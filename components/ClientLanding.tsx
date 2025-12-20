@@ -1,6 +1,19 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Linking, View, Text, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Dimensions, Platform } from 'react-native';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  interpolate, 
+  Extrapolation, 
+  runOnJS,
+  useAnimatedReaction
+} from 'react-native-reanimated';
 import LocationMap from './LocationMap';
+import ThreeBackground from './ThreeBackground';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface ClientLandingProps {
   onBookNow: () => void;
@@ -56,127 +69,170 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
   onNavigateToPage,
   activePageIndex 
 }) => {
-  const horizontalScrollRef = useRef<HTMLDivElement>(null);
   const [isMapActive, setIsMapActive] = useState(false);
-
-  const handleHorizontalScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const scrollLeft = e.currentTarget.scrollLeft;
-    const width = e.currentTarget.offsetWidth;
-    if (width === 0) return;
-    const index = Math.round(scrollLeft / width);
-    if (index !== activePageIndex && index >= 0 && index < PAGES.length) {
-      onNavigateToPage(index);
-    }
-  };
+  const scrollX = useSharedValue(activePageIndex);
+  const context = useSharedValue(0);
+  const [progress, setProgress] = useState(activePageIndex);
 
   useEffect(() => {
-    if (horizontalScrollRef.current) {
-      horizontalScrollRef.current.scrollTo({
-        left: activePageIndex * horizontalScrollRef.current.offsetWidth,
-        behavior: 'smooth'
-      });
-    }
+    // Only spring if we are not currently dragging
+    scrollX.value = withSpring(activePageIndex, { damping: 20, stiffness: 90 });
     if (activePageIndex !== 3) setIsMapActive(false);
   }, [activePageIndex]);
 
+  // Sync reanimated shared value to React state for Three.js
+  useAnimatedReaction(
+    () => scrollX.value,
+    (current) => {
+      runOnJS(setProgress)(current);
+    }
+  );
+
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      context.value = scrollX.value;
+    })
+    .onUpdate((event) => {
+      const target = context.value - event.translationX / SCREEN_WIDTH;
+      scrollX.value = Math.max(0, Math.min(PAGES.length - 1, target));
+      
+      // Update parent index immediately for UI feedback (indicators)
+      const currentIndex = Math.round(scrollX.value);
+      if (currentIndex !== activePageIndex) {
+        runOnJS(onNavigateToPage)(currentIndex);
+      }
+    })
+    .onEnd((event) => {
+      const velocity = -event.velocityX / SCREEN_WIDTH;
+      const targetIndex = Math.round(scrollX.value + velocity * 0.2);
+      const finalIndex = Math.max(0, Math.min(PAGES.length - 1, targetIndex));
+      
+      scrollX.value = withSpring(finalIndex, { velocity: velocity });
+      runOnJS(onNavigateToPage)(finalIndex);
+    });
+
   return (
-    <div className="relative w-full h-full bg-emerald-950 overflow-hidden">
-      {/* Horizontal Carousel */}
-      <div 
-        ref={horizontalScrollRef}
-        onScroll={handleHorizontalScroll}
-        className="flex w-full h-full overflow-x-scroll snap-x snap-mandatory no-scrollbar"
-        style={{ scrollBehavior: 'smooth' }}
-      >
-        {PAGES.map((page, idx) => (
-          <section 
-            key={page.id} 
-            className="flex-shrink-0 w-screen h-full relative snap-center overflow-hidden"
+    <GestureDetector gesture={panGesture}>
+      <View className="relative w-full h-full bg-emerald-950 overflow-hidden">
+          
+          <ThreeBackground progress={progress} />
+
+          {/* Map Section for index 3 */}
+          <Animated.View 
+            style={useAnimatedStyle(() => ({
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              opacity: interpolate(scrollX.value, [2, 3], [0, 1], Extrapolation.CLAMP),
+              zIndex: scrollX.value > 2.5 ? 10 : -1,
+            }))}
           >
-            {/* Background */}
-            <div className="absolute inset-0 z-0">
-              {idx === 3 ? (
-                <LocationMap isInteractive={isMapActive} />
-              ) : (
-                <>
-                  <img 
-                    src={page.image} 
-                    alt={page.title} 
-                    className={`w-full h-full object-cover transition-all duration-1000 ease-in-out ${
-                      activePageIndex === idx ? 'scale-100 opacity-100 blur-0' : 'scale-110 opacity-0 blur-md'
-                    }`}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/80 via-emerald-950/40 to-emerald-950/90" />
-                </>
-              )}
-            </div>
+            <LocationMap isInteractive={isMapActive} />
+          </Animated.View>
 
-            {/* Content */}
-            <div className={`relative z-10 w-full h-full flex flex-col items-center justify-center text-center px-6 transition-opacity duration-500 ${isMapActive ? 'opacity-0' : 'opacity-100'}`}>
-              <div className={`transition-all duration-1000 transform ${activePageIndex === idx ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
-                <span className="inline-block py-2 px-5 bg-emerald-400/10 border border-emerald-400/20 rounded-full text-emerald-400 text-[9px] font-black uppercase tracking-[0.4em] mb-4">
-                  {page.badge}
-                </span>
-                <h2 className="text-4xl md:text-8xl font-black text-white leading-none tracking-tighter mb-6 italic uppercase">
-                  {page.subtitle}
-                </h2>
-                <p className="max-w-xl mx-auto text-white/70 text-sm md:text-lg font-light leading-relaxed mb-8">
-                  {page.description}
-                </p>
+          {/* Content Overlay */}
+          <View className="absolute inset-0 z-20 pointer-events-none">
+            {PAGES.map((page, idx) => (
+              <ContentSlide 
+                key={page.id}
+                page={page}
+                index={idx}
+                scrollX={scrollX}
+                onBookNow={onBookNow}
+                isMapActive={isMapActive}
+                setIsMapActive={setIsMapActive}
+              />
+            ))}
+          </View>
 
-                {idx === 3 ? (
-                  <button 
-                    onClick={() => setIsMapActive(true)}
-                    className="px-8 py-4 bg-emerald-900/40 border border-emerald-400/30 text-emerald-50 rounded-2xl font-black text-sm hover:bg-emerald-400 hover:text-emerald-950 transition-all backdrop-blur-xl"
-                  >
-                    Explore Facility
-                  </button>
-                ) : (
-                  <button 
-                    onClick={onBookNow}
-                    className="px-10 py-5 bg-emerald-400 text-emerald-950 rounded-2xl font-black text-sm shadow-2xl hover:bg-white transition-all active:scale-95"
-                  >
-                    View Available Times
-                  </button>
-                )}
+          {/* Vertical Hint Button */}
+          <Animated.View 
+            style={useAnimatedStyle(() => ({
+              opacity: interpolate(isMapActive ? 1 : 0, [0, 1], [1, 0]),
+            }))}
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30"
+          >
+            <button 
+              className="flex flex-col items-center gap-1 pointer-events-auto"
+              onClick={onBookNow}
+            >
+              <span className="text-[8px] font-black text-emerald-400/30 uppercase tracking-[0.5em]">Reserve Now</span>
+              <div className="animate-bounce">
+                <i className="fa-solid fa-chevron-down text-emerald-400/30"></i>
               </div>
-            </div>
-          </section>
-        ))}
-      </div>
+            </button>
+          </Animated.View>
 
-      {/* Page Indicators */}
-      <div className={`absolute bottom-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-6 py-3 rounded-full bg-emerald-950/40 backdrop-blur-xl border border-emerald-500/10 transition-opacity ${isMapActive ? 'opacity-0' : 'opacity-100'}`}>
-        {PAGES.map((_, dotIdx) => (
-          <button
-            key={dotIdx}
-            onClick={() => onNavigateToPage(dotIdx)}
-            className={`h-2 rounded-full transition-all duration-500 ${activePageIndex === dotIdx ? 'w-10 bg-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'w-2 bg-emerald-400/20'}`}
-          />
-        ))}
-      </div>
+          {/* Exit Map */}
+          {isMapActive && (
+            <button 
+              onClick={() => setIsMapActive(false)}
+              className="absolute top-28 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 bg-emerald-950 text-emerald-50 rounded-full font-black text-[10px] uppercase tracking-widest border border-emerald-500/50"
+            >
+              Exit Exploration
+            </button>
+          )}
+        </View>
+      </GestureDetector>
+    );
+  };
 
-      {/* Vertical Hint Button */}
-      <button 
-        className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1 transition-opacity ${isMapActive ? 'opacity-0' : 'opacity-100'}`}
-        onClick={onBookNow}
-      >
-        <span className="text-[8px] font-black text-emerald-400/30 uppercase tracking-[0.5em]">Reserve Now</span>
-        <div className="animate-bounce">
-          <i className="fa-solid fa-chevron-down text-emerald-400/30"></i>
-        </div>
-      </button>
+const ContentSlide = ({ page, index, scrollX, onBookNow, isMapActive, setIsMapActive }: any) => {
+  const animatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollX.value,
+      [index - 0.5, index, index + 0.5],
+      [0, 1, 0],
+      Extrapolation.CLAMP
+    );
+    
+    const translateY = interpolate(
+      scrollX.value,
+      [index - 0.5, index, index + 0.5],
+      [20, 0, -20],
+      Extrapolation.CLAMP
+    );
 
-      {/* Exit Map */}
-      {isMapActive && (
+    return {
+      opacity: isMapActive ? 0 : opacity,
+      transform: [{ translateY }],
+      display: opacity === 0 ? 'none' : 'flex'
+    };
+  });
+
+  return (
+    <Animated.View 
+      style={animatedStyle}
+      className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
+    >
+      <span className="inline-block py-2 px-5 bg-emerald-400/10 border border-emerald-400/20 rounded-full text-emerald-400 text-[9px] font-black uppercase tracking-[0.4em] mb-4">
+        {page.badge}
+      </span>
+      <h2 className="text-4xl md:text-8xl font-black text-white leading-none tracking-tighter mb-6 italic uppercase">
+        {page.subtitle}
+      </h2>
+      <p className="max-w-xl mx-auto text-white/70 text-sm md:text-lg font-light leading-relaxed mb-8">
+        {page.description}
+      </p>
+
+      {index === 3 ? (
         <button 
-          onClick={() => setIsMapActive(false)}
-          className="absolute top-28 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 bg-emerald-950 text-emerald-50 rounded-full font-black text-[10px] uppercase tracking-widest border border-emerald-500/50"
+          onClick={() => setIsMapActive(true)}
+          className="px-8 py-4 bg-emerald-900/40 border border-emerald-400/30 text-emerald-50 rounded-2xl font-black text-sm hover:bg-emerald-400 hover:text-emerald-950 transition-all backdrop-blur-xl pointer-events-auto"
         >
-          Exit Exploration
+          Explore Facility
+        </button>
+      ) : (
+        <button 
+          onClick={onBookNow}
+          className="px-10 py-5 bg-emerald-400 text-emerald-950 rounded-2xl font-black text-sm shadow-2xl hover:bg-white transition-all active:scale-95 pointer-events-auto"
+        >
+          View Available Times
         </button>
       )}
-    </div>
+    </Animated.View>
   );
 };
 
