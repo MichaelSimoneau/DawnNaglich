@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "dawn-naglich"
-  }
+    "default": "dawn-naglich",
+    "prod": "dawn-naglich"
+  },
+  "targets": {},
+  "etags": {}
 }
