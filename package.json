@@ -1,7 +1,7 @@
 {
   "name": "dawn-naglich-wellness",
   "version": "1.0.0",
-  "main": "index.tsx",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -23,8 +23,10 @@
     "expo": "~51.0.0",
     "expo-auth-session": "~5.5.2",
     "expo-av": "~14.0.5",
+    "expo-constants": "^18.0.12",
     "expo-crypto": "~13.0.2",
     "expo-linking": "~6.3.1",
+    "expo-router": "^6.0.21",
     "expo-status-bar": "~1.12.1",
     "firebase": "^10.12.0",
     "nativewind": "^4.2.1",
