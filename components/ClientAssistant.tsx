@@ -1,15 +1,10 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   StyleSheet, View, Text, TextInput, TouchableOpacity, Animated, 
-  Dimensions, PanResponder, Keyboard, Platform, KeyboardAvoidingView, Linking 
+  Dimensions, PanResponder, Keyboard, Platform, KeyboardAvoidingView, Linking,
+  useWindowDimensions 
 } from 'react-native';
 import { GoogleGenAI } from '@google/genai';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-const H_MIN = SCREEN_HEIGHT * 0.33;
-const H_MID = SCREEN_HEIGHT * 0.66;
-const H_FULL = SCREEN_HEIGHT - 60;
 
 const FACILITY_ADDRESS = "8430 Mayfield Rd., Chesterland, OH, 44024";
 const DIRECTIONS_URL = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(FACILITY_ADDRESS)}`;
@@ -17,6 +12,18 @@ const DIRECTIONS_URL = `https://www.google.com/maps/dir/?api=1&destination=${enc
 type HeightState = 'min' | 'mid' | 'full';
 
 const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isDesktop = windowWidth > 768;
+
+  // Mobile Heights
+  const H_MIN = windowHeight * 0.33;
+  const H_MID = windowHeight * 0.66;
+  const H_FULL = windowHeight - 60;
+  
+  // Desktop Dimensions
+  const DESKTOP_WIDTH = 400;
+  const DESKTOP_HEIGHT = 600;
+
   const [heightState, setHeightState] = useState<HeightState>('min');
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [messages, setMessages] = useState<{ role: 'ai' | 'user'; text: string }[]>([
@@ -44,12 +51,19 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
   }, [messages, loading]);
 
   const animateTo = (state: HeightState) => {
-    let target = H_MIN;
-    if (state === 'mid') target = H_MID;
-    if (state === 'full') target = H_FULL;
-    
-    if (isKeyboardVisible && state !== 'full') {
-        target = SCREEN_HEIGHT * 0.5;
+    let target = 0;
+
+    if (isDesktop) {
+        // On desktop, we just animate to full fixed height when open
+        target = DESKTOP_HEIGHT;
+    } else {
+        target = H_MIN;
+        if (state === 'mid') target = H_MID;
+        if (state === 'full') target = H_FULL;
+        
+        if (isKeyboardVisible && state !== 'full') {
+            target = windowHeight * 0.5;
+        }
     }
 
     setHeightState(state);
@@ -64,12 +78,13 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
   useEffect(() => {
     if (isOpen) animateTo(heightState);
     else Animated.timing(heightAnim, { toValue: 0, duration: 300, useNativeDriver: false }).start();
-  }, [isOpen, isKeyboardVisible]);
+  }, [isOpen, isKeyboardVisible, isDesktop, heightState]); // Added dependencies to react to resize
 
   const panResponder = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dy) > 10,
+    onStartShouldSetPanResponder: () => !isDesktop, // Disable on desktop
+    onMoveShouldSetPanResponder: (_, gs) => !isDesktop && Math.abs(gs.dy) > 10,
     onPanResponderRelease: (_, gs) => {
+      if (isDesktop) return;
       if (gs.dy < -50) {
         if (heightState === 'min') animateTo('mid');
         else if (heightState === 'mid') animateTo('full');
@@ -79,7 +94,7 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
         else if (heightState === 'min') onClose();
       }
     }
-  }), [heightState, isKeyboardVisible]);
+  }), [heightState, isKeyboardVisible, isDesktop, windowHeight]);
 
   const handleGetDirections = () => {
     Linking.openURL(DIRECTIONS_URL);
@@ -112,10 +127,22 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
     }
   };
 
+  // Dynamic Styles for Desktop
+  const desktopStyles = isDesktop ? {
+    left: 'auto',
+    right: 32,
+    bottom: 32,
+    width: DESKTOP_WIDTH,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderRadius: 24,
+  } : {};
+
   return (
     <Animated.View 
       style={[
         styles.sheet, 
+        desktopStyles,
         { height: heightAnim }, 
         !isOpen && { pointerEvents: 'none' } as any
       ]}
@@ -125,7 +152,7 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
         style={{ flex: 1 }}
       >
         <View {...panResponder.panHandlers} style={styles.handleArea}>
-          <View style={styles.handleBar} />
+          {!isDesktop && <View style={styles.handleBar} />}
         </View>
 
         <View style={styles.header}>

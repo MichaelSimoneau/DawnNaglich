@@ -1,3 +1,4 @@
+import './global.css';
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, StatusBar, TouchableOpacity, Text, SafeAreaView, ActivityIndicator, ScrollView, Dimensions, Platform, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { auth, isDemo } from './firebaseConfig';
@@ -194,7 +195,7 @@ const App: React.FC = () => {
             <i className={`fa-solid fa-snowflake ${isSnowing ? 'text-white' : 'text-emerald-400'} text-lg`}></i>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setIsAssistantOpen(true)} style={styles.fabAssistant}>
-            <i className="fa-solid fa-sparkles text-white text-xl"></i>
+            <i className="fa-solid fa-wand-magic-sparkles text-white text-xl"></i>
           </TouchableOpacity>
         </View>
       )}
