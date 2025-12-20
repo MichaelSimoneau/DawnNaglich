@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Dimensions, Platform } from 'react-native';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { View, Text, Dimensions, Platform, TouchableOpacity } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -42,6 +42,27 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
     if (activePageIndex !== 3) setIsMapActive(false);
   }, [activePageIndex]);
 
+  // Handle horizontal scroll wheel if on web
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        e.preventDefault();
+        const target = scrollX.value + e.deltaX / SCREEN_WIDTH;
+        scrollX.value = Math.max(0, Math.min(PAGES.length - 1, target));
+        
+        const currentIndex = Math.round(scrollX.value);
+        if (currentIndex !== activePageIndex) {
+          onNavigateToPage(currentIndex);
+        }
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [activePageIndex, onNavigateToPage]);
+
   // Sync reanimated shared value to React state for Three.js
   useAnimatedReaction(
     () => scrollX.value,
@@ -74,12 +95,12 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
     });
 
   return (
-    <GestureDetector gesture={panGesture}>
-      <View className="relative w-full h-full bg-emerald-950 overflow-hidden">
-          
-          <ThreeBackground progress={progress} />
+      <GestureDetector gesture={panGesture}>
+        <View className="relative w-full h-full bg-emerald-950 overflow-hidden">
+            
+            {/* <ThreeBackground progress={progress} /> */}
 
-          {/* Map Section for index 3 */}
+            {/* Map Section for index 3 */}
           <Animated.View 
             style={useAnimatedStyle(() => ({
               position: 'absolute',
@@ -116,25 +137,27 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
             }))}
             className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30"
           >
-            <button 
+            <TouchableOpacity 
               className="flex flex-col items-center gap-1 pointer-events-auto"
-              onClick={onBookNow}
+              onPress={onBookNow}
             >
-              <span className="text-[8px] font-black text-emerald-400/30 uppercase tracking-[0.5em]">Reserve Now</span>
-              <div className="animate-bounce">
-                <i className="fa-solid fa-chevron-down text-emerald-400/30"></i>
-              </div>
-            </button>
+              <Text className="text-[8px] font-black text-emerald-400/30 uppercase tracking-[0.5em]">Reserve Now</Text>
+              <View className="animate-bounce">
+                <Text className="fa-solid fa-chevron-down text-emerald-400/30" />
+              </View>
+            </TouchableOpacity>
           </Animated.View>
 
           {/* Exit Map */}
           {isMapActive && (
-            <button 
-              onClick={() => setIsMapActive(false)}
-              className="absolute top-28 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 bg-emerald-950 text-emerald-50 rounded-full font-black text-[10px] uppercase tracking-widest border border-emerald-500/50"
+            <TouchableOpacity 
+              onPress={() => setIsMapActive(false)}
+              className="absolute top-28 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 bg-emerald-950 rounded-full border border-emerald-500/50"
             >
-              Exit Exploration
-            </button>
+              <Text className="text-emerald-50 font-black text-[10px] uppercase tracking-widest">
+                Exit Exploration
+              </Text>
+            </TouchableOpacity>
           )}
         </View>
       </GestureDetector>
@@ -169,30 +192,32 @@ const ContentSlide = ({ page, index, scrollX, onBookNow, isMapActive, setIsMapAc
       style={animatedStyle}
       className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
     >
-      <span className="inline-block py-2 px-5 bg-emerald-400/10 border border-emerald-400/20 rounded-full text-emerald-400 text-[9px] font-black uppercase tracking-[0.4em] mb-4">
-        {page.badge}
-      </span>
-      <h2 className="text-4xl md:text-8xl font-black text-white leading-none tracking-tighter mb-6 italic uppercase">
+      <View className="py-2 px-5 bg-emerald-400/10 border border-emerald-400/20 rounded-full mb-4">
+        <Text className="text-emerald-400 text-[9px] font-black uppercase tracking-[0.4em]">
+          {page.badge}
+        </Text>
+      </View>
+      <Text className="text-4xl md:text-8xl font-black text-white leading-none tracking-tighter mb-6 italic uppercase">
         {page.subtitle}
-      </h2>
-      <p className="max-w-xl mx-auto text-white/70 text-sm md:text-lg font-light leading-relaxed mb-8">
+      </Text>
+      <Text className="max-w-xl mx-auto text-white/70 text-sm md:text-lg font-light leading-relaxed mb-8">
         {page.description}
-      </p>
+      </Text>
 
       {index === 3 ? (
-        <button 
-          onClick={() => setIsMapActive(true)}
-          className="px-8 py-4 bg-emerald-900/40 border border-emerald-400/30 text-emerald-50 rounded-2xl font-black text-sm hover:bg-emerald-400 hover:text-emerald-950 transition-all backdrop-blur-xl pointer-events-auto"
+        <TouchableOpacity 
+          onPress={() => setIsMapActive(true)}
+          className="px-8 py-4 bg-emerald-900/40 border border-emerald-400/30 rounded-2xl hover:bg-emerald-400 transition-all backdrop-blur-xl pointer-events-auto"
         >
-          Explore Facility
-        </button>
+          <Text className="text-emerald-50 font-black text-sm uppercase">Explore Facility</Text>
+        </TouchableOpacity>
       ) : (
-        <button 
-          onClick={onBookNow}
-          className="px-10 py-5 bg-emerald-400 text-emerald-950 rounded-2xl font-black text-sm shadow-2xl hover:bg-white transition-all active:scale-95 pointer-events-auto"
+        <TouchableOpacity 
+          onPress={onBookNow}
+          className="px-10 py-5 bg-emerald-400 rounded-2xl shadow-2xl hover:bg-white transition-all active:scale-95 pointer-events-auto"
         >
-          View Available Times
-        </button>
+          <Text className="text-emerald-950 font-black text-sm uppercase">View Available Times</Text>
+        </TouchableOpacity>
       )}
     </Animated.View>
   );

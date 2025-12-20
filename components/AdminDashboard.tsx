@@ -49,16 +49,16 @@ const AdminDashboard: React.FC = () => {
             <Text style={styles.subtitle}>Daily Management & Alignment</Text>
           </View>
           <TouchableOpacity style={styles.voiceBtn} onPress={() => setShowVoice(true)}>
-            <i className="fa-solid fa-microphone text-white text-xl"></i>
+            <Text className="fa-solid fa-microphone text-white text-xl" />
           </TouchableOpacity>
         </View>
 
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>Today's Agenda</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View className="flex-row items-center gap-2">
               <TouchableOpacity onPress={fetchCalendar} disabled={loading}>
-                <i className={`fa-solid fa-arrows-rotate ${loading ? 'animate-spin' : ''} text-emerald-600 text-sm`}></i>
+                <Text className={`fa-solid fa-arrows-rotate ${loading ? 'animate-spin' : ''} text-emerald-600 text-sm`} />
               </TouchableOpacity>
               {loading && <ActivityIndicator size="small" color="#10B981" />}
             </View>
@@ -89,11 +89,15 @@ const AdminDashboard: React.FC = () => {
                         disabled={!!processingId}
                         style={styles.confirmBtn}
                       >
-                        {processingId === appt.id ? <ActivityIndicator size="small" color="#FFF" /> : <i className="fa-solid fa-check text-white"></i>}
+                        {processingId === appt.id ? (
+                          <ActivityIndicator size="small" color="#FFF" />
+                        ) : (
+                          <Text className="fa-solid fa-check text-white" />
+                        )}
                       </TouchableOpacity>
                     ) : (
                       <View style={styles.confirmedBadge}>
-                        <i className="fa-solid fa-check-double text-emerald-600"></i>
+                        <Text className="fa-solid fa-check-double text-emerald-600" />
                       </View>
                     )}
                     <TouchableOpacity 
@@ -101,7 +105,7 @@ const AdminDashboard: React.FC = () => {
                       disabled={!!processingId}
                       style={styles.cancelBtn}
                     >
-                      <i className="fa-solid fa-trash-can text-red-300"></i>
+                      <Text className="fa-solid fa-trash-can text-red-300" />
                     </TouchableOpacity>
                   </View>
                 </View>

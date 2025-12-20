@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   StyleSheet, View, Text, TextInput, TouchableOpacity, Animated, 
   Dimensions, PanResponder, Keyboard, Platform, KeyboardAvoidingView, Linking,
-  useWindowDimensions 
+  useWindowDimensions, ScrollView 
 } from 'react-native';
 import { GoogleGenAI } from '@google/genai';
 
@@ -33,7 +33,7 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
   const [loading, setLoading] = useState(false);
   
   const heightAnim = useRef(new Animated.Value(0)).current;
-  const chatScrollRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
@@ -46,7 +46,7 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
 
   useEffect(() => {
     if (chatScrollRef.current) {
-      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+      chatScrollRef.current.scrollToEnd({ animated: true });
     }
   }, [messages, loading]);
 
@@ -162,17 +162,17 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
           </View>
           <View style={styles.headerActions}>
             <TouchableOpacity onPress={handleGetDirections} style={styles.actionIcon}>
-              <i className="fa-solid fa-location-arrow text-emerald-400"></i>
+              <Text className="fa-solid fa-location-arrow text-emerald-400" />
             </TouchableOpacity>
             <TouchableOpacity onPress={onClose} style={styles.actionIcon}>
-              <i className="fa-solid fa-times text-emerald-200 opacity-40"></i>
+              <Text className="fa-solid fa-times text-emerald-200 opacity-40" />
             </TouchableOpacity>
           </View>
         </View>
 
-        <div 
-          ref={chatScrollRef}
-          className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth no-scrollbar"
+        <ScrollView 
+          className="flex-1 p-6 space-y-6 scroll-smooth no-scrollbar"
+          contentContainerStyle={{ gap: 24 }}
         >
           {messages.map((msg, i) => (
             <View key={i} style={[styles.messageRow, msg.role === 'user' ? styles.userRow : styles.aiRow]}>
@@ -185,12 +185,12 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
           ))}
           {loading && (
             <View style={styles.loadingContainer}>
-              <div className="w-1 h-1 bg-emerald-400 rounded-full animate-bounce"></div>
-              <div className="w-1 h-1 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-              <div className="w-1 h-1 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+              <View className="w-1 h-1 bg-emerald-400 rounded-full animate-bounce" />
+              <View className="w-1 h-1 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+              <View className="w-1 h-1 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.4s]" />
             </View>
           )}
-        </div>
+        </ScrollView>
 
         <View style={[styles.inputArea, isKeyboardVisible && { paddingBottom: 10 }]}>
           <TextInput 
@@ -206,7 +206,7 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
             onPress={handleSend}
             style={[styles.sendBtn, (!input.trim() || loading) && { opacity: 0.5 }]}
           >
-            <i className="fa-solid fa-paper-plane text-emerald-950"></i>
+            <Text className="fa-solid fa-paper-plane text-emerald-950" />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -220,7 +220,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(2, 44, 34, 0.98)',
     borderTopLeftRadius: 32, borderTopRightRadius: 32,
     elevation: 30, zIndex: 2000, borderTopWidth: 1, borderColor: 'rgba(16, 185, 129, 0.1)',
-    backdropFilter: 'blur(30px)'
   } as any,
   handleArea: { width: '100%', height: 30, justifyContent: 'center', alignItems: 'center' },
   handleBar: { width: 36, height: 4, backgroundColor: 'rgba(16, 185, 129, 0.2)', borderRadius: 2 },

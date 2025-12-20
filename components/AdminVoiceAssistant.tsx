@@ -245,7 +245,7 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleClose} style={styles.backBtn}>
-            <i className="fa-solid fa-chevron-down text-white/40"></i>
+            <Text className="fa-solid fa-chevron-down text-white/40" />
             <Text style={styles.backText}>Minimize Assistant</Text>
           </TouchableOpacity>
           <View style={styles.statusIndicator}>
@@ -337,8 +337,8 @@ const styles = StyleSheet.create({
 
   visualizerContainer: { height: 100, justifyContent: 'center', alignItems: 'center' },
   orbContainer: { width: 100, height: 100, justifyContent: 'center', alignItems: 'center' },
-  orbGlow: { ...StyleSheet.absoluteFillObject, borderRadius: 50, backgroundColor: 'rgba(20, 184, 166, 0.15)', shadowColor: '#14B8A6', shadowOpacity: 0.5, shadowRadius: 30 },
-  orbCore: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#14B8A6', shadowColor: '#14B8A6', shadowOpacity: 1, shadowRadius: 15 },
+  orbGlow: { ...StyleSheet.absoluteFillObject, borderRadius: 50, backgroundColor: 'rgba(20, 184, 166, 0.15)' },
+  orbCore: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#14B8A6' },
 });
 
 export default AdminVoiceAssistant;

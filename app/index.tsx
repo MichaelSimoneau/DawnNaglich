@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import Head from 'expo-router/head';
 import { useUser } from '../UserContext';
 
 import Login from '../components/Login';
@@ -53,7 +52,7 @@ export default function Home() {
         className="absolute top-[30px] left-[30px] z-[200] flex-row items-center p-3 bg-white/5 rounded-[20px]" 
         onPress={() => setShowLogin(false)}
       >
-        <i className="fa-solid fa-arrow-left text-emerald-100"></i>
+        <Text className="fa-solid fa-arrow-left text-emerald-100" />
         <Text className="text-white font-black text-[10px] uppercase tracking-[2px] ml-3">Home</Text>
       </TouchableOpacity>
       <Login onLoginComplete={() => setShowLogin(false)} />
@@ -62,17 +61,8 @@ export default function Home() {
 
   return (
     <View className="flex-1 bg-emerald-950">
-      <Head>
-        <title>Dawn Naglich Wellness | Reclaim Motion</title>
-        <meta name="description" content="Elite Muscle Activation & Functional Realignment for high-performance recovery." />
-        {/* Replace with actual verification code when provided */}
-        <meta name="google-site-verification" content="GSC_VERIFICATION_PLACEHOLDER" />
-      </Head>
-
-      {/* Nav override or extension for Home page */}
       <View className="fixed top-0 left-0 right-0 z-[110] px-6 pt-8 pb-5 flex-row items-center justify-between pointer-events-none">
-        <View className="flex-1" /> {/* Spacer for Logo in _layout */}
-
+        <View className="flex-1" />
         <View className="flex-row items-center gap-3 px-6 py-3 rounded-full bg-emerald-950/40 backdrop-blur-xl border border-emerald-500/10 pointer-events-auto">
           {PAGES.map((_, dotIdx) => (
             <TouchableOpacity
@@ -92,7 +82,7 @@ export default function Home() {
               {user ? 'My Sessions' : 'Login'}
             </Text>
           </TouchableOpacity>
-          {user && <View className="w-12" />} {/* Spacer for Logout icon in _layout */}
+          {user && <View className="w-12" />}
         </View>
       </View>
 
@@ -122,8 +112,8 @@ export default function Home() {
           style={{ minHeight: windowHeight }}
         >
           <View className="px-10 pt-[120px] pb-5 bg-white">
-             <Text className="text-[42px] font-black color-[#064e3b] tracking-[-2px] uppercase">Schedule</Text>
-             <Text className="text-[11px] font-bold color-[#94A3B8] uppercase tracking-[2px] mt-1">Select a window for realignment</Text>
+             <Text className="text-[42px] font-black text-[#064e3b] tracking-tighter uppercase">Schedule</Text>
+             <Text className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-[2px] mt-1">Select a window for realignment</Text>
           </View>
           
           <Booking 

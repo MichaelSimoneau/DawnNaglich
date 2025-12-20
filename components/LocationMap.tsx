@@ -11,7 +11,7 @@ const LocationMap: React.FC<{ isInteractive: boolean }> = ({ isInteractive }) =>
 
   return (
     <View style={styles.container}>
-      <div 
+      <View 
         className={`absolute inset-0 transition-all duration-700 ${isInteractive ? 'opacity-100 pointer-events-auto' : 'opacity-60 pointer-events-none grayscale contrast-125'}`}
       >
         <iframe
@@ -22,12 +22,12 @@ const LocationMap: React.FC<{ isInteractive: boolean }> = ({ isInteractive }) =>
           src={`https://www.google.com/maps?q=${encodeURIComponent(ADDRESS)}&output=embed&z=15&t=m&hl=en`}
           allowFullScreen
         ></iframe>
-      </div>
+      </View>
       
       {!isInteractive && (
         <View style={styles.overlay} pointerEvents="none">
           <View style={styles.markerCircle}>
-            <i className="fa-solid fa-location-dot text-emerald-400 text-3xl"></i>
+            <Text className="fa-solid fa-location-dot text-emerald-400 text-3xl" />
           </View>
         </View>
       )}
@@ -39,7 +39,7 @@ const LocationMap: React.FC<{ isInteractive: boolean }> = ({ isInteractive }) =>
             onPress={handleGetDirections}
             style={styles.directionsBtn}
           >
-            <i className="fa-solid fa-diamond-turn-right text-emerald-950 mr-3"></i>
+            <Text className="fa-solid fa-diamond-turn-right text-emerald-950 mr-3" />
             <Text style={styles.btnText}>Get Directions</Text>
           </TouchableOpacity>
         </View>
@@ -84,9 +84,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
     elevation: 10,
   },
   btnText: {

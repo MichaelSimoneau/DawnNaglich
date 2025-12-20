@@ -146,9 +146,9 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
   if (isSuccess) {
     return (
       <View style={styles.successContainer}>
-        <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6 border border-emerald-100 shadow-sm">
-           <i className="fa-solid fa-calendar-check text-emerald-500 text-3xl"></i>
-        </div>
+        <View className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6 border border-emerald-100">
+           <Text className="fa-solid fa-calendar-check text-emerald-500 text-3xl" />
+        </View>
         <Text style={styles.successTitle}>Confirmed</Text>
         <Text style={styles.successSub}>Your session for {confirmedDetails} is secured.</Text>
         <TouchableOpacity style={styles.backBtn} onPress={() => setIsSuccess(false)}>
@@ -166,15 +166,15 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
           <ActivityIndicator size="large" color="#059669" />
         </View>
       )}
-      <div className="w-full bg-white">
+      <View className="w-full bg-white">
         {generateDays().map((day, dIdx) => (
-          <div key={dIdx} className="w-full relative">
+          <View key={dIdx} className="w-full relative">
             {/* 
                STICKY HEADER:
                top-[85px] aligns it right below the main Nav bar (which is ~88px).
                z-index needs to be high enough to sit over content, but lower than Nav (100).
             */}
-            <div className="sticky top-[85px] z-[50] bg-white/95 backdrop-blur-md border-b border-emerald-50 px-8 py-5 flex items-center shadow-sm">
+            <View className="sticky top-[85px] z-[50] bg-white/95 border-b border-emerald-50 px-8 py-5 flex-row items-center">
               <View style={styles.dayIndicator}>
                 <Text style={styles.dayIndicatorText}>{day.getDate()}</Text>
               </View>
@@ -182,7 +182,7 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
                 <Text style={styles.dateDayName}>{day.toLocaleDateString('en-US', { weekday: 'long' })}</Text>
                 <Text style={styles.dateFull}>{day.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</Text>
               </View>
-            </div>
+            </View>
             
             {getTimeSlots().map(time => {
               const id = `${day.toDateString()}-${time}`;
@@ -207,7 +207,7 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
                     <View style={styles.rowTimeBox}>
                       <Text style={[styles.rowTimeText, taken && styles.textMuted, isSelected && styles.textSelected]}>{time}</Text>
                     </View>
-                    <div className="w-[1px] h-8 bg-slate-100 mx-5" />
+                    <View className="w-[1px] h-8 bg-slate-100 mx-5" />
                     <View style={styles.rowMain}>
                       {taken ? (
                         <View style={styles.takenContainer}>
@@ -218,7 +218,7 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
                           <Text style={[styles.availableLabel, isSelected && styles.textSelected]}>
                             {isSelected ? 'Secure your session below' : `Book at ${time}`}
                           </Text>
-                          <i className={`fa-solid ${isSelected ? 'fa-chevron-up' : 'fa-plus'} ${isSelected ? 'text-emerald-900' : 'text-emerald-400'} text-[11px] ml-auto`}></i>
+                          <Text className={`fa-solid ${isSelected ? 'fa-chevron-up' : 'fa-plus'} ${isSelected ? 'text-emerald-900' : 'text-emerald-400'} text-[11px] ml-auto`} />
                         </View>
                       )}
                     </View>
@@ -303,9 +303,9 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
                 </View>
               );
             })}
-          </div>
+          </View>
         ))}
-      </div>
+      </View>
     </View>
   );
 };
