@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { useUser } from '../UserContext';
 
 import Login from '../components/Login';
@@ -10,14 +10,14 @@ import Footer from '../components/Footer';
 
 export default function Home() {
   const { user } = useUser();
+  const { height: windowHeight } = useWindowDimensions();
   const [showLogin, setShowLogin] = useState(false);
   const [activeLandingPage, setActiveLandingPage] = useState(0);
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
-  const [agendaOffset, setAgendaOffset] = useState(Dimensions.get('window').height);
+  const [agendaOffset, setAgendaOffset] = useState(windowHeight || 800);
   
   const verticalScrollRef = useRef<ScrollView>(null);
   const lastScrollY = useRef(0);
-  const { height: windowHeight } = Dimensions.get('window');
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const currentY = event.nativeEvent.contentOffset.y;
@@ -93,7 +93,7 @@ export default function Home() {
         scrollEventThrottle={16}
         onScroll={handleScroll}
       >
-        <View style={{ width: '100%', height: windowHeight }}>
+        <View style={{ width: '100%', height: windowHeight, minHeight: 600 }}>
           <ClientLanding 
             onBookNow={scrollToAgenda} 
             onLoginClick={() => setShowLogin(true)}

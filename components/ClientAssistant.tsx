@@ -15,16 +15,16 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isDesktop = windowWidth > 768;
 
-  // Mobile Heights
-  const H_MIN = windowHeight * 0.33;
-  const H_MID = windowHeight * 0.66;
+  // Mobile Heights - Start larger so text is visible
+  const H_MIN = windowHeight * 0.5;
+  const H_MID = windowHeight * 0.75;
   const H_FULL = windowHeight - 60;
   
   // Desktop Dimensions
   const DESKTOP_WIDTH = 400;
   const DESKTOP_HEIGHT = 600;
 
-  const [heightState, setHeightState] = useState<HeightState>('min');
+  const [heightState, setHeightState] = useState<HeightState>('mid');
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [messages, setMessages] = useState<{ role: 'ai' | 'user'; text: string }[]>([
     { role: 'ai', text: "Welcome to Dawn's Wellness Sanctuary. I can explain Muscle Activation techniques, help you navigate the schedule, or provide directions to our facility. How are you feeling today?" }
@@ -76,9 +76,15 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
   };
 
   useEffect(() => {
-    if (isOpen) animateTo(heightState);
-    else Animated.timing(heightAnim, { toValue: 0, duration: 300, useNativeDriver: false }).start();
-  }, [isOpen, isKeyboardVisible, isDesktop, heightState]); // Added dependencies to react to resize
+    if (isOpen) {
+      // Start at mid height so content is visible
+      const initialHeight = isDesktop ? DESKTOP_HEIGHT : H_MID;
+      heightAnim.setValue(initialHeight);
+      animateTo(heightState);
+    } else {
+      Animated.timing(heightAnim, { toValue: 0, duration: 300, useNativeDriver: false }).start();
+    }
+  }, [isOpen, isKeyboardVisible, isDesktop, heightState]);
 
   const panResponder = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => !isDesktop, // Disable on desktop

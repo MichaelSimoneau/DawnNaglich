@@ -1,20 +1,20 @@
 import React from 'react';
-import { View, StyleSheet, Image, Dimensions } from 'react-native';
+import { View, StyleSheet, Image, useWindowDimensions } from 'react-native';
 import Animated, { 
   useAnimatedStyle, 
   interpolate, 
   Extrapolation,
-  SharedValue
+  useSharedValue
 } from 'react-native-reanimated';
 import { PAGES } from '../content';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
 interface Props {
-  progress: SharedValue<number>;
+  progress: ReturnType<typeof useSharedValue<number>>;
 }
 
-const ThreeBackground: React.FC<Props> = ({ progress }) => {
+const LandingPage: React.FC<Props> = ({ progress }) => {
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
+
   return (
     <View style={styles.container}>
       {PAGES.map((page, index) => {
@@ -24,7 +24,7 @@ const ThreeBackground: React.FC<Props> = ({ progress }) => {
           const translateX = (index - progress.value) * SCREEN_WIDTH;
           const opacity = interpolate(
             progress.value,
-            [index - 0.5, index, index + 0.5],
+            [index - 0.9, index, index + 0.9],
             [0, 1, 0],
             Extrapolation.CLAMP
           );
@@ -32,14 +32,18 @@ const ThreeBackground: React.FC<Props> = ({ progress }) => {
           return {
             transform: [{ translateX }],
             opacity,
+            zIndex: index === Math.round(progress.value) ? 1 : 0
           };
         });
 
         return (
-          <Animated.View key={page.id} style={[styles.imageContainer, animatedStyle]}>
+          <Animated.View 
+            key={page.id} 
+            style={[StyleSheet.absoluteFill, animatedStyle]}
+          >
             <Image
               source={{ uri: page.image }}
-              style={styles.image}
+              style={StyleSheet.absoluteFill}
               resizeMode="cover"
             />
           </Animated.View>
@@ -53,20 +57,13 @@ const ThreeBackground: React.FC<Props> = ({ progress }) => {
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#022C22',
-  },
-  imageContainer: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  image: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(2, 44, 34, 0.5)',
+    backgroundColor: 'rgba(2, 44, 34, 0.9)',
+    zIndex: 5,
   },
 });
 
-export default ThreeBackground;
+export default LandingPage;
+

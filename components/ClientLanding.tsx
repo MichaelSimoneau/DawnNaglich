@@ -1,20 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Dimensions, Platform, TouchableOpacity } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, useWindowDimensions, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
-  withSpring, 
   interpolate, 
   Extrapolation, 
   runOnJS,
-  useAnimatedReaction
+  useAnimatedScrollHandler
 } from 'react-native-reanimated';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebaseConfig';
 import LocationMap from './LocationMap';
-import ThreeBackground from './ThreeBackground';
+import LandingPage from './LandingPage';
 import { PAGES } from '../content';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface ClientLandingProps {
   onBookNow: () => void;
@@ -31,187 +29,430 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
   onNavigateToPage,
   activePageIndex 
 }) => {
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
   const [isMapActive, setIsMapActive] = useState(false);
   const scrollX = useSharedValue(activePageIndex);
-  const context = useSharedValue(0);
+  const scrollViewRef = useRef<Animated.ScrollView>(null);
 
   useEffect(() => {
-    // Only spring if we are not currently dragging
-    scrollX.value = withSpring(activePageIndex, { damping: 20, stiffness: 90 });
+    scrollX.value = activePageIndex;
+    const targetPos = activePageIndex * SCREEN_WIDTH;
+    scrollViewRef.current?.scrollTo({ x: targetPos, animated: true });
     if (activePageIndex !== 3) setIsMapActive(false);
-  }, [activePageIndex]);
+  }, [activePageIndex, SCREEN_WIDTH]);
 
-  // Handle horizontal scroll wheel if on web
-  useEffect(() => {
-    if (Platform.OS !== 'web') return;
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollX.value = event.contentOffset.x / SCREEN_WIDTH;
+    },
+    onMomentumScrollEnd: (event) => {
+      const index = Math.round(event.contentOffset.x / SCREEN_WIDTH);
+      const clampedIndex = Math.max(0, Math.min(index, PAGES.length - 1));
+      runOnJS(onNavigateToPage)(clampedIndex);
+    }
+  });
 
-    const handleWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-        e.preventDefault();
-        const target = scrollX.value + e.deltaX / SCREEN_WIDTH;
-        scrollX.value = Math.max(0, Math.min(PAGES.length - 1, target));
-        
-        const currentIndex = Math.round(scrollX.value);
-        if (currentIndex !== activePageIndex) {
-          runOnJS(onNavigateToPage)(currentIndex);
-        }
-      }
-    };
-
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    return () => window.removeEventListener('wheel', handleWheel);
-  }, [activePageIndex, onNavigateToPage]);
-
-  const panGesture = Gesture.Pan()
-    .onStart(() => {
-      context.value = scrollX.value;
-    })
-    .onUpdate((event) => {
-      const target = context.value - event.translationX / SCREEN_WIDTH;
-      scrollX.value = Math.max(0, Math.min(PAGES.length - 1, target));
-      
-      // Update parent index immediately for UI feedback (indicators)
-      const currentIndex = Math.round(scrollX.value);
-      if (currentIndex !== activePageIndex) {
-        runOnJS(onNavigateToPage)(currentIndex);
-      }
-    })
-    .onEnd((event) => {
-      const velocity = -event.velocityX / SCREEN_WIDTH;
-      const targetIndex = Math.round(scrollX.value + velocity * 0.2);
-      const finalIndex = Math.max(0, Math.min(PAGES.length - 1, targetIndex));
-      
-      scrollX.value = withSpring(finalIndex, { velocity: velocity });
-      runOnJS(onNavigateToPage)(finalIndex);
-    });
+  const handleLogout = () => {
+    if (auth) signOut(auth);
+  };
 
   return (
-      <GestureDetector gesture={panGesture}>
-        <View className="relative w-full h-full bg-emerald-950 overflow-hidden">
-            
-            <ThreeBackground progress={scrollX} />
+    <View style={styles.container}>
+      <LandingPage progress={scrollX} />
 
-            {/* Map Section for index 3 */}
-          <Animated.View 
-            style={useAnimatedStyle(() => ({
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              opacity: interpolate(scrollX.value, [2, 3], [0, 1], Extrapolation.CLAMP),
-              zIndex: scrollX.value > 2.5 ? 10 : -1,
-            }))}
-          >
-            <LocationMap isInteractive={isMapActive} />
-          </Animated.View>
+      {/* Map Section for index 3 */}
+      <Animated.View 
+        style={useAnimatedStyle(() => ({
+          ...StyleSheet.absoluteFillObject,
+          opacity: interpolate(scrollX.value, [2.5, 3], [0, 1], Extrapolation.CLAMP),
+          zIndex: scrollX.value > 2.5 ? 10 : -1,
+        }))}
+      >
+        <LocationMap isInteractive={isMapActive} />
+      </Animated.View>
 
-          {/* Content Overlay */}
-          <View className="absolute top-0 left-0 right-0 bottom-0 z-20 pointer-events-none">
-            {PAGES.map((page, idx) => (
-              <ContentSlide 
-                key={page.id}
-                page={page}
-                index={idx}
-                scrollX={scrollX}
-                onBookNow={onBookNow}
-                isMapActive={isMapActive}
-                setIsMapActive={setIsMapActive}
+      <Animated.ScrollView
+        ref={scrollViewRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+        decelerationRate={0.9}
+        snapToInterval={SCREEN_WIDTH}
+        snapToAlignment="start"
+        disableIntervalMomentum={false}
+        bounces={false}
+        style={StyleSheet.absoluteFill}
+        contentContainerStyle={{ width: SCREEN_WIDTH * PAGES.length }}
+      >
+        {PAGES.map((page, idx) => (
+          <View key={page.id} style={{ width: SCREEN_WIDTH, height: '100%' }}>
+            <ContentSlide 
+              page={page}
+              index={idx}
+              scrollX={scrollX}
+              SCREEN_WIDTH={SCREEN_WIDTH}
+              onBookNow={onBookNow}
+              isMapActive={isMapActive}
+              setIsMapActive={setIsMapActive}
+            />
+          </View>
+        ))}
+      </Animated.ScrollView>
+
+      {/* Top Bar with Indicators, Login/Logout - ALWAYS VISIBLE */}
+      <View 
+        style={styles.topBar}
+        pointerEvents="box-none"
+      >
+        <View style={styles.topBarContent}>
+          <View style={styles.spacer} />
+          
+          {/* Pagination Indicators - HIGHLY VISIBLE */}
+          <View style={styles.indicatorContainer}>
+            {PAGES.map((_, dotIdx) => (
+              <TouchableOpacity
+                key={dotIdx}
+                onPress={() => onNavigateToPage(dotIdx)}
+                style={[
+                  styles.indicator,
+                  activePageIndex === dotIdx && styles.indicatorActive
+                ]}
               />
             ))}
           </View>
 
-          {/* Vertical Hint Button */}
-          <Animated.View 
-            style={useAnimatedStyle(() => ({
-              opacity: interpolate(isMapActive ? 1 : 0, [0, 1], [1, 0]),
-            }))}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30"
-          >
+          {/* Login/Logout Buttons */}
+          <View style={styles.buttonContainer}>
+            {isLoggedIn && (
+              <TouchableOpacity 
+                onPress={handleLogout}
+                style={styles.logoutButton}
+              >
+                <Text style={styles.logoutButtonText}>Logout</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity 
-              className="flex flex-col items-center gap-1 pointer-events-auto"
-              onPress={onBookNow}
+              onPress={isLoggedIn ? onBookNow : onLoginClick}
+              style={styles.loginButton}
             >
-              <Text className="text-[8px] font-black text-emerald-400/30 uppercase tracking-[0.5em]">Reserve Now</Text>
-              <View className="animate-bounce">
-                <Text className="fa-solid fa-chevron-down text-emerald-400/30" />
-              </View>
-            </TouchableOpacity>
-          </Animated.View>
-
-          {/* Exit Map */}
-          {isMapActive && (
-            <TouchableOpacity 
-              onPress={() => setIsMapActive(false)}
-              className="absolute top-28 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 bg-emerald-950 rounded-full border border-emerald-500/50"
-            >
-              <Text className="text-emerald-50 font-black text-[10px] uppercase tracking-widest">
-                Exit Exploration
+              <Text style={styles.loginButtonText}>
+                {isLoggedIn ? 'Sessions' : 'Login'}
               </Text>
             </TouchableOpacity>
-          )}
+          </View>
         </View>
-      </GestureDetector>
-    );
-  };
+      </View>
 
-const ContentSlide = ({ page, index, scrollX, onBookNow, isMapActive, setIsMapActive }: any) => {
+      {/* Vertical Hint Button - Show on all pages except map */}
+      <Animated.View 
+        style={useAnimatedStyle(() => ({
+          opacity: interpolate(scrollX.value, [2.5, 3], [1, 0], Extrapolation.CLAMP),
+          pointerEvents: scrollX.value > 2.5 ? 'none' : 'auto',
+        }))}
+      >
+        <TouchableOpacity 
+          style={styles.reserveButton}
+          onPress={onBookNow}
+        >
+          <Text style={styles.reserveButtonText}>Reserve Now</Text>
+          <Text style={styles.reserveIcon}>↓</Text>
+        </TouchableOpacity>
+      </Animated.View>
+
+      {/* Exit Map Button */}
+      {isMapActive && (
+        <TouchableOpacity 
+          onPress={() => setIsMapActive(false)}
+          style={styles.exitMapButton}
+        >
+          <Text style={styles.exitMapButtonText}>Exit Exploration</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+};
+
+interface ContentSlideProps {
+  page: typeof PAGES[0];
+  index: number;
+  scrollX: ReturnType<typeof useSharedValue<number>>;
+  SCREEN_WIDTH: number;
+  onBookNow: () => void;
+  isMapActive: boolean;
+  setIsMapActive: (active: boolean) => void;
+}
+
+const ContentSlide: React.FC<ContentSlideProps> = ({ 
+  page, 
+  index, 
+  scrollX, 
+  SCREEN_WIDTH,
+  onBookNow, 
+  isMapActive, 
+  setIsMapActive 
+}) => {
   const animatedStyle = useAnimatedStyle(() => {
+    const inputRange = [index - 1, index, index + 1];
+    
+    // Simple fade in/out - NO translateX, NO vertical movement
     const opacity = interpolate(
       scrollX.value,
-      [index - 0.5, index, index + 0.5],
+      inputRange,
       [0, 1, 0],
       Extrapolation.CLAMP
     );
-    
-    const translateY = interpolate(
-      scrollX.value,
-      [index - 0.5, index, index + 0.5],
-      [20, 0, -20],
-      Extrapolation.CLAMP
-    );
 
+    // Keep content visible over map until map is fully interactive
+    const finalOpacity = (isMapActive && index === 3) ? 0 : opacity;
+    
     return {
-      opacity: isMapActive ? 0 : opacity,
-      transform: [{ translateY }],
-      display: opacity === 0 ? 'none' : 'flex'
+      opacity: finalOpacity,
     };
   });
 
   return (
     <Animated.View 
-      style={animatedStyle}
-      className="absolute top-0 left-0 right-0 bottom-0 flex flex-col items-center justify-center text-center px-6"
+      style={[styles.slideContent, animatedStyle]}
     >
-      <View className="py-2 px-5 bg-emerald-400/10 border border-emerald-400/20 rounded-full mb-4">
-        <Text className="text-emerald-400 text-[9px] font-black uppercase tracking-[0.4em]">
-          {page.badge}
-        </Text>
+      <View style={styles.badgeContainer}>
+        <Text style={styles.badgeText}>{page.badge}</Text>
       </View>
-      <Text className="text-4xl md:text-8xl font-black text-white leading-none tracking-tighter mb-6 italic uppercase">
-        {page.subtitle}
-      </Text>
-      <Text className="max-w-xl mx-auto text-white/70 text-sm md:text-lg font-light leading-relaxed mb-8">
-        {page.description}
-      </Text>
+      <Text style={styles.subtitle}>{page.subtitle}</Text>
+      <Text style={styles.description}>{page.description}</Text>
 
       {index === 3 ? (
         <TouchableOpacity 
           onPress={() => setIsMapActive(true)}
-          className="px-8 py-4 bg-emerald-900/40 border border-emerald-400/30 rounded-2xl hover:bg-emerald-400 transition-all backdrop-blur-xl pointer-events-auto"
+          style={styles.exploreButton}
         >
-          <Text className="text-emerald-50 font-black text-sm uppercase">Explore Facility</Text>
+          <Text style={styles.exploreButtonText}>Explore Facility</Text>
         </TouchableOpacity>
       ) : (
         <TouchableOpacity 
           onPress={onBookNow}
-          className="px-10 py-5 bg-emerald-400 rounded-2xl shadow-2xl hover:bg-white transition-all active:scale-95 pointer-events-auto"
+          style={styles.bookButton}
         >
-          <Text className="text-emerald-950 font-black text-sm uppercase">View Available Times</Text>
+          <Text style={styles.bookButtonText}>View Available Times</Text>
         </TouchableOpacity>
       )}
     </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#022c22',
+  },
+  topBar: {
+    zIndex: 2000,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  topBarContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    paddingBottom: 20,
+  },
+  spacer: {
+    flex: 1,
+  },
+  indicatorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: 'rgba(2, 44, 34, 0.95)',
+    borderWidth: 2,
+    borderColor: '#10B981',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  indicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: 'rgba(16, 185, 129, 0.5)',
+  },
+  indicatorActive: {
+    width: 56,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#10B981',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  buttonContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+  },
+  logoutButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+  },
+  logoutButtonText: {
+    color: '#FCA5A5',
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  loginButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: '#10B981',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  loginButtonText: {
+    color: '#022c22',
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+  },
+  slideContent: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  badgeContainer: {
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+    borderRadius: 999,
+    marginBottom: 16,
+  },
+  badgeText: {
+    color: '#10B981',
+    fontSize: 9,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 4,
+  },
+  subtitle: {
+    fontSize: 48,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    lineHeight: 56,
+    letterSpacing: -2,
+    marginBottom: 24,
+    textTransform: 'uppercase',
+    fontStyle: 'italic',
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 12,
+  },
+  description: {
+    maxWidth: 600,
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.95)',
+    fontWeight: '300',
+    lineHeight: 24,
+    marginBottom: 32,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+  },
+  exploreButton: {
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(2, 44, 34, 0.4)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderRadius: 20,
+  },
+  exploreButtonText: {
+    color: '#ECFDF5',
+    fontSize: 14,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  bookButton: {
+    paddingHorizontal: 40,
+    paddingVertical: 20,
+    backgroundColor: '#10B981',
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+  bookButtonText: {
+    color: '#022c22',
+    fontSize: 14,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  reserveButton: {
+    position: 'absolute',
+    bottom: 32,
+    alignSelf: 'center',
+    alignItems: 'center',
+    gap: 4,
+    zIndex: 100,
+  },
+  reserveButtonText: {
+    fontSize: 8,
+    fontWeight: '900',
+    color: 'rgba(16, 185, 129, 0.7)',
+    textTransform: 'uppercase',
+    letterSpacing: 8,
+  },
+  reserveIcon: {
+    fontSize: 28,
+    color: 'rgba(16, 185, 129, 0.7)',
+    fontWeight: '900',
+  },
+  exitMapButton: {
+    position: 'absolute',
+    top: 112,
+    alignSelf: 'center',
+    zIndex: 200,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: '#022c22',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.5)',
+  },
+  exitMapButtonText: {
+    color: '#ECFDF5',
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+  },
+});
 
 export default ClientLanding;

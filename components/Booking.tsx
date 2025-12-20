@@ -4,6 +4,7 @@ import { SERVICES } from '../constants';
 import { Service, Appointment } from '../types';
 import { CalendarService } from '../services/calendarService';
 import { auth, isDemo } from '../firebaseConfig';
+import { useUser } from '../UserContext';
 
 interface Slot {
   id: string;
@@ -17,6 +18,7 @@ interface BookingProps {
 }
 
 const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
+  const { user } = useUser();
   const [isSuccess, setIsSuccess] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [confirmedDetails, setConfirmedDetails] = useState<string>('');
@@ -50,11 +52,14 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
   }, [isSuccess]);
 
   useEffect(() => {
-    const user = auth?.currentUser;
-    if (user && !formData.name) {
-      setFormData(prev => ({ ...prev, name: user.displayName || '', email: user.email || '' }));
+    if (user) {
+      setFormData(prev => ({ 
+        ...prev, 
+        name: user.name || prev.name, 
+        email: user.email || prev.email 
+      }));
     }
-  }, []);
+  }, [user]);
 
   // Animate layout changes when activeSlotId changes
   useEffect(() => {

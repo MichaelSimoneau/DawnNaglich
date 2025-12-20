@@ -61,6 +61,11 @@ const SnowParticles = () => {
 };
 
 const SnowOverlay: React.FC = () => {
+  // Only render on web platform
+  if (Platform.OS !== 'web') {
+    return null;
+  }
+
   return (
     <View 
       style={[

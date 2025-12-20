@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Linking } from 'react-native';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebaseConfig';
 import { Appointment } from '../types';
 import { CalendarService } from '../services/calendarService';
 import AdminVoiceAssistant from './AdminVoiceAssistant';
@@ -48,9 +50,17 @@ const AdminDashboard: React.FC = () => {
             <Text style={styles.title}>Dawn's Studio</Text>
             <Text style={styles.subtitle}>Daily Management & Alignment</Text>
           </View>
-          <TouchableOpacity style={styles.voiceBtn} onPress={() => setShowVoice(true)}>
-            <Text className="fa-solid fa-microphone text-white text-xl" />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity 
+              style={styles.logoutBtn} 
+              onPress={() => { if (auth) signOut(auth); }}
+            >
+              <Text style={styles.logoutBtnText}>Logout</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.voiceBtn} onPress={() => setShowVoice(true)}>
+              <Text className="fa-solid fa-microphone text-white text-xl" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.card}>
@@ -131,6 +141,9 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 },
   title: { fontSize: 32, fontWeight: '900', color: '#064E3B', letterSpacing: -1 },
   subtitle: { fontSize: 12, fontWeight: '600', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1.5, marginTop: 4 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  logoutBtn: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' },
+  logoutBtnText: { color: '#EF4444', fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 },
   voiceBtn: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#059669', justifyContent: 'center', alignItems: 'center' },
   card: { backgroundColor: '#F8FAFC', borderRadius: 32, padding: 24, borderWidth: 1, borderColor: '#ECFDF5' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
