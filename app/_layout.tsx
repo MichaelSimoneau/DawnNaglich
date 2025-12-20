@@ -61,12 +61,12 @@ function RootLayoutContent() {
             >
               <i className={`fa-solid fa-snowflake ${isSnowing ? 'text-white' : 'text-emerald-400'} text-lg`}></i>
             </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={() => setIsAssistantOpen(true)} 
-              className="w-[60px] h-[60px] rounded-full bg-emerald-600 items-center justify-center shadow-lg shadow-emerald-600/50"
-            >
-              <i className="fa-solid fa-wand-magic-sparkles text-white text-xl"></i>
-            </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => setIsAssistantOpen(true)} 
+            className="w-[60px] h-[60px] rounded-full bg-emerald-600 items-center justify-center"
+          >
+            <i className="fa-solid fa-wand-magic-sparkles text-white text-xl"></i>
+          </TouchableOpacity>
           </View>
         )}
 

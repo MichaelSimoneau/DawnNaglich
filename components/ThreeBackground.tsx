@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Image } from '@react-three/drei';
 import * as THREE from 'three';
-import { PAGES } from './ClientLanding';
+import { PAGES } from '../content';
 
 interface ThreeBackgroundProps {
   progress: number; // 0 to 3

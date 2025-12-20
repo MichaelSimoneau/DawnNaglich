@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   serviceChipTextActive: { color: '#FFF' },
 
   formActions: { marginTop: 20, gap: 12, paddingBottom: 20 },
-  submitBtn: { backgroundColor: '#059669', padding: 22, borderRadius: 18, alignItems: 'center', shadowColor: '#059669', shadowOpacity: 0.2, shadowRadius: 10 },
+  submitBtn: { backgroundColor: '#059669', padding: 22, borderRadius: 18, alignItems: 'center' },
   submitBtnText: { color: '#FFF', fontWeight: '900', fontSize: 15, textTransform: 'uppercase', letterSpacing: 1 },
   cancelBtn: { padding: 15, alignItems: 'center' },
   cancelBtnText: { color: '#94A3B8', fontWeight: '800', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 },

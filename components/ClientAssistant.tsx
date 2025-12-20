@@ -219,7 +219,6 @@ const styles = StyleSheet.create({
     position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: 'rgba(2, 44, 34, 0.98)',
     borderTopLeftRadius: 32, borderTopRightRadius: 32,
-    shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 30,
     elevation: 30, zIndex: 2000, borderTopWidth: 1, borderColor: 'rgba(16, 185, 129, 0.1)',
     backdropFilter: 'blur(30px)'
   } as any,

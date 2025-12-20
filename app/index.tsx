@@ -4,7 +4,8 @@ import { Head } from 'expo-router';
 import { useUser } from '../UserContext';
 
 import Login from '../components/Login';
-import ClientLanding, { PAGES } from '../components/ClientLanding';
+import ClientLanding from '../components/ClientLanding';
+import { PAGES } from '../content';
 import Booking from '../components/Booking';
 import Footer from '../components/Footer';
 
@@ -72,24 +73,25 @@ export default function Home() {
       <View className="fixed top-0 left-0 right-0 z-[110] px-6 pt-8 pb-5 flex-row items-center justify-between pointer-events-none">
         <View className="flex-1" /> {/* Spacer for Logo in _layout */}
 
-        {/* Page Indicators in Center */}
         <View className="flex-row items-center gap-3 px-6 py-3 rounded-full bg-emerald-950/40 backdrop-blur-xl border border-emerald-500/10 pointer-events-auto">
           {PAGES.map((_, dotIdx) => (
-            <button
+            <TouchableOpacity
               key={dotIdx}
-              onClick={() => setActiveLandingPage(dotIdx)}
-              className={`h-2 rounded-full transition-all duration-500 ${activeLandingPage === dotIdx ? 'w-10 bg-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'w-2 bg-emerald-400/20'}`}
+              onPress={() => setActiveLandingPage(dotIdx)}
+              className={`h-2 rounded-full transition-all duration-500 ${activeLandingPage === dotIdx ? 'w-10 bg-emerald-400' : 'w-2 bg-emerald-400/20'}`}
             />
           ))}
         </View>
 
         <View className="flex-1 flex-row justify-end pointer-events-auto">
-          <button 
-            onClick={() => user ? scrollToAgenda() : setShowLogin(true)}
-            className="px-5 py-2 bg-emerald-400 text-emerald-950 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-xl active:scale-95"
+          <TouchableOpacity 
+            onPress={() => user ? scrollToAgenda() : setShowLogin(true)}
+            className="px-5 py-2 bg-emerald-400 rounded-xl hover:bg-white transition-all active:scale-95"
           >
-            {user ? 'My Sessions' : 'Login'}
-          </button>
+            <Text className="text-emerald-950 text-[10px] font-black uppercase tracking-widest">
+              {user ? 'My Sessions' : 'Login'}
+            </Text>
+          </TouchableOpacity>
           {user && <View className="w-12" />} {/* Spacer for Logout icon in _layout */}
         </View>
       </View>
