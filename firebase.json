@@ -30,6 +30,22 @@
     ],
     "rewrites": [
       {
+        "source": "/api/getCalendarEventsSecure",
+        "function": "getCalendarEventsSecure"
+      },
+      {
+        "source": "/api/createCalendarEventSecure",
+        "function": "createCalendarEventSecure"
+      },
+      {
+        "source": "/api/confirmCalendarEventSecure",
+        "function": "confirmCalendarEventSecure"
+      },
+      {
+        "source": "/api/cancelCalendarEventSecure",
+        "function": "cancelCalendarEventSecure"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

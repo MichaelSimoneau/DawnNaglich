@@ -25,13 +25,13 @@ const Logo: React.FC<LogoProps> = ({ size = 42, color = '#10B981', onPress }) =>
           toValue: 1.04,
           duration: 3000,
           easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.timing(pulse, {
           toValue: 1,
           duration: 3000,
           easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ])
     ).start();

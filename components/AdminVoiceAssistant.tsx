@@ -31,7 +31,7 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     // Entrance animation
     Animated.spring(slideAnim, {
       toValue: 0,
-      useNativeDriver: true,
+      useNativeDriver: false,
       tension: 40,
       friction: 8
     }).start();
@@ -39,8 +39,8 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     // Pulse animation for the orb
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.1, duration: 1200, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.1, duration: 1200, useNativeDriver: false }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: false }),
       ])
     ).start();
 
@@ -236,7 +236,7 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     Animated.timing(slideAnim, {
       toValue: SCREEN_HEIGHT,
       duration: 300,
-      useNativeDriver: true
+      useNativeDriver: false
     }).start(() => onClose());
   };
 
