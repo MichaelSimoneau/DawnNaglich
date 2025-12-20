@@ -1,0 +1,9 @@
+{
+  "requestFramePermissions": [
+    "microphone",
+    "camera",
+    "geolocation"
+  ],
+  "name": "Dawn Naglich Wellness & Muscle Activation",
+  "description": ""
+}
