@@ -29,3 +29,4 @@ dist-ssr
 *.sw?
 firebase-config.json
 dawn-naglich-firebase.json
+.firebase/*
