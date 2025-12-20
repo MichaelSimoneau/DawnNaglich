@@ -20,7 +20,8 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [confirmedDetails, setConfirmedDetails] = useState<string>('');
-  const [mockBookings, setMockBookings] = useState<Appointment[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
   
   // Persistent Form State
   const [formData, setFormData] = useState({
@@ -31,13 +32,21 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
   });
 
   useEffect(() => {
-    const fetchMockStatus = async () => {
-      if (isDemo) {
-        const events = await CalendarService.getEventsSecure('', '');
-        setMockBookings(CalendarService.mapGoogleEventsToAppointments(events));
+    const fetchAvailability = async () => {
+      setIsLoadingAvailability(true);
+      try {
+        const now = new Date();
+        const timeMin = new Date(now.setHours(0, 0, 0, 0)).toISOString();
+        const timeMax = new Date(now.setDate(now.getDate() + 30)).toISOString();
+        const events = await CalendarService.getEventsSecure(timeMin, timeMax);
+        setAppointments(CalendarService.mapGoogleEventsToAppointments(events));
+      } catch (e) {
+        console.error("Failed to fetch availability:", e);
+      } finally {
+        setIsLoadingAvailability(false);
       }
     };
-    fetchMockStatus();
+    fetchAvailability();
   }, [isSuccess]);
 
   useEffect(() => {
@@ -76,11 +85,21 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
   };
 
   const isSlotTaken = (day: Date, time: string) => {
-    return mockBookings.some(b => {
+    return appointments.some(b => {
       const bDate = new Date(b.startTime);
       const isSameDay = bDate.toDateString() === day.toDateString();
-      const bTime = bDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
-      return isSameDay && bTime.trim().toLowerCase() === time.trim().toLowerCase();
+      
+      // Parse the slot time
+      const [timeStr, ampm] = time.split(' ');
+      let [hour, minute] = timeStr.split(':').map(Number);
+      if (ampm === 'PM' && hour !== 12) hour += 12;
+      if (ampm === 'AM' && hour === 12) hour = 0;
+      
+      const bHour = bDate.getHours();
+      const bMinute = bDate.getMinutes();
+      
+      // Simple exact match for now, or could check overlap if appointments have duration
+      return isSameDay && bHour === hour && bMinute === minute;
     });
   };
 
@@ -91,10 +110,22 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
     setIsBooking(true);
     
     try {
+      // Parse the slot time accurately
+      const [timeStr, ampm] = slot.time.split(' ');
+      let [hour, minute] = timeStr.split(':').map(Number);
+      if (ampm === 'PM' && hour !== 12) hour += 12;
+      if (ampm === 'AM' && hour === 12) hour = 0;
+      
+      const startTime = new Date(slot.day);
+      startTime.setHours(hour, minute, 0, 0);
+      
+      const endTime = new Date(startTime.getTime() + service.duration * 60000);
+
       const result = await CalendarService.createEventSecure({
         clientName: formData.name || "Valued Client",
         service: service.title,
-        startTime: new Date(slot.day.setHours(parseInt(slot.time), 0)).toISOString(),
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
       });
       if (result.success) {
         setIsSuccess(true);
@@ -130,6 +161,11 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
   return (
     // overflow-visible is crucial for sticky children to work
     <View style={[styles.container, { overflow: 'visible' }]}>
+      {isLoadingAvailability && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#059669" />
+        </View>
+      )}
       <div className="w-full bg-white">
         {generateDays().map((day, dIdx) => (
           <div key={dIdx} className="w-full relative">
@@ -323,6 +359,14 @@ const styles = StyleSheet.create({
   cancelBtnText: { color: '#94A3B8', fontWeight: '800', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 },
   
   successContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, minHeight: 450, backgroundColor: '#FFF' },
+  loadingOverlay: { 
+    position: 'absolute', 
+    top: 0, left: 0, right: 0, bottom: 0, 
+    backgroundColor: 'rgba(255,255,255,0.7)', 
+    zIndex: 1000, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
   successTitle: { fontSize: 32, fontWeight: '900', color: '#064E3B', marginBottom: 8 },
   successSub: { fontSize: 15, color: '#64748B', textAlign: 'center', lineHeight: 22, marginBottom: 35, maxWidth: 280 },
   backBtn: { backgroundColor: '#064E3B', paddingHorizontal: 36, paddingVertical: 18, borderRadius: 14 },

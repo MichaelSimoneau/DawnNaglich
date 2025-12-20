@@ -3,8 +3,7 @@ import { Service } from './types';
 
 export const ADMIN_EMAILS = [
   'dawn.naglich@gmail.com',
-  'michael@brainycouch.com',
-  'don.negligent@gmail.com'
+  'michael@brainycouch.com'
 ];
 
 export const SERVICES: Service[] = [

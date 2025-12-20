@@ -87,19 +87,7 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{isSignUp ? 'Create an Account' : 'Secure Sign In'}</Text>
 
-          {isDemo && (
-            <View style={styles.demoSection}>
-              <Text style={styles.demoLabel}>Demo Shortcuts</Text>
-              <View style={styles.demoBtnRow}>
-                <TouchableOpacity onPress={() => handleDemoLogin(UserRole.ADMIN)} style={styles.demoAdminBtn}>
-                  <Text style={styles.demoBtnText}>Login as Dawn</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDemoLogin(UserRole.CLIENT)} style={styles.demoClientBtn}>
-                  <Text style={styles.demoBtnText}>Login as Client</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+          {/* Demo shortcuts removed for production fruition */}
 
           <TouchableOpacity 
             style={styles.googleBtn}

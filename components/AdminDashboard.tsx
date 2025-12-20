@@ -56,7 +56,12 @@ const AdminDashboard: React.FC = () => {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>Today's Agenda</Text>
-            {loading && <ActivityIndicator size="small" color="#10B981" />}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <TouchableOpacity onPress={fetchCalendar} disabled={loading}>
+                <i className={`fa-solid fa-arrows-rotate ${loading ? 'animate-spin' : ''} text-emerald-600 text-sm`}></i>
+              </TouchableOpacity>
+              {loading && <ActivityIndicator size="small" color="#10B981" />}
+            </View>
           </View>
 
           {appointments.length === 0 && !loading ? (
