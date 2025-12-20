@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import { Head } from 'expo-router';
+import Head from 'expo-router/head';
 import { useUser } from '../UserContext';
 
 import Login from '../components/Login';
