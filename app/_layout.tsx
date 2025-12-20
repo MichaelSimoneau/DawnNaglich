@@ -1,4 +1,5 @@
 import '../global.css';
+import 'react-native-reanimated';
 import React, { useState } from 'react';
 import { View, StatusBar, TouchableOpacity, Text, SafeAreaView, ActivityIndicator, Platform } from 'react-native';
 import { Stack } from 'expo-router';
@@ -51,6 +52,24 @@ function RootLayoutContent() {
         </View>
 
         <Stack screenOptions={{ headerShown: false }} />
+
+        {/* FABs */}
+        {!isAssistantOpen && (
+          <View className="absolute bottom-10 right-8 gap-4 z-[1001] items-center">
+            <TouchableOpacity 
+              onPress={() => setIsSnowing(!isSnowing)} 
+              className={`w-12 h-12 rounded-full items-center justify-center border ${isSnowing ? 'bg-emerald-400 border-white' : 'bg-emerald-950/90 border-emerald-400/40'}`}
+            >
+              <Text className={`fa-solid fa-snowflake ${isSnowing ? 'text-white' : 'text-emerald-400'} text-lg`} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => setIsAssistantOpen(true)} 
+              className="w-[60px] h-[60px] rounded-full bg-emerald-600 items-center justify-center"
+            >
+              <Text className="fa-solid fa-wand-magic-sparkles text-white text-xl" />
+            </TouchableOpacity>
+          </View>
+        )}
 
         <ClientAssistant isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} />
       </SafeAreaView>

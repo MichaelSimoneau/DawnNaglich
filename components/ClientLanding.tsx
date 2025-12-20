@@ -34,7 +34,6 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
   const [isMapActive, setIsMapActive] = useState(false);
   const scrollX = useSharedValue(activePageIndex);
   const context = useSharedValue(0);
-  const [progress, setProgress] = useState(activePageIndex);
 
   useEffect(() => {
     // Only spring if we are not currently dragging
@@ -54,7 +53,7 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
         
         const currentIndex = Math.round(scrollX.value);
         if (currentIndex !== activePageIndex) {
-          onNavigateToPage(currentIndex);
+          runOnJS(onNavigateToPage)(currentIndex);
         }
       }
     };
@@ -62,14 +61,6 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
     window.addEventListener('wheel', handleWheel, { passive: false });
     return () => window.removeEventListener('wheel', handleWheel);
   }, [activePageIndex, onNavigateToPage]);
-
-  // Sync reanimated shared value to React state for Three.js
-  useAnimatedReaction(
-    () => scrollX.value,
-    (current) => {
-      runOnJS(setProgress)(current);
-    }
-  );
 
   const panGesture = Gesture.Pan()
     .onStart(() => {
@@ -98,7 +89,7 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
       <GestureDetector gesture={panGesture}>
         <View className="relative w-full h-full bg-emerald-950 overflow-hidden">
             
-            {/* <ThreeBackground progress={progress} /> */}
+            <ThreeBackground progress={scrollX} />
 
             {/* Map Section for index 3 */}
           <Animated.View 
@@ -116,7 +107,7 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
           </Animated.View>
 
           {/* Content Overlay */}
-          <View className="absolute inset-0 z-20 pointer-events-none">
+          <View className="absolute top-0 left-0 right-0 bottom-0 z-20 pointer-events-none">
             {PAGES.map((page, idx) => (
               <ContentSlide 
                 key={page.id}
@@ -190,7 +181,7 @@ const ContentSlide = ({ page, index, scrollX, onBookNow, isMapActive, setIsMapAc
   return (
     <Animated.View 
       style={animatedStyle}
-      className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
+      className="absolute top-0 left-0 right-0 bottom-0 flex flex-col items-center justify-center text-center px-6"
     >
       <View className="py-2 px-5 bg-emerald-400/10 border border-emerald-400/20 rounded-full mb-4">
         <Text className="text-emerald-400 text-[9px] font-black uppercase tracking-[0.4em]">

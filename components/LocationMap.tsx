@@ -14,14 +14,26 @@ const LocationMap: React.FC<{ isInteractive: boolean }> = ({ isInteractive }) =>
       <View 
         className={`absolute inset-0 transition-all duration-700 ${isInteractive ? 'opacity-100 pointer-events-auto' : 'opacity-60 pointer-events-none grayscale contrast-125'}`}
       >
-        <iframe
-          width="100%"
-          height="100%"
-          frameBorder="0"
-          style={{ border: 0 }}
-          src={`https://www.google.com/maps?q=${encodeURIComponent(ADDRESS)}&output=embed&z=15&t=m&hl=en`}
-          allowFullScreen
-        ></iframe>
+        {Platform.OS === 'web' ? (
+          /* Web-specific implementation using iframe wrapped in a View */
+          <View style={{ flex: 1 }}>
+            <iframe
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              style={{ border: 0 }}
+              src={`https://www.google.com/maps?q=${encodeURIComponent(ADDRESS)}&output=embed&z=15&t=m&hl=en`}
+              allowFullScreen
+            />
+          </View>
+        ) : (
+          /* Placeholder for Native - would use WebView if installed */
+          <View className="flex-1 items-center justify-center bg-emerald-900">
+            <Text className="text-emerald-100/50 uppercase tracking-widest text-[10px]">
+              Map viewing available on web
+            </Text>
+          </View>
+        )}
       </View>
       
       {!isInteractive && (

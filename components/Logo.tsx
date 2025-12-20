@@ -51,7 +51,6 @@ const Logo: React.FC<LogoProps> = ({ size = 42, color = '#10B981', onPress }) =>
                 color: '#FFFFFF',
                 letterSpacing: 4,
                 textTransform: 'uppercase',
-                // Simulate stroke with shadow or just use simple text
                 textShadowColor: color,
                 textShadowOffset: { width: 0, height: 0 },
                 textShadowRadius: 2,

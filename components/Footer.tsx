@@ -1,9 +1,13 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Linking } from 'react-native';
 import { Link } from 'expo-router';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+
+  const openInstagram = () => {
+    Linking.openURL('https://instagram.com/dawn_naglich');
+  };
 
   return (
     <View className="w-full bg-emerald-950 px-10 py-20 border-t border-emerald-900">
@@ -32,9 +36,7 @@ const Footer: React.FC = () => {
               </Text>
             </TouchableOpacity>
           </Link>
-          <TouchableOpacity 
-            onPress={() => window.open('https://instagram.com/dawn_naglich', '_blank')}
-          >
+          <TouchableOpacity onPress={openInstagram}>
             <Text className="text-emerald-100/60 text-[10px] font-black uppercase tracking-widest hover:text-emerald-400 transition-colors">
               Instagram
             </Text>
