@@ -30,5 +30,6 @@ module.exports = {
     "import/no-unresolved": 0,
     "indent": ["error", 2],
     "object-curly-spacing": ["warn", "never"],
+    "max-len": ["warn", { "code": 120 }],
   },
 };
