@@ -11,7 +11,6 @@ import { UserProvider, useUser } from '../UserContext';
 
 import AdminDashboard from '../components/AdminDashboard';
 import ClientAssistant from '../components/ClientAssistant';
-import Logo from '../components/Logo';
 import Login from '../components/Login';
 
 // Lazy load SnowOverlay to avoid Three.js import issues
@@ -63,29 +62,6 @@ function RootLayoutContent() {
             <SnowOverlay />
           </React.Suspense>
         )}
-        
-        {/* Shared Navigation */}
-        <View className="fixed top-0 left-0 right-0 z-[50] flex-row items-center justify-between px-6 pt-8 pb-5 backdrop-blur-3xl bg-emerald-950/80 border-b border-emerald-500/20 safe-top">
-          <View className="flex-row items-center gap-4 lg:gap-8">
-            <Logo color="#10B981" size={Platform.OS === 'web' ? 42 : 36} />
-          </View>
-
-          <View className="flex-row items-center gap-3 lg:gap-5">
-            {user ? (
-              <TouchableOpacity onPress={handleLogout} className="p-2 opacity-50">
-                <Text className="fa-solid fa-power-off text-emerald-400" />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity 
-                onPress={() => setShowLogin(true)} 
-                className="px-4 py-2 bg-emerald-600 rounded-lg"
-                activeOpacity={0.8}
-              >
-                <Text className="text-white font-semibold text-sm">Login</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
 
         <Stack screenOptions={{ headerShown: false }} />
 

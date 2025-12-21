@@ -12,6 +12,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 import LocationMap from './LocationMap';
 import LandingPage from './LandingPage';
+import Logo from './Logo';
 import { PAGES } from '../content';
 
 interface ClientLandingProps {
@@ -37,18 +38,36 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
   useEffect(() => {
     scrollX.value = activePageIndex;
     const targetPos = activePageIndex * SCREEN_WIDTH;
-    scrollViewRef.current?.scrollTo({ x: targetPos, animated: true });
+    // Use requestAnimationFrame to ensure scroll happens after render
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollTo({ x: targetPos, animated: false });
+    });
     if (activePageIndex !== 3) setIsMapActive(false);
   }, [activePageIndex, SCREEN_WIDTH]);
+
+  const snapToPage = (index: number) => {
+    const clampedIndex = Math.max(0, Math.min(index, PAGES.length - 1));
+    const expectedOffset = clampedIndex * SCREEN_WIDTH;
+    scrollViewRef.current?.scrollTo({ x: expectedOffset, animated: true });
+    onNavigateToPage(clampedIndex);
+  };
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollX.value = event.contentOffset.x / SCREEN_WIDTH;
     },
     onMomentumScrollEnd: (event) => {
-      const index = Math.round(event.contentOffset.x / SCREEN_WIDTH);
+      const currentOffset = event.contentOffset.x;
+      const index = Math.round(currentOffset / SCREEN_WIDTH);
       const clampedIndex = Math.max(0, Math.min(index, PAGES.length - 1));
-      runOnJS(onNavigateToPage)(clampedIndex);
+      const expectedOffset = clampedIndex * SCREEN_WIDTH;
+      
+      // If scroll didn't complete to exact position, snap to it
+      if (Math.abs(currentOffset - expectedOffset) > 1) {
+        runOnJS(snapToPage)(clampedIndex);
+      } else {
+        runOnJS(onNavigateToPage)(clampedIndex);
+      }
     }
   });
 
@@ -110,8 +129,10 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
         pointerEvents="box-none"
       >
         <View style={styles.topBarContent}>
-          {/* Left spacer */}
-          <View style={styles.spacer} />
+          {/* Logo - LEFT SIDE */}
+          <View style={styles.logoContainer} pointerEvents="auto">
+            <Logo color="#10B981" size={Platform.OS === 'web' ? 42 : 36} />
+          </View>
           
           {/* Pagination Indicators - CENTERED AND HIGHLY VISIBLE */}
           <View style={styles.indicatorContainer}>
@@ -280,9 +301,11 @@ const styles = StyleSheet.create({
     zIndex: 3002,
     elevation: 3002,
   },
-  spacer: {
+  logoContainer: {
     flex: 1,
-    minWidth: 24,
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    minWidth: 60,
   },
   indicatorContainer: {
     flexDirection: 'row',
