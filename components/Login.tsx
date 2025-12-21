@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native';
 import { auth } from '../firebaseConfig';
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInWithCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { User } from '../types';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import { makeRedirectUri } from 'expo-auth-session';
+
+// Complete auth session for expo-auth-session
+if (Platform.OS !== 'web') {
+  WebBrowser.maybeCompleteAuthSession();
+}
 
 interface LoginProps {
   onLoginComplete?: (user: User) => void;
@@ -14,15 +22,56 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Configure Google OAuth for native platforms
+  const redirectUri = Platform.OS !== 'web' ? makeRedirectUri({
+    scheme: 'dawn-naglich-wellness',
+    path: 'auth',
+  }) : undefined;
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    scopes: [
+      'https://www.googleapis.com/auth/calendar',
+      'https://www.googleapis.com/auth/calendar.events',
+    ],
+    redirectUri,
+  });
+
+  // Handle native OAuth response
+  React.useEffect(() => {
+    if (response?.type === 'success' && Platform.OS !== 'web' && auth) {
+      const { id_token, access_token } = response.params;
+      if (id_token) {
+        const credential = GoogleAuthProvider.credential(id_token, access_token);
+        signInWithCredential(auth, credential).catch((error) => {
+          console.error("Firebase credential sign-in error:", error);
+          alert("Authentication failed. Please try again.");
+        });
+      }
+    }
+  }, [response]);
+
   const handleGoogleLogin = async () => {
     setLoading(true);
-    const provider = new GoogleAuthProvider();
-    provider.addScope('https://www.googleapis.com/auth/calendar');
-    provider.addScope('https://www.googleapis.com/auth/calendar.events');
-
+    
     try {
-      if (auth) {
-        await signInWithPopup(auth, provider);
+      if (Platform.OS === 'web') {
+        // Web: Use Firebase popup
+        if (auth) {
+          const provider = new GoogleAuthProvider();
+          provider.addScope('https://www.googleapis.com/auth/calendar');
+          provider.addScope('https://www.googleapis.com/auth/calendar.events');
+          await signInWithPopup(auth, provider);
+        }
+      } else {
+        // Native: Use expo-auth-session
+        if (request) {
+          await promptAsync();
+        } else {
+          alert("OAuth not configured. Please set EXPO_PUBLIC_GOOGLE_CLIENT_ID environment variables.");
+        }
       }
     } catch (error) {
       console.error("Google Auth Error:", error);

@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Dawn Naglich Wellness",
-    "slug": "dawn-naglich-wellness",
+    "slug": "dawn-naglich",
     "scheme": "dawn-naglich-wellness",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -19,7 +19,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.dawnnaglich.wellness",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Dawn needs microphone access for the Becky AI scheduling assistant."
+        "NSMicrophoneUsageDescription": "Dawn needs microphone access for the Becky AI scheduling assistant.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -39,12 +40,14 @@
     },
     "extra": {
       "eas": {
-        "projectId": "your-eas-project-id"
-      }
+        "projectId": "16065a72-fc14-4c7c-8feb-2bb5a44b2616"
+      },
+      "router": {}
     },
     "plugins": [
       "expo-asset",
       "expo-router"
-    ]
+    ],
+    "owner": "michael-simoneau"
   }
 }
