@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Linking, Platform } from 'react-native';
 
-const ADDRESS = "8430 Mayfield Rd., Chesterland, OH, 44024";
+const ADDRESS = "31005 Bainbridge Rd, Solon, OH 44139";
 const MAPS_URL = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ADDRESS)}`;
 
 const LocationMap: React.FC<{ isInteractive: boolean }> = ({ isInteractive }) => {

@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { GoogleGenAI } from '@google/genai';
 
-const FACILITY_ADDRESS = "8430 Mayfield Rd., Chesterland, OH, 44024";
+const FACILITY_ADDRESS = "31005 Bainbridge Rd, Solon, OH 44139";
 const DIRECTIONS_URL = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(FACILITY_ADDRESS)}`;
 
 type HeightState = 'min' | 'mid' | 'full';

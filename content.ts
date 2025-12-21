@@ -32,7 +32,7 @@ export const PAGES = [
     title: 'Connect',
     subtitle: 'START HEALING.',
     image: '', // Map used instead
-    description: 'Ready to realign? Visit our facility in Chesterland for a professional assessment and realignment.',
+    description: 'Ready to realign? Visit our facility in Solon for a professional assessment and realignment.',
     badge: 'Join the Community'
   }
 ];

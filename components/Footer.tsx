@@ -49,7 +49,7 @@ const Footer: React.FC = () => {
           &copy; {currentYear} Dawn Naglich Wellness. All rights reserved.
         </Text>
         <Text className="text-emerald-100/20 text-[9px] font-bold uppercase tracking-widest">
-          Chesterland, OH
+          Solon, OH
         </Text>
       </View>
     </View>

@@ -62,7 +62,7 @@ const TermsAndConditionsContent: React.FC = () => {
 
         <View className="mt-24 pt-12 border-t border-emerald-900">
           <Text className="text-emerald-100/30 text-[10px] font-bold uppercase tracking-widest">
-            Dawn Naglich Wellness | Chesterland, Ohio
+            Dawn Naglich Wellness | Solon, Ohio
           </Text>
         </View>
       </View>
