@@ -7,6 +7,7 @@ import {
   Linking,
   Platform,
 } from "react-native";
+import { FontAwesome6 } from "@expo/vector-icons";
 
 const ADDRESS = "31005 Bainbridge Rd, Solon, OH 44139";
 const MAPS_URL = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ADDRESS)}`;
@@ -48,7 +49,7 @@ const LocationMap: React.FC<{ isInteractive: boolean }> = ({
       {!isInteractive && (
         <View style={styles.overlay} pointerEvents="none">
           <View style={styles.markerCircle}>
-            <Text className="fa-solid fa-location-dot text-emerald-400 text-3xl" />
+            <FontAwesome6 name="location-dot" size={32} color="#10B981" />
           </View>
         </View>
       )}
@@ -60,7 +61,7 @@ const LocationMap: React.FC<{ isInteractive: boolean }> = ({
             onPress={handleGetDirections}
             style={styles.directionsBtn}
           >
-            <Text className="fa-solid fa-diamond-turn-right text-emerald-950 mr-3" />
+            <FontAwesome6 name="route" size={16} color="#022C22" style={{ marginRight: 12 }} />
             <Text style={styles.btnText}>Get Directions</Text>
           </TouchableOpacity>
         </View>

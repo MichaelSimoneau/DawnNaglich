@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { FontAwesome6 } from "@expo/vector-icons";
 import { auth } from "../firebaseConfig";
 import { signOut } from "firebase/auth";
 import { UserRole } from "../types";
@@ -102,8 +103,10 @@ function RootLayoutContent() {
                   }
                 : {})}
             >
-              <Text
-                className={`fa-solid fa-snowflake ${isSnowing ? "text-white" : "text-emerald-400"} text-lg`}
+              <FontAwesome6
+                name="snowflake"
+                size={18}
+                color={isSnowing ? "#FFFFFF" : "#10B981"}
               />
             </Pressable>
             <TouchableOpacity
@@ -111,7 +114,7 @@ function RootLayoutContent() {
               activeOpacity={0.7}
               className="w-[60px] h-[60px] rounded-full bg-emerald-600 items-center justify-center"
             >
-              <Text className="fa-solid fa-wand-magic-sparkles text-white text-xl" />
+              <FontAwesome6 name="wand-magic-sparkles" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         )}
@@ -128,7 +131,7 @@ function RootLayoutContent() {
               className="absolute top-[30px] left-[30px] z-[2001] flex-row items-center p-3 bg-white/5 rounded-[20px]"
               onPress={() => setShowLogin(false)}
             >
-              <Text className="fa-solid fa-arrow-left text-emerald-100" />
+              <FontAwesome6 name="arrow-left" size={14} color="#D1FAE5" />
               <Text className="text-white font-black text-[10px] uppercase tracking-[2px] ml-3">
                 Close
               </Text>

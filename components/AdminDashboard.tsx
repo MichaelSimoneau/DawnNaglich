@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Linking,
 } from "react-native";
+import { FontAwesome6 } from "@expo/vector-icons";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebaseConfig";
 import { Appointment } from "../types";
@@ -77,7 +78,7 @@ const AdminDashboard: React.FC = () => {
               style={styles.voiceBtn}
               onPress={() => setShowVoice(true)}
             >
-              <Text className="fa-solid fa-microphone text-white text-xl" />
+              <FontAwesome6 name="microphone" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </View>
@@ -87,8 +88,11 @@ const AdminDashboard: React.FC = () => {
             <Text style={styles.cardTitle}>Today's Agenda</Text>
             <View className="flex-row items-center gap-2">
               <TouchableOpacity onPress={fetchCalendar} disabled={loading}>
-                <Text
-                  className={`fa-solid fa-arrows-rotate ${loading ? "animate-spin" : ""} text-emerald-600 text-sm`}
+                <FontAwesome6
+                  name="rotate"
+                  size={14}
+                  color="#059669"
+                  style={loading ? { transform: [{ rotate: "180deg" }] } : undefined}
                 />
               </TouchableOpacity>
               {loading && <ActivityIndicator size="small" color="#10B981" />}
@@ -133,12 +137,12 @@ const AdminDashboard: React.FC = () => {
                         {processingId === appt.id ? (
                           <ActivityIndicator size="small" color="#FFF" />
                         ) : (
-                          <Text className="fa-solid fa-check text-white" />
+                          <FontAwesome6 name="check" size={16} color="#FFFFFF" />
                         )}
                       </TouchableOpacity>
                     ) : (
                       <View style={styles.confirmedBadge}>
-                        <Text className="fa-solid fa-check-double text-emerald-600" />
+                        <FontAwesome6 name="check-double" size={16} color="#059669" />
                       </View>
                     )}
                     <TouchableOpacity
@@ -146,7 +150,7 @@ const AdminDashboard: React.FC = () => {
                       disabled={!!processingId}
                       style={styles.cancelBtn}
                     >
-                      <Text className="fa-solid fa-trash-can text-red-300" />
+                      <FontAwesome6 name="trash" size={16} color="#FCA5A5" />
                     </TouchableOpacity>
                   </View>
                 </View>

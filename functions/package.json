@@ -1,7 +1,7 @@
 {
   "name": "functions",
   "scripts": {
-    "lint": "eslint --ext .js,.ts .",
+    "lint": "eslint .",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
@@ -17,7 +17,7 @@
   "dependencies": {
     "@google-cloud/functions-framework": "^4.0.1",
     "firebase-admin": "^13.6.0",
-    "firebase-functions": "^7.0.0",
+    "firebase-functions": "^7.0.2",
     "google-auth-library": "^10.5.0",
     "googleapis": "^169.0.0"
   },
@@ -29,7 +29,7 @@
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.25.4",
     "firebase-functions-test": "^3.4.1",
-    "typescript": "^5.7.3"
+    "typescript": "^5.1.6"
   },
   "private": true
 }

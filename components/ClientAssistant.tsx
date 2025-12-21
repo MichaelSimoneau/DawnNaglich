@@ -15,6 +15,7 @@ import {
   useWindowDimensions,
   ScrollView,
 } from "react-native";
+import { FontAwesome6 } from "@expo/vector-icons";
 import { GoogleGenAI } from "@google/genai";
 
 const FACILITY_ADDRESS = "31005 Bainbridge Rd, Solon, OH 44139";
@@ -217,10 +218,10 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               onPress={handleGetDirections}
               style={styles.actionIcon}
             >
-              <Text className="fa-solid fa-location-arrow text-emerald-400" />
+              <FontAwesome6 name="location-dot" size={16} color="#10B981" />
             </TouchableOpacity>
             <TouchableOpacity onPress={onClose} style={styles.actionIcon}>
-              <Text className="fa-solid fa-times text-emerald-200 opacity-40" />
+              <FontAwesome6 name="xmark" size={16} color="rgba(209, 250, 229, 0.4)" />
             </TouchableOpacity>
           </View>
         </View>
@@ -282,7 +283,7 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               (!input.trim() || loading) && { opacity: 0.5 },
             ]}
           >
-            <Text className="fa-solid fa-paper-plane text-emerald-950" />
+            <FontAwesome6 name="paper-plane" size={18} color="#022C22" />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

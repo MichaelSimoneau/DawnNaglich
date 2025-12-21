@@ -8,6 +8,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from "react-native";
+import { FontAwesome6 } from "@expo/vector-icons";
 import { useUser } from "../UserContext";
 
 import Login from "../components/Login";
@@ -78,7 +79,7 @@ export default function Home() {
           className="absolute top-[30px] left-[30px] z-[200] flex-row items-center p-3 bg-white/5 rounded-[20px]"
           onPress={() => setShowLogin(false)}
         >
-          <Text className="fa-solid fa-arrow-left text-emerald-100" />
+          <FontAwesome6 name="arrow-left" size={14} color="#D1FAE5" />
           <Text className="text-white font-black text-[10px] uppercase tracking-[2px] ml-3">
             Home
           </Text>

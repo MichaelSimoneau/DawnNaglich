@@ -8,6 +8,7 @@ import {
   TextInput,
   LayoutAnimation,
 } from "react-native";
+import { FontAwesome6 } from "@expo/vector-icons";
 import { SERVICES } from "../constants";
 import { Service, Appointment } from "../types";
 import { CalendarService } from "../services/calendarService";
@@ -345,7 +346,7 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
     return (
       <View style={styles.successContainer}>
         <View className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6 border border-emerald-100">
-          <Text className="fa-solid fa-calendar-check text-emerald-500 text-3xl" />
+          <FontAwesome6 name="calendar-check" size={32} color="#10B981" />
         </View>
         <Text style={styles.successTitle}>Confirmed</Text>
         <Text style={styles.successSub}>
@@ -477,8 +478,17 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
                                     ? "Click to extend session"
                                     : `Book at ${time}`}
                             </Text>
-                            <Text
-                              className={`fa-solid ${isSelected ? "fa-chevron-up" : isInSelectedRange ? "fa-check" : "fa-plus"} ${isSelected || isInSelectedRange ? "text-emerald-900" : "text-emerald-400"} text-[11px] ml-auto`}
+                            <FontAwesome6
+                              name={
+                                isSelected
+                                  ? "chevron-up"
+                                  : isInSelectedRange
+                                    ? "check"
+                                    : "plus"
+                              }
+                              size={11}
+                              color={isSelected || isInSelectedRange ? "#064E3B" : "#10B981"}
+                              style={{ marginLeft: "auto" }}
                             />
                           </View>
                         )}

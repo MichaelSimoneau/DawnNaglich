@@ -7,18 +7,19 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import { setGlobalOptions } from "firebase-functions";
-import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { google } from "googleapis";
-import { GoogleAuth } from "google-auth-library";
-import * as path from "path";
+import { setGlobalOptions } from 'firebase-functions';
+// eslint-ignore-next-line import/no-unresolved
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { google } from 'googleapis';
+import { GoogleAuth, OAuth2Client } from 'google-auth-library';
+import * as path from 'path';
 
 // Set global options for all functions
 setGlobalOptions({ maxInstances: 10 });
 
-const ADMIN_EMAILS = ["dawn.naglich@gmail.com", "michael@brainycouch.com"];
-const MASTER_CALENDAR_ID = "dawn.naglich@gmail.com";
-const KEY_FILE_PATH = path.join(__dirname, "../../dawn-naglich-firebase.json");
+const ADMIN_EMAILS = ['dawn.naglich@gmail.com', 'michael@brainycouch.com'];
+const MASTER_CALENDAR_ID = 'dawn.naglich@gmail.com';
+const KEY_FILE_PATH = path.join(__dirname, '../../dawn-naglich-firebase.json');
 
 /**
  * Initialize Google Calendar API
@@ -26,11 +27,11 @@ const KEY_FILE_PATH = path.join(__dirname, "../../dawn-naglich-firebase.json");
 async function getCalendarClient() {
   const auth = new GoogleAuth({
     keyFile: KEY_FILE_PATH,
-    scopes: ["https://www.googleapis.com/auth/calendar"],
+    scopes: ['https://www.googleapis.com/auth/calendar'],
   });
   const authClient = await auth.getClient();
   // Type assertion needed due to Google Calendar API client typing incompatibility
-  return google.calendar({ version: "v3", auth: authClient as any });
+  return google.calendar({ version: 'v3', auth: authClient as GoogleAuth | OAuth2Client });
 }
 
 /**
@@ -41,7 +42,7 @@ export const getCalendarEventsSecure = onCall(
   {
     cors: true,
   },
-  async (request) => {
+  async (request: any) => {
     const { timeMin, timeMax } = request.data;
     const userEmail = request.auth?.token.email;
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
@@ -52,19 +53,19 @@ export const getCalendarEventsSecure = onCall(
         calendarId: MASTER_CALENDAR_ID,
         timeMin: timeMin || new Date().toISOString(),
         timeMax:
-          timeMax ||
-          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          timeMax
+          || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         singleEvents: true,
-        orderBy: "startTime",
+        orderBy: 'startTime',
       });
 
       const events = response.data.items || [];
 
       // Filter events for privacy if not admin
       const filteredEvents = events.map((event) => {
-        const isPublic =
-          event.extendedProperties?.private?.status === "confirmed" ||
-          event.extendedProperties?.private?.status === "pending";
+        const isPublic
+          = event.extendedProperties?.private?.status === 'confirmed'
+          || event.extendedProperties?.private?.status === 'pending';
 
         if (isAdmin || isPublic) {
           return event;
@@ -73,7 +74,7 @@ export const getCalendarEventsSecure = onCall(
         // Hide details for private events
         return {
           id: event.id,
-          summary: "Busy",
+          summary: 'Busy',
           start: event.start,
           end: event.end,
           transparency: event.transparency,
@@ -82,33 +83,33 @@ export const getCalendarEventsSecure = onCall(
 
       return { success: true, items: filteredEvents };
     } catch (error: unknown) {
-      console.error("Error fetching calendar events:", error);
+      console.error('Error fetching calendar events:', error);
 
       // Check if this is a Google Calendar API not enabled error
-      const errorMessage =
-        error && typeof error === "object" && "message" in error
+      const errorMessage
+        = error && typeof error === 'object' && 'message' in error
           ? String(error.message)
-          : "";
-      const errorCode =
-        error && typeof error === "object" && "code" in error
+          : '';
+      const errorCode
+        = error && typeof error === 'object' && 'code' in error
           ? error.code
           : undefined;
-      const isApiNotEnabled =
-        errorCode === 403 ||
-        errorMessage.includes("API has not been used") ||
-        errorMessage.includes("it is disabled") ||
-        errorMessage.includes("PERMISSION_DENIED");
+      const isApiNotEnabled
+        = errorCode === 403
+        || errorMessage.includes('API has not been used')
+        || errorMessage.includes('it is disabled')
+        || errorMessage.includes('PERMISSION_DENIED');
 
       if (isApiNotEnabled) {
         console.warn(
-          "⚠️ Google Calendar API is not enabled for this project. " +
-            "Please enable it at: https://console.developers.google.com/apis/api/calendar-json.googleapis.com/overview",
+          '⚠️ Google Calendar API is not enabled for this project. '
+          + 'Please enable it at: https://console.developers.google.com/apis/api/calendar-json.googleapis.com/overview',
         );
         // Return empty array instead of throwing to allow graceful fallback
         return { success: true, items: [] };
       }
 
-      throw new HttpsError("internal", "Failed to fetch calendar events.");
+      throw new HttpsError('internal', 'Failed to fetch calendar events.');
     }
   },
 );
@@ -120,12 +121,12 @@ export const createCalendarEventSecure = onCall(
   {
     cors: true,
   },
-  async (request) => {
+  async (request: any) => {
     const { clientName, service, startTime, endTime } = request.data;
     const userEmail = request.auth?.token.email;
 
     if (!startTime) {
-      throw new HttpsError("invalid-argument", "Start time is required.");
+      throw new HttpsError('invalid-argument', 'Start time is required.');
     }
 
     // Default end time to 1 hour after start if not provided
@@ -144,7 +145,7 @@ export const createCalendarEventSecure = onCall(
         attendees: userEmail ? [{ email: userEmail }] : [],
         extendedProperties: {
           private: {
-            status: "pending", // New bookings start as pending
+            status: 'pending', // New bookings start as pending
           },
         },
       };
@@ -156,8 +157,8 @@ export const createCalendarEventSecure = onCall(
 
       return { success: true, eventId: response.data.id };
     } catch (error) {
-      console.error("Error creating calendar event:", error);
-      throw new HttpsError("internal", "Failed to create calendar event.");
+      console.error('Error creating calendar event:', error);
+      throw new HttpsError('internal', 'Failed to create calendar event.');
     }
   },
 );
@@ -169,20 +170,20 @@ export const confirmCalendarEventSecure = onCall(
   {
     cors: true,
   },
-  async (request) => {
+  async (request: any) => {
     const userEmail = request.auth?.token.email;
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
 
     if (!isAdmin) {
       throw new HttpsError(
-        "permission-denied",
-        "Only admins can confirm events.",
+        'permission-denied',
+        'Only admins can confirm events.',
       );
     }
 
     const { eventId } = request.data;
     if (!eventId) {
-      throw new HttpsError("invalid-argument", "Event ID is required.");
+      throw new HttpsError('invalid-argument', 'Event ID is required.');
     }
 
     try {
@@ -197,7 +198,7 @@ export const confirmCalendarEventSecure = onCall(
       const event = eventResponse.data;
       const extendedProperties = event.extendedProperties || {};
       extendedProperties.private = extendedProperties.private || {};
-      extendedProperties.private.status = "confirmed";
+      extendedProperties.private.status = 'confirmed';
 
       await calendar.events.patch({
         calendarId: MASTER_CALENDAR_ID,
@@ -209,8 +210,8 @@ export const confirmCalendarEventSecure = onCall(
 
       return { success: true };
     } catch (error) {
-      console.error("Error confirming calendar event:", error);
-      throw new HttpsError("internal", "Failed to confirm calendar event.");
+      console.error('Error confirming calendar event:', error);
+      throw new HttpsError('internal', 'Failed to confirm calendar event.');
     }
   },
 );
@@ -222,20 +223,20 @@ export const cancelCalendarEventSecure = onCall(
   {
     cors: true,
   },
-  async (request) => {
+  async (request: any) => {
     const userEmail = request.auth?.token.email;
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
 
     if (!isAdmin) {
       throw new HttpsError(
-        "permission-denied",
-        "Only admins can cancel events.",
+        'permission-denied',
+        'Only admins can cancel events.',
       );
     }
 
     const { eventId } = request.data;
     if (!eventId) {
-      throw new HttpsError("invalid-argument", "Event ID is required.");
+      throw new HttpsError('invalid-argument', 'Event ID is required.');
     }
 
     try {
@@ -247,8 +248,8 @@ export const cancelCalendarEventSecure = onCall(
 
       return { success: true };
     } catch (error) {
-      console.error("Error deleting calendar event:", error);
-      throw new HttpsError("internal", "Failed to cancel calendar event.");
+      console.error('Error deleting calendar event:', error);
+      throw new HttpsError('internal', 'Failed to cancel calendar event.');
     }
   },
 );

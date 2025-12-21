@@ -10,6 +10,7 @@ import {
   Dimensions,
   SafeAreaView,
 } from "react-native";
+import { FontAwesome6 } from "@expo/vector-icons";
 import {
   GoogleGenAI,
   Modality,
@@ -377,7 +378,7 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleClose} style={styles.backBtn}>
-            <Text className="fa-solid fa-chevron-down text-white/40" />
+            <FontAwesome6 name="chevron-down" size={14} color="rgba(255, 255, 255, 0.4)" />
             <Text style={styles.backText}>Minimize Assistant</Text>
           </TouchableOpacity>
           <View style={styles.statusIndicator}>

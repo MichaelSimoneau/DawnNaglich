@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  ImageSourcePropType,
 } from "react-native";
 import { auth } from "../firebaseConfig";
 import {
@@ -44,7 +45,7 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
   const redirectUri =
     Platform.OS !== "web"
       ? makeRedirectUri({
-          scheme: "dawn-naglich-wellness",
+          scheme: "dawn-naglich",
           path: "auth",
         })
       : undefined;
@@ -106,6 +107,7 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
           id: firebaseUser.uid,
           email: firebaseUser.email || "",
           name: firebaseUser.displayName || "Guest",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           role: "client" as any, // Will be determined by UserContext
         };
         // Update state to prevent multiple calls
@@ -170,12 +172,20 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
           // onLoginComplete will be called via auth state change listener
         }
       }
-    } catch (error: any) {
-      alert(error.message);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("An unknown error occurred");
+      }
       setLoading(false);
     }
     // Don't set loading to false here - let auth state change handle it
   };
+
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const logoImage = require("../assets/icon.png") as ImageSourcePropType;
 
   return (
     <KeyboardAvoidingView
@@ -185,7 +195,7 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.brandSection}>
           <View style={styles.logoBox}>
-            <Text style={styles.logoEmoji}>🌿</Text>
+            <Image source={logoImage} resizeMode="contain" />
           </View>
           <Text style={styles.brandName}>Dawn Naglich</Text>
           <Text style={styles.brandTagline}>WELLNESS & MUSCLE ACTIVATION</Text>

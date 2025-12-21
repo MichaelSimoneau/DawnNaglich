@@ -13,10 +13,18 @@
     },
     "production": {
       "node": "v22.21.1",
-      "pnpm": "10.25.0"
+      "pnpm": "10.25.0",
+      "android": {
+        "buildType": "apk"
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleTeamId": "DH6B4U9WS7",
+        "ascAppId": "6756852968"
+      }
+    }
   }
 }
