@@ -13,7 +13,12 @@ if (process.env.FIREBASE_CONFIG_JSON) {
   // Local development: set FIREBASE_CONFIG_JSON 
   // to the contents of firebase-config.json
   // via the `source ./.zshrc` command
-  throw new Error("Firebase config not found");
+  throw new Error(`
+    Firebase config not found:
+    - EAS build: set FIREBASE_CONFIG_JSON to the contents of firebase-config.json
+    - Local development: set FIREBASE_CONFIG_JSON to the contents of firebase-config.json
+    - hint: \`source ./.zshrc\` to load the environment variable in your terminal
+  `);
 }
 
 let app: FirebaseApp | undefined;
