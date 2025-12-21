@@ -1,12 +1,12 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Linking } from 'react-native';
-import { Link } from 'expo-router';
+import React from "react";
+import { View, Text, TouchableOpacity, Linking } from "react-native";
+import { Link } from "expo-router";
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   const openInstagram = () => {
-    Linking.openURL('https://instagram.com/dawn_naglich');
+    Linking.openURL("https://instagram.com/dawn_naglich");
   };
 
   return (
@@ -57,4 +57,3 @@ const Footer: React.FC = () => {
 };
 
 export default Footer;
-

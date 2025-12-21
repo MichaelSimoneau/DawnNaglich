@@ -1,20 +1,29 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Linking, Platform } from 'react-native';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Linking,
+  Platform,
+} from "react-native";
 
 const ADDRESS = "31005 Bainbridge Rd, Solon, OH 44139";
 const MAPS_URL = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ADDRESS)}`;
 
-const LocationMap: React.FC<{ isInteractive: boolean }> = ({ isInteractive }) => {
+const LocationMap: React.FC<{ isInteractive: boolean }> = ({
+  isInteractive,
+}) => {
   const handleGetDirections = () => {
     Linking.openURL(MAPS_URL);
   };
 
   return (
     <View style={styles.container}>
-      <View 
-        className={`absolute inset-0 transition-all duration-700 ${isInteractive ? 'opacity-100 pointer-events-auto' : 'opacity-60 pointer-events-none grayscale contrast-125'}`}
+      <View
+        className={`absolute inset-0 transition-all duration-700 ${isInteractive ? "opacity-100 pointer-events-auto" : "opacity-60 pointer-events-none grayscale contrast-125"}`}
       >
-        {Platform.OS === 'web' ? (
+        {Platform.OS === "web" ? (
           /* Web-specific implementation using iframe wrapped in a View */
           <View style={{ flex: 1 }}>
             <iframe
@@ -35,7 +44,7 @@ const LocationMap: React.FC<{ isInteractive: boolean }> = ({ isInteractive }) =>
           </View>
         )}
       </View>
-      
+
       {!isInteractive && (
         <View style={styles.overlay} pointerEvents="none">
           <View style={styles.markerCircle}>
@@ -47,7 +56,7 @@ const LocationMap: React.FC<{ isInteractive: boolean }> = ({ isInteractive }) =>
       {/* Button only appears during/after interaction */}
       {isInteractive && (
         <View style={styles.controls}>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={handleGetDirections}
             style={styles.directionsBtn}
           >
@@ -63,48 +72,48 @@ const LocationMap: React.FC<{ isInteractive: boolean }> = ({ isInteractive }) =>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#022C22',
-    width: '100%',
-    height: '100%',
+    backgroundColor: "#022C22",
+    width: "100%",
+    height: "100%",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(2, 44, 34, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(2, 44, 34, 0.4)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   markerCircle: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "rgba(16, 185, 129, 0.3)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   controls: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 120,
-    alignSelf: 'center',
+    alignSelf: "center",
     zIndex: 50,
   },
   directionsBtn: {
-    backgroundColor: '#10B981',
+    backgroundColor: "#10B981",
     paddingHorizontal: 30,
     paddingVertical: 18,
     borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     elevation: 10,
   },
   btnText: {
-    color: '#022C22',
-    fontWeight: '900',
+    color: "#022C22",
+    fontWeight: "900",
     fontSize: 14,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
-  }
+  },
 });
 
 export default LocationMap;

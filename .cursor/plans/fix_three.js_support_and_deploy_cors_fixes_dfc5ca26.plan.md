@@ -12,4 +12,3 @@ todos:
     content: Rebuild web app with clean cache to apply Metro config changes
     status: completed
 ---
-

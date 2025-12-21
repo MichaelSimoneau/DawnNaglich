@@ -1,12 +1,17 @@
-import React, { useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
+import React, { useEffect, useRef } from "react";
+import { Platform } from "react-native";
 
 const SnowOverlay: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const threeRef = useRef<any>(null);
 
   useEffect(() => {
-    if (Platform.OS !== 'web' || typeof window === 'undefined' || !containerRef.current) return;
+    if (
+      Platform.OS !== "web" ||
+      typeof window === "undefined" ||
+      !containerRef.current
+    )
+      return;
 
     // Load Three.js from CDN to avoid Metro bundling issues
     const loadThree = async () => {
@@ -19,8 +24,9 @@ const SnowOverlay: React.FC = () => {
 
       // Load from CDN
       return new Promise<void>((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        const script = document.createElement("script");
+        script.src =
+          "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
         script.onload = () => {
           threeRef.current = (window as any).THREE;
           initScene();
@@ -29,12 +35,12 @@ const SnowOverlay: React.FC = () => {
         script.onerror = () => {
           // Fallback to require if CDN fails
           try {
-            const threeModule = require('three');
+            const threeModule = require("three");
             threeRef.current = threeModule.default || threeModule;
             initScene();
             resolve();
           } catch (e) {
-            console.error('Failed to load Three.js:', e);
+            console.error("Failed to load Three.js:", e);
             reject(e);
           }
         };
@@ -47,17 +53,22 @@ const SnowOverlay: React.FC = () => {
 
       const THREE = threeRef.current;
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      
-      const renderer = new THREE.WebGLRenderer({ 
-        alpha: true, 
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000,
+      );
+
+      const renderer = new THREE.WebGLRenderer({
+        alpha: true,
         antialias: true,
       });
-      
+
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setClearColor(0x000000, 0);
-      
+
       containerRef.current.appendChild(renderer.domElement);
 
       const snowflakeCount = 800;
@@ -74,19 +85,22 @@ const SnowOverlay: React.FC = () => {
         sways[i] = Math.random() * Math.PI * 2;
       }
 
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(positions, 3),
+      );
 
       const createCircleTexture = () => {
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = 64;
         canvas.height = 64;
-        const context = canvas.getContext('2d');
+        const context = canvas.getContext("2d");
         if (!context) return null;
 
         const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-        gradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.4)');
-        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
+        gradient.addColorStop(0.3, "rgba(255, 255, 255, 0.4)");
+        gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
 
         context.fillStyle = gradient;
         context.fillRect(0, 0, 64, 64);
@@ -96,16 +110,16 @@ const SnowOverlay: React.FC = () => {
       };
 
       const snowflakeTexture = createCircleTexture();
-      
+
       const material = new THREE.PointsMaterial({
         size: 0.6,
         map: snowflakeTexture,
         transparent: true,
         opacity: 0.6,
-        depthWrite: false, 
-        blending: THREE.AdditiveBlending, 
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
         color: 0xffffff,
-        sizeAttenuation: true
+        sizeAttenuation: true,
       });
 
       const snowflakes = new THREE.Points(geometry, material);
@@ -116,8 +130,9 @@ const SnowOverlay: React.FC = () => {
       let animationFrameId: number;
       const animate = () => {
         animationFrameId = requestAnimationFrame(animate);
-        
-        const positionsArray = geometry.attributes.position.array as Float32Array;
+
+        const positionsArray = geometry.attributes.position
+          .array as Float32Array;
         const time = Date.now() * 0.0006;
 
         for (let i = 0; i < snowflakeCount; i++) {
@@ -129,7 +144,7 @@ const SnowOverlay: React.FC = () => {
             positionsArray[i * 3] = (Math.random() - 0.5) * 100;
           }
         }
-        
+
         geometry.attributes.position.needsUpdate = true;
         renderer.render(scene, camera);
       };
@@ -140,12 +155,12 @@ const SnowOverlay: React.FC = () => {
         renderer.setSize(window.innerWidth, window.innerHeight);
       };
 
-      window.addEventListener('resize', handleResize);
+      window.addEventListener("resize", handleResize);
       animate();
 
       // Store cleanup
       const cleanup = () => {
-        window.removeEventListener('resize', handleResize);
+        window.removeEventListener("resize", handleResize);
         cancelAnimationFrame(animationFrameId);
         if (containerRef.current && renderer.domElement) {
           containerRef.current.removeChild(renderer.domElement);
@@ -169,22 +184,22 @@ const SnowOverlay: React.FC = () => {
     };
   }, []);
 
-  if (Platform.OS !== 'web') {
+  if (Platform.OS !== "web") {
     return null;
   }
 
   return (
-    <div 
-      ref={containerRef as any} 
-      style={{ 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        width: '100vw', 
-        height: '100vh', 
-        pointerEvents: 'none', 
-        zIndex: 999 
-      }} 
+    <div
+      ref={containerRef as any}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        pointerEvents: "none",
+        zIndex: 999,
+      }}
     />
   );
 };

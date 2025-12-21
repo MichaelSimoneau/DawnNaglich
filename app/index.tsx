@@ -1,12 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import { useUser } from '../UserContext';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  useWindowDimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from "react-native";
+import { useUser } from "../UserContext";
 
-import Login from '../components/Login';
-import ClientLanding from '../components/ClientLanding';
-import { PAGES } from '../content';
-import Booking from '../components/Booking';
-import Footer from '../components/Footer';
+import Login from "../components/Login";
+import ClientLanding from "../components/ClientLanding";
+import { PAGES } from "../content";
+import Booking from "../components/Booking";
+import Footer from "../components/Footer";
 
 export default function Home() {
   const { user } = useUser();
@@ -15,7 +23,7 @@ export default function Home() {
   const [activeLandingPage, setActiveLandingPage] = useState(0);
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
   const [agendaOffset, setAgendaOffset] = useState(windowHeight || 800);
-  
+
   const verticalScrollRef = useRef<ScrollView>(null);
   const lastScrollY = useRef(0);
 
@@ -33,11 +41,14 @@ export default function Home() {
     const pageTitle = `Dawn Naglich | ${currentPage.label}`;
     try {
       const targetHash = `#${currentPage.id}`;
-      if (typeof window !== 'undefined' && window.location.hash !== targetHash) {
-        window.history.replaceState(null, '', targetHash);
+      if (
+        typeof window !== "undefined" &&
+        window.location.hash !== targetHash
+      ) {
+        window.history.replaceState(null, "", targetHash);
       }
     } catch (e) {}
-    if (typeof document !== 'undefined') {
+    if (typeof document !== "undefined") {
       document.title = pageTitle;
     }
   }, [activeLandingPage]);
@@ -60,39 +71,42 @@ export default function Home() {
     }, 100);
   };
 
-  if (showLogin) return (
-    <View className="flex-1 bg-emerald-950">
-      <TouchableOpacity 
-        className="absolute top-[30px] left-[30px] z-[200] flex-row items-center p-3 bg-white/5 rounded-[20px]" 
-        onPress={() => setShowLogin(false)}
-      >
-        <Text className="fa-solid fa-arrow-left text-emerald-100" />
-        <Text className="text-white font-black text-[10px] uppercase tracking-[2px] ml-3">Home</Text>
-      </TouchableOpacity>
-      <Login onLoginComplete={handleLoginComplete} />
-    </View>
-  );
+  if (showLogin)
+    return (
+      <View className="flex-1 bg-emerald-950">
+        <TouchableOpacity
+          className="absolute top-[30px] left-[30px] z-[200] flex-row items-center p-3 bg-white/5 rounded-[20px]"
+          onPress={() => setShowLogin(false)}
+        >
+          <Text className="fa-solid fa-arrow-left text-emerald-100" />
+          <Text className="text-white font-black text-[10px] uppercase tracking-[2px] ml-3">
+            Home
+          </Text>
+        </TouchableOpacity>
+        <Login onLoginComplete={handleLoginComplete} />
+      </View>
+    );
 
   return (
     <View className="flex-1 bg-emerald-950">
-      <ScrollView 
-        ref={verticalScrollRef} 
+      <ScrollView
+        ref={verticalScrollRef}
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
         onScroll={handleScroll}
       >
-        <View style={{ width: '100%', height: windowHeight, minHeight: 600 }}>
-          <ClientLanding 
-            onBookNow={scrollToAgenda} 
+        <View style={{ width: "100%", height: windowHeight, minHeight: 600 }}>
+          <ClientLanding
+            onBookNow={scrollToAgenda}
             onLoginClick={() => setShowLogin(true)}
-            isLoggedIn={!!user} 
-            activePageIndex={activeLandingPage} 
+            isLoggedIn={!!user}
+            activePageIndex={activeLandingPage}
             onNavigateToPage={setActiveLandingPage}
           />
         </View>
 
-        <View 
+        <View
           onLayout={(event) => {
             const layout = event.nativeEvent.layout;
             if (layout.y > 0) setAgendaOffset(layout.y);
@@ -101,14 +115,15 @@ export default function Home() {
           style={{ minHeight: windowHeight }}
         >
           <View className="px-10 pt-[120px] pb-5 bg-white">
-             <Text className="text-[42px] font-black text-[#064e3b] tracking-tighter uppercase">Schedule</Text>
-             <Text className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-[2px] mt-1">Select a window for realignment</Text>
+            <Text className="text-[42px] font-black text-[#064e3b] tracking-tighter uppercase">
+              Schedule
+            </Text>
+            <Text className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-[2px] mt-1">
+              Select a window for realignment
+            </Text>
           </View>
-          
-          <Booking 
-            activeSlotId={activeSlotId} 
-            onSlotSelect={setActiveSlotId} 
-          />
+
+          <Booking activeSlotId={activeSlotId} onSlotSelect={setActiveSlotId} />
 
           <Footer />
         </View>
@@ -116,4 +131,3 @@ export default function Home() {
     </View>
   );
 }
-

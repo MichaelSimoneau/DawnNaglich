@@ -1,17 +1,31 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { 
-  StyleSheet, View, Text, TextInput, TouchableOpacity, Animated, 
-  Dimensions, PanResponder, Keyboard, Platform, KeyboardAvoidingView, Linking,
-  useWindowDimensions, ScrollView 
-} from 'react-native';
-import { GoogleGenAI } from '@google/genai';
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Animated,
+  Dimensions,
+  PanResponder,
+  Keyboard,
+  Platform,
+  KeyboardAvoidingView,
+  Linking,
+  useWindowDimensions,
+  ScrollView,
+} from "react-native";
+import { GoogleGenAI } from "@google/genai";
 
 const FACILITY_ADDRESS = "31005 Bainbridge Rd, Solon, OH 44139";
 const DIRECTIONS_URL = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(FACILITY_ADDRESS)}`;
 
-type HeightState = 'min' | 'mid' | 'full';
+type HeightState = "min" | "mid" | "full";
 
-const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
+  isOpen,
+  onClose,
+}) => {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isDesktop = windowWidth > 768;
 
@@ -19,25 +33,34 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
   const H_MIN = windowHeight * 0.5;
   const H_MID = windowHeight * 0.75;
   const H_FULL = windowHeight - 60;
-  
+
   // Desktop Dimensions
   const DESKTOP_WIDTH = 400;
   const DESKTOP_HEIGHT = 600;
 
-  const [heightState, setHeightState] = useState<HeightState>('mid');
+  const [heightState, setHeightState] = useState<HeightState>("mid");
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [messages, setMessages] = useState<{ role: 'ai' | 'user'; text: string }[]>([
-    { role: 'ai', text: "Welcome to Dawn's Wellness Sanctuary. I can explain Muscle Activation techniques, help you navigate the schedule, or provide directions to our facility. How are you feeling today?" }
+  const [messages, setMessages] = useState<
+    { role: "ai" | "user"; text: string }[]
+  >([
+    {
+      role: "ai",
+      text: "Welcome to Dawn's Wellness Sanctuary. I can explain Muscle Activation techniques, help you navigate the schedule, or provide directions to our facility. How are you feeling today?",
+    },
   ]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  
+
   const heightAnim = useRef(new Animated.Value(0)).current;
   const chatScrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
-    const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
-    const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    const showSub = Keyboard.addListener("keyboardDidShow", () =>
+      setKeyboardVisible(true),
+    );
+    const hideSub = Keyboard.addListener("keyboardDidHide", () =>
+      setKeyboardVisible(false),
+    );
     return () => {
       showSub.remove();
       hideSub.remove();
@@ -54,16 +77,16 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
     let target = 0;
 
     if (isDesktop) {
-        // On desktop, we just animate to full fixed height when open
-        target = DESKTOP_HEIGHT;
+      // On desktop, we just animate to full fixed height when open
+      target = DESKTOP_HEIGHT;
     } else {
-        target = H_MIN;
-        if (state === 'mid') target = H_MID;
-        if (state === 'full') target = H_FULL;
-        
-        if (isKeyboardVisible && state !== 'full') {
-            target = windowHeight * 0.5;
-        }
+      target = H_MIN;
+      if (state === "mid") target = H_MID;
+      if (state === "full") target = H_FULL;
+
+      if (isKeyboardVisible && state !== "full") {
+        target = windowHeight * 0.5;
+      }
     }
 
     setHeightState(state);
@@ -82,25 +105,34 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
       heightAnim.setValue(initialHeight);
       animateTo(heightState);
     } else {
-      Animated.timing(heightAnim, { toValue: 0, duration: 300, useNativeDriver: false }).start();
+      Animated.timing(heightAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
     }
   }, [isOpen, isKeyboardVisible, isDesktop, heightState]);
 
-  const panResponder = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => !isDesktop, // Disable on desktop
-    onMoveShouldSetPanResponder: (_, gs) => !isDesktop && Math.abs(gs.dy) > 10,
-    onPanResponderRelease: (_, gs) => {
-      if (isDesktop) return;
-      if (gs.dy < -50) {
-        if (heightState === 'min') animateTo('mid');
-        else if (heightState === 'mid') animateTo('full');
-      } else if (gs.dy > 50) {
-        if (heightState === 'full') animateTo('mid');
-        else if (heightState === 'mid') animateTo('min');
-        else if (heightState === 'min') onClose();
-      }
-    }
-  }), [heightState, isKeyboardVisible, isDesktop, windowHeight]);
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => !isDesktop, // Disable on desktop
+        onMoveShouldSetPanResponder: (_, gs) =>
+          !isDesktop && Math.abs(gs.dy) > 10,
+        onPanResponderRelease: (_, gs) => {
+          if (isDesktop) return;
+          if (gs.dy < -50) {
+            if (heightState === "min") animateTo("mid");
+            else if (heightState === "mid") animateTo("full");
+          } else if (gs.dy > 50) {
+            if (heightState === "full") animateTo("mid");
+            else if (heightState === "mid") animateTo("min");
+            else if (heightState === "min") onClose();
+          }
+        },
+      }),
+    [heightState, isKeyboardVisible, isDesktop, windowHeight],
+  );
 
   const handleGetDirections = () => {
     Linking.openURL(DIRECTIONS_URL);
@@ -109,52 +141,66 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
   const handleSend = async () => {
     if (!input.trim() || loading) return;
     const userMsg = input.trim();
-    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-    setInput('');
+    setMessages((prev) => [...prev, { role: "user", text: userMsg }]);
+    setInput("");
     setLoading(true);
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: "gemini-3-flash-preview",
         contents: userMsg,
         config: {
           systemInstruction: `You are Dawn Naglich's elite concierge. Dawn is a specialist in Muscle Activation (MAT). 
           Location: ${FACILITY_ADDRESS}. 
           If the user asks for directions or location, tell them the address and explain they can click the 'Get Directions' button in the assistant header or provide this link: ${DIRECTIONS_URL}.
-          Keep answers concise, healing-focused, and encourage booking for realignment.`
-        }
+          Keep answers concise, healing-focused, and encourage booking for realignment.`,
+        },
       });
-      setMessages(prev => [...prev, { role: 'ai', text: response.text || 'I missed that. Please try again.' }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "ai",
+          text: response.text || "I missed that. Please try again.",
+        },
+      ]);
     } catch (e) {
-      setMessages(prev => [...prev, { role: 'ai', text: 'Connection issue. Please use the booking calendar.' }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "ai",
+          text: "Connection issue. Please use the booking calendar.",
+        },
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
   // Dynamic Styles for Desktop
-  const desktopStyles = isDesktop ? {
-    left: 'auto',
-    right: 32,
-    bottom: 32,
-    width: DESKTOP_WIDTH,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderRadius: 24,
-  } : {};
+  const desktopStyles = isDesktop
+    ? {
+        left: "auto",
+        right: 32,
+        bottom: 32,
+        width: DESKTOP_WIDTH,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        borderRadius: 24,
+      }
+    : {};
 
   return (
-    <Animated.View 
+    <Animated.View
       style={[
-        styles.sheet, 
+        styles.sheet,
         desktopStyles,
-        { height: heightAnim }, 
-        !isOpen && { pointerEvents: 'none' } as any
+        { height: heightAnim },
+        !isOpen && ({ pointerEvents: "none" } as any),
       ]}
     >
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
       >
         <View {...panResponder.panHandlers} style={styles.handleArea}>
@@ -167,7 +213,10 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
             <Text style={styles.headerStatus}>Session Assistant</Text>
           </View>
           <View style={styles.headerActions}>
-            <TouchableOpacity onPress={handleGetDirections} style={styles.actionIcon}>
+            <TouchableOpacity
+              onPress={handleGetDirections}
+              style={styles.actionIcon}
+            >
               <Text className="fa-solid fa-location-arrow text-emerald-400" />
             </TouchableOpacity>
             <TouchableOpacity onPress={onClose} style={styles.actionIcon}>
@@ -176,14 +225,30 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
           </View>
         </View>
 
-        <ScrollView 
+        <ScrollView
           className="flex-1 p-6 space-y-6 scroll-smooth no-scrollbar"
           contentContainerStyle={{ gap: 24 }}
         >
           {messages.map((msg, i) => (
-            <View key={i} style={[styles.messageRow, msg.role === 'user' ? styles.userRow : styles.aiRow]}>
-              <View style={[styles.bubble, msg.role === 'user' ? styles.userBubble : styles.aiBubble]}>
-                <Text style={[styles.bubbleText, msg.role === 'user' ? styles.userText : styles.aiText]}>
+            <View
+              key={i}
+              style={[
+                styles.messageRow,
+                msg.role === "user" ? styles.userRow : styles.aiRow,
+              ]}
+            >
+              <View
+                style={[
+                  styles.bubble,
+                  msg.role === "user" ? styles.userBubble : styles.aiBubble,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.bubbleText,
+                    msg.role === "user" ? styles.userText : styles.aiText,
+                  ]}
+                >
                   {msg.text}
                 </Text>
               </View>
@@ -198,8 +263,10 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
           )}
         </ScrollView>
 
-        <View style={[styles.inputArea, isKeyboardVisible && { paddingBottom: 10 }]}>
-          <TextInput 
+        <View
+          style={[styles.inputArea, isKeyboardVisible && { paddingBottom: 10 }]}
+        >
+          <TextInput
             style={styles.input}
             placeholder="Ask about Muscle Activation..."
             placeholderTextColor="#10B98188"
@@ -208,9 +275,12 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
             onSubmitEditing={handleSend}
             blurOnSubmit={false}
           />
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={handleSend}
-            style={[styles.sendBtn, (!input.trim() || loading) && { opacity: 0.5 }]}
+            style={[
+              styles.sendBtn,
+              (!input.trim() || loading) && { opacity: 0.5 },
+            ]}
           >
             <Text className="fa-solid fa-paper-plane text-emerald-950" />
           </TouchableOpacity>
@@ -222,34 +292,102 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
 
 const styles = StyleSheet.create({
   sheet: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: 'rgba(2, 44, 34, 0.98)',
-    borderTopLeftRadius: 32, borderTopRightRadius: 32,
-    elevation: 30, zIndex: 2000, borderTopWidth: 1, borderColor: 'rgba(16, 185, 129, 0.1)',
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(2, 44, 34, 0.98)",
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    elevation: 30,
+    zIndex: 2000,
+    borderTopWidth: 1,
+    borderColor: "rgba(16, 185, 129, 0.1)",
   } as any,
-  handleArea: { width: '100%', height: 30, justifyContent: 'center', alignItems: 'center' },
-  handleBar: { width: 36, height: 4, backgroundColor: 'rgba(16, 185, 129, 0.2)', borderRadius: 2 },
-  header: { 
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', 
-    paddingHorizontal: 30, paddingBottom: 15, borderBottomWidth: 1, borderColor: 'rgba(16, 185, 129, 0.05)' 
+  handleArea: {
+    width: "100%",
+    height: 30,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#FFF' },
-  headerStatus: { fontSize: 9, fontWeight: '800', color: '#10B981', textTransform: 'uppercase', letterSpacing: 1 },
-  headerActions: { flexDirection: 'row', gap: 12 },
-  actionIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(16, 185, 129, 0.05)', justifyContent: 'center', alignItems: 'center' },
-  messageRow: { marginBottom: 12, flexDirection: 'row' },
-  userRow: { justifyContent: 'flex-end' },
-  aiRow: { justifyContent: 'flex-start' },
-  bubble: { maxWidth: '85%', padding: 18, borderRadius: 24 },
-  userBubble: { backgroundColor: '#064E3B', borderBottomRightRadius: 4 },
-  aiBubble: { backgroundColor: 'rgba(255,255,255,0.05)', borderBottomLeftRadius: 4 },
+  handleBar: {
+    width: 36,
+    height: 4,
+    backgroundColor: "rgba(16, 185, 129, 0.2)",
+    borderRadius: 2,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 30,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderColor: "rgba(16, 185, 129, 0.05)",
+  },
+  headerTitle: { fontSize: 18, fontWeight: "900", color: "#FFF" },
+  headerStatus: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#10B981",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  headerActions: { flexDirection: "row", gap: 12 },
+  actionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(16, 185, 129, 0.05)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  messageRow: { marginBottom: 12, flexDirection: "row" },
+  userRow: { justifyContent: "flex-end" },
+  aiRow: { justifyContent: "flex-start" },
+  bubble: { maxWidth: "85%", padding: 18, borderRadius: 24 },
+  userBubble: { backgroundColor: "#064E3B", borderBottomRightRadius: 4 },
+  aiBubble: {
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderBottomLeftRadius: 4,
+  },
   bubbleText: { fontSize: 15, lineHeight: 22 },
-  userText: { color: '#ECFDF5' },
-  aiText: { color: '#D1FAE5' },
-  inputArea: { flexDirection: 'row', padding: 20, alignItems: 'center', gap: 12, borderTopWidth: 1, borderColor: 'rgba(16, 185, 129, 0.05)' },
-  input: { flex: 1, height: 50, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 25, paddingHorizontal: 20, color: '#FFF', fontSize: 15 },
-  sendBtn: { width: 50, height: 50, backgroundColor: '#10B981', borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
-  loadingContainer: { padding: 16, backgroundColor: 'rgba(16, 185, 129, 0.1)', borderRadius: 16, width: 80, flexDirection: 'row', gap: 4, justifyContent: 'center' },
+  userText: { color: "#ECFDF5" },
+  aiText: { color: "#D1FAE5" },
+  inputArea: {
+    flexDirection: "row",
+    padding: 20,
+    alignItems: "center",
+    gap: 12,
+    borderTopWidth: 1,
+    borderColor: "rgba(16, 185, 129, 0.05)",
+  },
+  input: {
+    flex: 1,
+    height: 50,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    color: "#FFF",
+    fontSize: 15,
+  },
+  sendBtn: {
+    width: 50,
+    height: 50,
+    backgroundColor: "#10B981",
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingContainer: {
+    padding: 16,
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+    borderRadius: 16,
+    width: 80,
+    flexDirection: "row",
+    gap: 4,
+    justifyContent: "center",
+  },
 });
 
 export default ClientAssistant;

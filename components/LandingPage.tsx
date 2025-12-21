@@ -1,12 +1,12 @@
-import React from 'react';
-import { View, StyleSheet, Image, useWindowDimensions } from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  interpolate, 
+import React from "react";
+import { View, StyleSheet, Image, useWindowDimensions } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  interpolate,
   Extrapolation,
-  useSharedValue
-} from 'react-native-reanimated';
-import { PAGES } from '../content';
+  useSharedValue,
+} from "react-native-reanimated";
+import { PAGES } from "../content";
 
 interface Props {
   progress: ReturnType<typeof useSharedValue<number>>;
@@ -28,26 +28,26 @@ const LandingPage: React.FC<Props> = ({ progress, isMapActive }) => {
     <View style={styles.container}>
       {PAGES.map((page, index) => {
         if (index >= 3 || !page.image) return null;
-        
+
         const animatedStyle = useAnimatedStyle(() => {
           const translateX = (index - progress.value) * SCREEN_WIDTH;
           const opacity = interpolate(
             progress.value,
             [index - 0.9, index, index + 0.9],
             [0, 1, 0],
-            Extrapolation.CLAMP
+            Extrapolation.CLAMP,
           );
-          
+
           return {
             transform: [{ translateX }],
             opacity,
-            zIndex: index === Math.round(progress.value) ? 1 : 0
+            zIndex: index === Math.round(progress.value) ? 1 : 0,
           };
         });
 
         return (
-          <Animated.View 
-            key={page.id} 
+          <Animated.View
+            key={page.id}
             style={[StyleSheet.absoluteFill, animatedStyle]}
           >
             <Image
@@ -58,7 +58,10 @@ const LandingPage: React.FC<Props> = ({ progress, isMapActive }) => {
           </Animated.View>
         );
       })}
-      <Animated.View style={[styles.overlay, overlayStyle]} pointerEvents="none" />
+      <Animated.View
+        style={[styles.overlay, overlayStyle]}
+        pointerEvents="none"
+      />
     </View>
   );
 };
@@ -69,10 +72,9 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(2, 44, 34, 0.9)',
+    backgroundColor: "rgba(2, 44, 34, 0.9)",
     zIndex: 5,
   },
 });
 
 export default LandingPage;
-

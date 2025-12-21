@@ -30,7 +30,7 @@ We will stop deploying to production and fix the issues locally using Firebase E
 
 The error `TypeError: Cannot read properties of undefined (reading 'S')` in `SnowOverlay` is likely due to incorrect bundling of `three` (aggressive tree-shaking or module resolution) when using `import * as THREE`.
 
-- **Refactor `components/SnowOverlay.tsx`**: 
+- **Refactor `components/SnowOverlay.tsx`**:
 - Change imports to explicit named imports to ensure the bundler includes exactly what is needed.
 - specifically import `AdditiveBlending` and `Points` directly from `three`.
 - Remove wildcard import `import * as THREE`.
@@ -48,14 +48,14 @@ The CORS error persists because the client is requesting the cross-origin Cloud 
 
 - **Update `services/calendarService.ts`**:
 - Modify `getEventsSecure`, `createEventSecure`, etc., to use `httpsCallableFromURL`.
-- **Critical**: Use `window.location.origin` to construct an absolute URL that points to the *current hosting origin* (e.g., `http://localhost:5000/api/getCalendarEventsSecure` when local, or `https://dawn-naglich.web.app/api/...` when deployed).
+- **Critical**: Use `window.location.origin` to construct an absolute URL that points to the _current hosting origin_ (e.g., `http://localhost:5000/api/getCalendarEventsSecure` when local, or `https://dawn-naglich.web.app/api/...` when deployed).
 - This forces the request to go through the Firebase Hosting Rewrite rule, which proxies it to the function. This is a **Same-Origin** request, bypassing CORS completely.
 
 ### 4. Verify API Locally
 
 - **Run Full Emulators**: Run `pnpm exec firebase emulators:start` (starts Hosting AND Functions emulators).
 - **Test**: Use the app locally to fetch calendar events.
-- **Success Criteria**: 
+- **Success Criteria**:
 - Network request goes to `http://localhost:5000/api/getCalendarEventsSecure`.
 - No CORS error.
 - Data is returned (or mock data if functions aren't fully mocked, but the connection should work).

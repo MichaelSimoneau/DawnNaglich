@@ -55,8 +55,11 @@
     "three": "^0.182.0"
   },
   "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.27.1",
     "@babel/runtime": "^7.28.4",
     "@types/react": "~19.1.17",
+    "babel-preset-expo": "^54.0.9",
+    "prettier": "^3.7.4",
     "puppeteer": "^24.34.0",
     "typescript": "~5.9.3"
   },

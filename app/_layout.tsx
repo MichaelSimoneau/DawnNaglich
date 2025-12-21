@@ -1,24 +1,33 @@
-import '../global.css';
-import 'react-native-reanimated';
-import React, { useState, useEffect } from 'react';
-import { View, StatusBar, TouchableOpacity, Text, SafeAreaView, ActivityIndicator, Platform, Pressable } from 'react-native';
-import { Stack } from 'expo-router';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { auth } from '../firebaseConfig';
-import { signOut } from 'firebase/auth';
-import { UserRole } from '../types';
-import { UserProvider, useUser } from '../UserContext';
+import "../global.css";
+import "react-native-reanimated";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  StatusBar,
+  TouchableOpacity,
+  Text,
+  SafeAreaView,
+  ActivityIndicator,
+  Platform,
+  Pressable,
+} from "react-native";
+import { Stack } from "expo-router";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { auth } from "../firebaseConfig";
+import { signOut } from "firebase/auth";
+import { UserRole } from "../types";
+import { UserProvider, useUser } from "../UserContext";
 
-import AdminDashboard from '../components/AdminDashboard';
-import ClientAssistant from '../components/ClientAssistant';
-import Login from '../components/Login';
+import AdminDashboard from "../components/AdminDashboard";
+import ClientAssistant from "../components/ClientAssistant";
+import Login from "../components/Login";
 
 // Lazy load SnowOverlay to avoid Three.js import issues
-const SnowOverlay = React.lazy(() => import('../components/SnowOverlay'));
+const SnowOverlay = React.lazy(() => import("../components/SnowOverlay"));
 
 // Check if we're before December 26, 2025
 const isBeforeSnowEndDate = () => {
-  const snowEndDate = new Date('2025-12-26T23:59:59');
+  const snowEndDate = new Date("2025-12-26T23:59:59");
   const now = new Date();
   return now < snowEndDate;
 };
@@ -34,7 +43,9 @@ function RootLayoutContent() {
     setIsSnowing(isBeforeSnowEndDate());
   }, []);
 
-  const handleLogout = () => { if (auth) signOut(auth); };
+  const handleLogout = () => {
+    if (auth) signOut(auth);
+  };
 
   const handleSnowToggle = () => {
     setIsSnowing(!isSnowing);
@@ -44,12 +55,15 @@ function RootLayoutContent() {
     setIsAssistantOpen(true);
   };
 
-  if (initializing) return (
-    <View className="flex-1 bg-emerald-950 justify-center items-center">
-      <ActivityIndicator size="large" color="#10B981" />
-      <Text className="mt-5 text-[12px] text-emerald-400 font-black tracking-[8px]">DAWN NAGLICH</Text>
-    </View>
-  );
+  if (initializing)
+    return (
+      <View className="flex-1 bg-emerald-950 justify-center items-center">
+        <ActivityIndicator size="large" color="#10B981" />
+        <Text className="mt-5 text-[12px] text-emerald-400 font-black tracking-[8px]">
+          DAWN NAGLICH
+        </Text>
+      </View>
+    );
 
   if (user?.role === UserRole.ADMIN) return <AdminDashboard />;
 
@@ -70,25 +84,29 @@ function RootLayoutContent() {
           <View className="absolute bottom-10 right-8 gap-4 z-[1001] items-center">
             <Pressable
               onPress={handleSnowToggle}
-              className={`w-12 h-12 rounded-full items-center justify-center border ${isSnowing ? 'bg-emerald-400 border-white' : 'bg-emerald-950/90 border-emerald-400/40'}`}
+              className={`w-12 h-12 rounded-full items-center justify-center border ${isSnowing ? "bg-emerald-400 border-white" : "bg-emerald-950/90 border-emerald-400/40"}`}
               style={({ pressed }) => ({
                 opacity: pressed ? 0.7 : 1,
               })}
-              {...(Platform.OS === 'web' ? {
-                // @ts-ignore - prevent default button behavior on web
-                onClick: (e: any) => {
-                  if (e && e.preventDefault) {
-                    e.preventDefault();
+              {...(Platform.OS === "web"
+                ? {
+                    // @ts-ignore - prevent default button behavior on web
+                    onClick: (e: any) => {
+                      if (e && e.preventDefault) {
+                        e.preventDefault();
+                      }
+                      if (e && e.stopPropagation) {
+                        e.stopPropagation();
+                      }
+                    },
                   }
-                  if (e && e.stopPropagation) {
-                    e.stopPropagation();
-                  }
-                }
-              } : {})}
+                : {})}
             >
-              <Text className={`fa-solid fa-snowflake ${isSnowing ? 'text-white' : 'text-emerald-400'} text-lg`} />
+              <Text
+                className={`fa-solid fa-snowflake ${isSnowing ? "text-white" : "text-emerald-400"} text-lg`}
+              />
             </Pressable>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={handleAssistantToggle}
               activeOpacity={0.7}
               className="w-[60px] h-[60px] rounded-full bg-emerald-600 items-center justify-center"
@@ -98,17 +116,22 @@ function RootLayoutContent() {
           </View>
         )}
 
-        <ClientAssistant isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} />
-        
+        <ClientAssistant
+          isOpen={isAssistantOpen}
+          onClose={() => setIsAssistantOpen(false)}
+        />
+
         {/* Login Modal */}
         {showLogin && (
           <View className="absolute inset-0 z-[2000] bg-emerald-950">
-            <TouchableOpacity 
-              className="absolute top-[30px] left-[30px] z-[2001] flex-row items-center p-3 bg-white/5 rounded-[20px]" 
+            <TouchableOpacity
+              className="absolute top-[30px] left-[30px] z-[2001] flex-row items-center p-3 bg-white/5 rounded-[20px]"
               onPress={() => setShowLogin(false)}
             >
               <Text className="fa-solid fa-arrow-left text-emerald-100" />
-              <Text className="text-white font-black text-[10px] uppercase tracking-[2px] ml-3">Close</Text>
+              <Text className="text-white font-black text-[10px] uppercase tracking-[2px] ml-3">
+                Close
+              </Text>
             </TouchableOpacity>
             <Login onLoginComplete={() => setShowLogin(false)} />
           </View>
@@ -125,4 +148,3 @@ export default function RootLayout() {
     </UserProvider>
   );
 }
-

@@ -1,21 +1,21 @@
 packages:
-  - 'functions'
-  - '.'
+  - "functions"
+  - "."
 
 excludeDirectories:
-  - 'node_modules'
-  - 'dist'
-  - 'build'
-  - 'coverage'
-  - 'logs'
-  - 'tmp'
-  - 'cache'
-  - 'temp'
-  - 'functions'
-  - 'firebase-config.json'
-  - 'dawn-naglich-firebase.json'
+  - "node_modules"
+  - "dist"
+  - "build"
+  - "coverage"
+  - "logs"
+  - "tmp"
+  - "cache"
+  - "temp"
+  - "functions"
+  - "firebase-config.json"
+  - "dawn-naglich-firebase.json"
 
 onlyBuiltDependencies:
-  - '@firebase/util'
+  - "@firebase/util"
   - protobufjs
   - unrs-resolver

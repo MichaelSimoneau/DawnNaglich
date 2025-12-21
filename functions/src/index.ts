@@ -7,14 +7,14 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import {setGlobalOptions} from "firebase-functions";
-import {onCall, HttpsError} from "firebase-functions/v2/https";
-import {google} from "googleapis";
-import {GoogleAuth} from "google-auth-library";
+import { setGlobalOptions } from "firebase-functions";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { google } from "googleapis";
+import { GoogleAuth } from "google-auth-library";
 import * as path from "path";
 
 // Set global options for all functions
-setGlobalOptions({maxInstances: 10});
+setGlobalOptions({ maxInstances: 10 });
 
 const ADMIN_EMAILS = ["dawn.naglich@gmail.com", "michael@brainycouch.com"];
 const MASTER_CALENDAR_ID = "dawn.naglich@gmail.com";
@@ -30,7 +30,7 @@ async function getCalendarClient() {
   });
   const authClient = await auth.getClient();
   // Type assertion needed due to Google Calendar API client typing incompatibility
-  return google.calendar({version: "v3", auth: authClient as any});
+  return google.calendar({ version: "v3", auth: authClient as any });
 }
 
 /**
@@ -42,7 +42,7 @@ export const getCalendarEventsSecure = onCall(
     cors: true,
   },
   async (request) => {
-    const {timeMin, timeMax} = request.data;
+    const { timeMin, timeMax } = request.data;
     const userEmail = request.auth?.token.email;
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
 
@@ -51,8 +51,9 @@ export const getCalendarEventsSecure = onCall(
       const response = await calendar.events.list({
         calendarId: MASTER_CALENDAR_ID,
         timeMin: timeMin || new Date().toISOString(),
-        timeMax: timeMax ||
-        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        timeMax:
+          timeMax ||
+          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         singleEvents: true,
         orderBy: "startTime",
       });
@@ -62,8 +63,8 @@ export const getCalendarEventsSecure = onCall(
       // Filter events for privacy if not admin
       const filteredEvents = events.map((event) => {
         const isPublic =
-        event.extendedProperties?.private?.status === "confirmed" ||
-        event.extendedProperties?.private?.status === "pending";
+          event.extendedProperties?.private?.status === "confirmed" ||
+          event.extendedProperties?.private?.status === "pending";
 
         if (isAdmin || isPublic) {
           return event;
@@ -79,15 +80,19 @@ export const getCalendarEventsSecure = onCall(
         };
       });
 
-      return {success: true, items: filteredEvents};
+      return { success: true, items: filteredEvents };
     } catch (error: unknown) {
       console.error("Error fetching calendar events:", error);
 
       // Check if this is a Google Calendar API not enabled error
-      const errorMessage = (error && typeof error === "object" && "message" in error) ?
-        String(error.message) : "";
-      const errorCode = (error && typeof error === "object" && "code" in error) ?
-        error.code : undefined;
+      const errorMessage =
+        error && typeof error === "object" && "message" in error
+          ? String(error.message)
+          : "";
+      const errorCode =
+        error && typeof error === "object" && "code" in error
+          ? error.code
+          : undefined;
       const isApiNotEnabled =
         errorCode === 403 ||
         errorMessage.includes("API has not been used") ||
@@ -97,15 +102,15 @@ export const getCalendarEventsSecure = onCall(
       if (isApiNotEnabled) {
         console.warn(
           "⚠️ Google Calendar API is not enabled for this project. " +
-          "Please enable it at: https://console.developers.google.com/apis/api/calendar-json.googleapis.com/overview"
+            "Please enable it at: https://console.developers.google.com/apis/api/calendar-json.googleapis.com/overview",
         );
         // Return empty array instead of throwing to allow graceful fallback
-        return {success: true, items: []};
+        return { success: true, items: [] };
       }
 
       throw new HttpsError("internal", "Failed to fetch calendar events.");
     }
-  }
+  },
 );
 
 /**
@@ -116,7 +121,7 @@ export const createCalendarEventSecure = onCall(
     cors: true,
   },
   async (request) => {
-    const {clientName, service, startTime, endTime} = request.data;
+    const { clientName, service, startTime, endTime } = request.data;
     const userEmail = request.auth?.token.email;
 
     if (!startTime) {
@@ -125,17 +130,18 @@ export const createCalendarEventSecure = onCall(
 
     // Default end time to 1 hour after start if not provided
     const start = new Date(startTime);
-    const end = endTime ?
-      new Date(endTime) : new Date(start.getTime() + 60 * 60 * 1000);
+    const end = endTime
+      ? new Date(endTime)
+      : new Date(start.getTime() + 60 * 60 * 1000);
 
     try {
       const calendar = await getCalendarClient();
       const event = {
         summary: `${clientName} - ${service}`,
         description: `Booking for ${service}`,
-        start: {dateTime: start.toISOString()},
-        end: {dateTime: end.toISOString()},
-        attendees: userEmail ? [{email: userEmail}] : [],
+        start: { dateTime: start.toISOString() },
+        end: { dateTime: end.toISOString() },
+        attendees: userEmail ? [{ email: userEmail }] : [],
         extendedProperties: {
           private: {
             status: "pending", // New bookings start as pending
@@ -148,12 +154,12 @@ export const createCalendarEventSecure = onCall(
         requestBody: event,
       });
 
-      return {success: true, eventId: response.data.id};
+      return { success: true, eventId: response.data.id };
     } catch (error) {
       console.error("Error creating calendar event:", error);
       throw new HttpsError("internal", "Failed to create calendar event.");
     }
-  }
+  },
 );
 
 /**
@@ -168,11 +174,13 @@ export const confirmCalendarEventSecure = onCall(
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
 
     if (!isAdmin) {
-      throw new HttpsError("permission-denied",
-        "Only admins can confirm events.");
+      throw new HttpsError(
+        "permission-denied",
+        "Only admins can confirm events.",
+      );
     }
 
-    const {eventId} = request.data;
+    const { eventId } = request.data;
     if (!eventId) {
       throw new HttpsError("invalid-argument", "Event ID is required.");
     }
@@ -199,12 +207,12 @@ export const confirmCalendarEventSecure = onCall(
         },
       });
 
-      return {success: true};
+      return { success: true };
     } catch (error) {
       console.error("Error confirming calendar event:", error);
       throw new HttpsError("internal", "Failed to confirm calendar event.");
     }
-  }
+  },
 );
 
 /**
@@ -219,11 +227,13 @@ export const cancelCalendarEventSecure = onCall(
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
 
     if (!isAdmin) {
-      throw new HttpsError("permission-denied",
-        "Only admins can cancel events.");
+      throw new HttpsError(
+        "permission-denied",
+        "Only admins can cancel events.",
+      );
     }
 
-    const {eventId} = request.data;
+    const { eventId } = request.data;
     if (!eventId) {
       throw new HttpsError("invalid-argument", "Event ID is required.");
     }
@@ -235,10 +245,10 @@ export const cancelCalendarEventSecure = onCall(
         eventId: eventId,
       });
 
-      return {success: true};
+      return { success: true };
     } catch (error) {
       console.error("Error deleting calendar event:", error);
       throw new HttpsError("internal", "Failed to cancel calendar event.");
     }
-  }
+  },
 );

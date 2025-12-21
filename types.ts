@@ -1,7 +1,6 @@
-
 export enum UserRole {
-  CLIENT = 'CLIENT',
-  ADMIN = 'ADMIN'
+  CLIENT = "CLIENT",
+  ADMIN = "ADMIN",
 }
 
 export interface User {
@@ -19,7 +18,7 @@ export interface Appointment {
   service: string;
   startTime: string;
   endTime: string;
-  status: 'confirmed' | 'pending' | 'cancelled';
+  status: "confirmed" | "pending" | "cancelled";
 }
 
 export interface Service {
@@ -32,14 +31,14 @@ export interface Service {
 }
 
 export interface PendingAction {
-  type: 'create' | 'cancel' | 'confirm';
+  type: "create" | "cancel" | "confirm";
   data: any;
   summary: string;
 }
 
 export interface TranscriptItem {
   id: string;
-  role: 'user' | 'model';
+  role: "user" | "model";
   text: string;
   isComplete: boolean;
 }

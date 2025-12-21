@@ -12,9 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.dawnnaglich.wellness",
@@ -30,9 +28,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.dawnnaglich.wellness",
-      "permissions": [
-        "RECORD_AUDIO"
-      ]
+      "permissions": ["RECORD_AUDIO"]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -45,10 +41,7 @@
       },
       "router": {}
     },
-    "plugins": [
-      "expo-asset",
-      "expo-router"
-    ],
+    "plugins": ["expo-asset", "expo-router"],
     "owner": "michael-simoneau"
   }
 }
