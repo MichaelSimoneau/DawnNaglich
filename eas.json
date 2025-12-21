@@ -5,16 +5,16 @@
   },
   "build": {
     "development": {
-      "prebuildCommand": "",
+      "prebuildCommand": "export",
       "developmentClient": true,
       "distribution": "internal"
     },
     "preview": {
-      "prebuildCommand": "",
+      "prebuildCommand": "export",
       "distribution": "internal"
     },
     "production": {
-      "prebuildCommand": "",
+      "prebuildCommand": "export",
       "node": "v22.21.1",
       "pnpm": "10.25.0",
       "android": {
