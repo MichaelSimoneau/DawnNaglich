@@ -12,7 +12,7 @@ if (process.env.FIREBASE_CONFIG_JSON) {
 } else {
   // Local development: Read from local file
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  firebaseConfig = require("./firebase-config.json");
+  firebaseConfig = require("./firebase-config");
 }
 
 let app: FirebaseApp | undefined;

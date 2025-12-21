@@ -5,16 +5,16 @@
   },
   "build": {
     "development": {
-      "prebuildCommand": "export --profile development --platform all",
+      "prebuildCommand": "export --clear --platform all",
       "developmentClient": true,
       "distribution": "internal"
     },
     "preview": {
-      "prebuildCommand": "export --profile preview --platform all",
+      "prebuildCommand": "export --clear --platform all",
       "distribution": "internal"
     },
     "production": {
-      "prebuildCommand": "export --profile production --platform all",
+      "prebuildCommand": "export --clear --platform all",
       "node": "v22.21.1",
       "pnpm": "10.25.0",
       "android": {
