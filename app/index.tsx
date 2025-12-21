@@ -61,31 +61,6 @@ export default function Home() {
 
   return (
     <View className="flex-1 bg-emerald-950">
-      <View className="fixed top-0 left-0 right-0 z-[110] px-6 pt-8 pb-5 flex-row items-center justify-between pointer-events-none">
-        <View className="flex-1" />
-        <View className="flex-row items-center gap-3 px-6 py-3 rounded-full bg-emerald-950/40 backdrop-blur-xl border border-emerald-500/10 pointer-events-auto">
-          {PAGES.map((_, dotIdx) => (
-            <TouchableOpacity
-              key={dotIdx}
-              onPress={() => setActiveLandingPage(dotIdx)}
-              className={`h-2 rounded-full transition-all duration-500 ${activeLandingPage === dotIdx ? 'w-10 bg-emerald-400' : 'w-2 bg-emerald-400/20'}`}
-            />
-          ))}
-        </View>
-
-        <View className="flex-1 flex-row justify-end pointer-events-auto">
-          <TouchableOpacity 
-            onPress={() => user ? scrollToAgenda() : setShowLogin(true)}
-            className="px-5 py-2 bg-emerald-400 rounded-xl hover:bg-white transition-all active:scale-95"
-          >
-            <Text className="text-emerald-950 text-[10px] font-black uppercase tracking-widest">
-              {user ? 'My Sessions' : 'Login'}
-            </Text>
-          </TouchableOpacity>
-          {user && <View className="w-12" />}
-        </View>
-      </View>
-
       <ScrollView 
         ref={verticalScrollRef} 
         contentContainerStyle={{ flexGrow: 1 }}

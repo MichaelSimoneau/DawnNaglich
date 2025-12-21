@@ -16,7 +16,7 @@ const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       const now = new Date();
-      const events = await CalendarService.getEventsSecure(
+      const events = await CalendarService.getEventsSecureV2(
         new Date(now.setHours(0,0,0,0)).toISOString(),
         new Date(now.setHours(23,59,59,999)).toISOString()
       );

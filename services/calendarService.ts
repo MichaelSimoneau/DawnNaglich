@@ -1,69 +1,39 @@
-import { httpsCallable } from 'firebase/functions';
-import { functions, isDemo } from '../firebaseConfig';
+import { httpsCallableFromURL } from 'firebase/functions';
+import { functions } from '../firebaseConfig';
 import { Appointment } from '../types';
 
 export const CalendarService = {
-  async getEventsSecure(timeMin: string, timeMax: string): Promise<any[]> {
-    if (isDemo) {
-      const today = new Date();
-      const tomorrow = new Date();
-      tomorrow.setDate(today.getDate() + 1);
-      const dayAfter = new Date();
-      dayAfter.setDate(today.getDate() + 2);
-      
-      // Fixed set of mixed fake bookings for visual variety in the agenda
-      return [
-        {
-          id: 'demo-1',
-          summary: 'Client Session',
-          description: 'Muscle Activation',
-          start: { dateTime: new Date(new Date(today).setHours(10, 0, 0)).toISOString() },
-          end: { dateTime: new Date(new Date(today).setHours(11, 0, 0)).toISOString() },
-          extendedProperties: { private: { status: 'confirmed' } }
-        },
-        {
-          id: 'demo-2',
-          summary: 'Client Session',
-          description: 'Functional Stretching',
-          start: { dateTime: new Date(new Date(today).setHours(15, 30, 0)).toISOString() },
-          end: { dateTime: new Date(new Date(today).setHours(16, 30, 0)).toISOString() },
-          extendedProperties: { private: { status: 'pending' } }
-        },
-        {
-          id: 'demo-3',
-          summary: 'Client Session',
-          description: 'Healing Realignment',
-          start: { dateTime: new Date(new Date(tomorrow).setHours(8, 30, 0)).toISOString() },
-          end: { dateTime: new Date(new Date(tomorrow).setHours(10, 0, 0)).toISOString() },
-          extendedProperties: { private: { status: 'confirmed' } }
-        },
-        {
-          id: 'demo-4',
-          summary: 'Client Session',
-          description: 'Muscle Activation',
-          start: { dateTime: new Date(new Date(dayAfter).setHours(11, 0, 0)).toISOString() },
-          end: { dateTime: new Date(new Date(dayAfter).setHours(12, 0, 0)).toISOString() },
-          extendedProperties: { private: { status: 'confirmed' } }
-        },
-        {
-          id: 'demo-5',
-          summary: 'Client Session',
-          description: 'Structural Realignment',
-          start: { dateTime: new Date(new Date(dayAfter).setHours(16, 0, 0)).toISOString() },
-          end: { dateTime: new Date(new Date(dayAfter).setHours(17, 30, 0)).toISOString() },
-          extendedProperties: { private: { status: 'pending' } }
-        }
-      ];
-    }
-
+  async getEventsSecureV2(timeMin: string, timeMax: string): Promise<any[]> {
     try {
       if (!functions) return [];
-      const getEventsFunc = httpsCallable(functions, 'getCalendarEventsSecure');
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      // Use relative /api/* path to hit Firebase Hosting rewrite (firebase.json)
+      // This avoids CORS by making same-origin requests instead of cross-origin
+      const url = `${origin}/api/getCalendarEventsSecure`;
+      console.log('Calling secure function via URL:', url);
+      const getEventsFunc = httpsCallableFromURL(functions, url);
       const response = await getEventsFunc({ timeMin, timeMax });
       const data = response.data as { success: boolean; items: any[] };
       return data.items || [];
     } catch (error: any) {
       console.error('Secure Fetch Error:', error);
+      
+      // Check if this is a Google Calendar API not enabled error
+      const errorMessage = error?.message || error?.details || '';
+      const isApiNotEnabled = 
+        error?.code === 403 || 
+        error?.code === 'permission-denied' ||
+        errorMessage.includes('API has not been used') ||
+        errorMessage.includes('it is disabled') ||
+        errorMessage.includes('PERMISSION_DENIED');
+      
+      if (isApiNotEnabled) {
+        console.error(
+          '⚠️ Google Calendar API is not enabled. ' +
+          'Please enable the API at: https://console.developers.google.com/apis/api/calendar-json.googleapis.com/overview'
+        );
+      }
+      
       return [];
     }
   },
@@ -80,30 +50,33 @@ export const CalendarService = {
   },
 
   async createEventSecure(appointment: Partial<Appointment>): Promise<{ success: boolean; eventId?: string }> {
-    if (isDemo) return { success: true, eventId: 'demo-' + Date.now() };
     try {
       if (!functions) return { success: false };
-      const createEventFunc = httpsCallable(functions, 'createCalendarEventSecure');
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      // Use relative /api/* path via Firebase Hosting rewrite to avoid CORS
+      const createEventFunc = httpsCallableFromURL(functions, `${origin}/api/createCalendarEventSecure`);
       const response = await createEventFunc(appointment);
       return response.data as any;
     } catch (error) { return { success: false }; }
   },
 
   async confirmEventSecure(eventId: string): Promise<boolean> {
-    if (isDemo) return true;
     try {
       if (!functions) return false;
-      const confirmFunc = httpsCallable(functions, 'confirmCalendarEventSecure');
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      // Use relative /api/* path via Firebase Hosting rewrite to avoid CORS
+      const confirmFunc = httpsCallableFromURL(functions, `${origin}/api/confirmCalendarEventSecure`);
       const response = await confirmFunc({ eventId });
       return (response.data as any).success;
     } catch (error) { return false; }
   },
 
   async cancelEventSecure(eventId: string): Promise<boolean> {
-    if (isDemo) return true;
     try {
       if (!functions) return false;
-      const cancelEventFunc = httpsCallable(functions, 'cancelCalendarEventSecure');
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      // Use relative /api/* path via Firebase Hosting rewrite to avoid CORS
+      const cancelEventFunc = httpsCallableFromURL(functions, `${origin}/api/cancelCalendarEventSecure`);
       const response = await cancelEventFunc({ eventId });
       return (response.data as any).success;
     } catch (error) { return false; }

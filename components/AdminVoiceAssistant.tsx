@@ -147,7 +147,7 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 // Fix: Cast fc.args to any to resolve unknown type issues
                 const args = (fc.args || {}) as any;
                 if (fc.name === 'getCalendarEvents') {
-                  const items = await CalendarService.getEventsSecure(args.timeMin, args.timeMax);
+                  const items = await CalendarService.getEventsSecureV2(args.timeMin, args.timeMax);
                   toolResult = items.length ? items.map(e => `${e.summary} at ${new Date(e.start.dateTime).toLocaleTimeString()}`).join(', ') : 'Schedule is clear.';
                 } else if (fc.name === 'createCalendarEvent') {
                   setPendingAction({ type: 'create', data: args, summary: args.summary });

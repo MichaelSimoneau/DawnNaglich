@@ -14,9 +14,6 @@ const firebaseConfig = require('./firebase-config.json');
 //   appId: "1:333181114084:web:7c59a39467396335173ef1"
 // };
 
-// Determine if we are in demo mode based on the environment and placeholders
-export const isDemo = false;
-
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let db: Firestore | undefined;
@@ -27,6 +24,8 @@ try {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
   auth = getAuth(app);
   db = getFirestore(app);
+  // Note: getFunctions() without region parameter allows functions to be called
+  // via /api/* rewrites in firebase.json, avoiding CORS issues
   functions = getFunctions(app);
 } catch (e) {
   console.warn("Firebase initialization limited. Some authenticated features may be restricted.", e);

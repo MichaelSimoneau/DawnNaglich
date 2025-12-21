@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, useWindowDimensions, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, useWindowDimensions, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -107,28 +107,37 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
         pointerEvents="box-none"
       >
         <View style={styles.topBarContent}>
+          {/* Left spacer */}
           <View style={styles.spacer} />
           
-          {/* Pagination Indicators - HIGHLY VISIBLE */}
+          {/* Pagination Indicators - CENTERED AND HIGHLY VISIBLE */}
           <View style={styles.indicatorContainer}>
             {PAGES.map((_, dotIdx) => (
               <TouchableOpacity
                 key={dotIdx}
                 onPress={() => onNavigateToPage(dotIdx)}
+                activeOpacity={0.7}
                 style={[
                   styles.indicator,
-                  activePageIndex === dotIdx && styles.indicatorActive
+                  activePageIndex === dotIdx && styles.indicatorActive,
+                  Platform.select({
+                    web: {
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    },
+                    default: {},
+                  }),
                 ]}
               />
             ))}
           </View>
 
-          {/* Login/Logout Buttons */}
-          <View style={styles.buttonContainer}>
+          {/* Login/Logout Buttons - RIGHT SIDE */}
+          <View style={styles.buttonContainer} pointerEvents="auto">
             {isLoggedIn && (
               <TouchableOpacity 
                 onPress={handleLogout}
                 style={styles.logoutButton}
+                activeOpacity={0.8}
               >
                 <Text style={styles.logoutButtonText}>Logout</Text>
               </TouchableOpacity>
@@ -136,6 +145,7 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
             <TouchableOpacity 
               onPress={isLoggedIn ? onBookNow : onLoginClick}
               style={styles.loginButton}
+              activeOpacity={0.8}
             >
               <Text style={styles.loginButtonText}>
                 {isLoggedIn ? 'Sessions' : 'Login'}
@@ -247,94 +257,112 @@ const styles = StyleSheet.create({
     backgroundColor: '#022c22',
   },
   topBar: {
-    zIndex: 2000,
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
+    zIndex: 3000,
+    elevation: 3000,
+    // Subtle backdrop for better visibility
+    backgroundColor: 'rgba(2, 44, 34, 0.3)',
   },
   topBarContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
-    paddingTop: 40,
+    paddingTop: 48,
     paddingBottom: 20,
+    minHeight: 88,
   },
   spacer: {
     flex: 1,
+    minWidth: 24,
   },
   indicatorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: 'rgba(2, 44, 34, 0.95)',
-    borderWidth: 2,
+    backgroundColor: 'rgba(2, 44, 34, 0.98)',
+    borderWidth: 1.5,
     borderColor: '#10B981',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 12,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 16,
+    // Ensure it's above other elements
+    zIndex: 3001,
   },
   indicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: 'rgba(16, 185, 129, 0.5)',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'rgba(16, 185, 129, 0.4)',
   },
   indicatorActive: {
-    width: 56,
-    height: 12,
-    borderRadius: 6,
+    width: 48,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: '#10B981',
     shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 10,
+    ...Platform.select({
+      web: {
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      },
+      default: {},
+    }),
   },
   buttonContainer: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: 12,
+    alignItems: 'center',
+    gap: 10,
   },
   logoutButton: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    paddingVertical: 10,
+    backgroundColor: 'rgba(239, 68, 68, 0.25)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: 'rgba(239, 68, 68, 0.5)',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+    ...Platform.select({
+      web: {
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      },
+      default: {},
+    }),
   },
   logoutButtonText: {
     color: '#FCA5A5',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   loginButton: {
     paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingVertical: 10,
     backgroundColor: '#10B981',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    borderRadius: 8,
   },
   loginButtonText: {
-    color: '#022c22',
-    fontSize: 10,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 2,
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   slideContent: {
     ...StyleSheet.absoluteFillObject,

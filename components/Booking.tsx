@@ -3,7 +3,7 @@ import { ActivityIndicator, StyleSheet, View, Text, TouchableOpacity, TextInput,
 import { SERVICES } from '../constants';
 import { Service, Appointment } from '../types';
 import { CalendarService } from '../services/calendarService';
-import { auth, isDemo } from '../firebaseConfig';
+import { auth } from '../firebaseConfig';
 import { useUser } from '../UserContext';
 
 interface Slot {
@@ -40,7 +40,7 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
         const now = new Date();
         const timeMin = new Date(now.setHours(0, 0, 0, 0)).toISOString();
         const timeMax = new Date(now.setDate(now.getDate() + 30)).toISOString();
-        const events = await CalendarService.getEventsSecure(timeMin, timeMax);
+        const events = await CalendarService.getEventsSecureV2(timeMin, timeMax);
         setAppointments(CalendarService.mapGoogleEventsToAppointments(events));
       } catch (e) {
         console.error("Failed to fetch availability:", e);
@@ -127,7 +127,7 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
       const endTime = new Date(startTime.getTime() + service.duration * 60000);
 
       const result = await CalendarService.createEventSecure({
-        clientName: formData.name || "Valued Client",
+        clientName: formData.name,
         service: service.title,
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),

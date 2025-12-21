@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native';
-import { auth, isDemo } from '../firebaseConfig';
+import { auth } from '../firebaseConfig';
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { ADMIN_EMAILS } from '../constants';
-import { User, UserRole } from '../types';
+import { User } from '../types';
 
 interface LoginProps {
   onLoginComplete?: (user: User) => void;
@@ -15,23 +14,7 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleDemoLogin = (role: UserRole) => {
-    if (onLoginComplete) {
-      onLoginComplete({
-        id: 'demo-user',
-        email: role === UserRole.ADMIN ? 'don.negligent@gmail.com' : 'client@example.com',
-        name: role === UserRole.ADMIN ? 'Dawn Naglich' : 'Valued Client',
-        role: role
-      });
-    }
-  };
-
   const handleGoogleLogin = async () => {
-    if (isDemo) {
-      handleDemoLogin(UserRole.CLIENT);
-      return;
-    }
-    
     setLoading(true);
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/calendar');
@@ -50,12 +33,6 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
   };
 
   const handleEmailAuth = async () => {
-    if (isDemo) {
-      const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === email.toLowerCase());
-      handleDemoLogin(isAdmin ? UserRole.ADMIN : UserRole.CLIENT);
-      return;
-    }
-
     if (!email || !password) return;
     setLoading(true);
     try {
@@ -86,8 +63,6 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{isSignUp ? 'Create an Account' : 'Secure Sign In'}</Text>
-
-          {/* Demo shortcuts removed for production fruition */}
 
           <TouchableOpacity 
             style={styles.googleBtn}
@@ -184,12 +159,6 @@ const styles = StyleSheet.create({
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 30 },
   footerText: { color: '#94A3B8', fontSize: 14 },
   footerLink: { color: '#10B981', fontWeight: '700', fontSize: 14 },
-  demoSection: { marginBottom: 24, padding: 16, backgroundColor: 'rgba(16, 185, 129, 0.1)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.2)' },
-  demoLabel: { fontSize: 10, fontWeight: '900', color: '#10B981', textTransform: 'uppercase', marginBottom: 8 },
-  demoBtnRow: { flexDirection: 'row', gap: 8 },
-  demoAdminBtn: { flex: 1, backgroundColor: '#059669', paddingVertical: 8, borderRadius: 12 },
-  demoClientBtn: { flex: 1, backgroundColor: '#10B981', paddingVertical: 8, borderRadius: 12 },
-  demoBtnText: { color: '#FFF', textAlign: 'center', fontWeight: '700', fontSize: 12 },
 });
 
 export default Login;
