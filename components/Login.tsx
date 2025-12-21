@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native';
 import { auth } from '../firebaseConfig';
-import { GoogleAuthProvider, signInWithPopup, signInWithCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInWithCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { User } from '../types';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
@@ -31,7 +31,7 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
   const [request, response, promptAsync] = Google.useAuthRequest({
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
     scopes: [
       'https://www.googleapis.com/auth/calendar',
       'https://www.googleapis.com/auth/calendar.events',
@@ -45,13 +45,58 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
       const { id_token, access_token } = response.params;
       if (id_token) {
         const credential = GoogleAuthProvider.credential(id_token, access_token);
-        signInWithCredential(auth, credential).catch((error) => {
-          console.error("Firebase credential sign-in error:", error);
-          alert("Authentication failed. Please try again.");
-        });
+        signInWithCredential(auth, credential)
+          .then(() => {
+            // Success - auth state change will trigger onLoginComplete
+          })
+          .catch((error) => {
+            console.error("Firebase credential sign-in error:", error);
+            alert("Authentication failed. Please try again.");
+            setLoading(false);
+          });
       }
     }
   }, [response]);
+
+  // Track initial auth state to only call onLoginComplete on sign-in transition
+  const [wasUnauthenticated, setWasUnauthenticated] = useState(true);
+
+  // Check initial auth state
+  useEffect(() => {
+    if (auth) {
+      setWasUnauthenticated(!auth.currentUser);
+    }
+  }, []);
+
+  // Listen for auth state changes to call onLoginComplete when user signs in
+  useEffect(() => {
+    if (!auth || !onLoginComplete) return;
+    
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      // Only call onLoginComplete if user was previously unauthenticated and now is authenticated
+      if (firebaseUser && wasUnauthenticated && onLoginComplete) {
+        // User successfully signed in (transition from unauthenticated to authenticated)
+        const user: User = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          name: firebaseUser.displayName || 'Guest',
+          role: 'client' as any, // Will be determined by UserContext
+        };
+        // Update state to prevent multiple calls
+        setWasUnauthenticated(false);
+        setLoading(false);
+        // Small delay to ensure state is updated
+        setTimeout(() => {
+          onLoginComplete(user);
+        }, 100);
+      } else if (!firebaseUser) {
+        // User signed out, reset state
+        setWasUnauthenticated(true);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [onLoginComplete, wasUnauthenticated]);
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -64,21 +109,24 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
           provider.addScope('https://www.googleapis.com/auth/calendar');
           provider.addScope('https://www.googleapis.com/auth/calendar.events');
           await signInWithPopup(auth, provider);
+          // onLoginComplete will be called via auth state change listener
         }
       } else {
         // Native: Use expo-auth-session
         if (request) {
           await promptAsync();
+          // onLoginComplete will be called via auth state change listener after credential sign-in
         } else {
           alert("OAuth not configured. Please set EXPO_PUBLIC_GOOGLE_CLIENT_ID environment variables.");
+          setLoading(false);
         }
       }
     } catch (error) {
       console.error("Google Auth Error:", error);
       alert("Authentication failed. Please try again.");
-    } finally {
       setLoading(false);
     }
+    // Don't set loading to false here for successful cases - let auth state change handle it
   };
 
   const handleEmailAuth = async () => {
@@ -88,15 +136,17 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
       if (auth) {
         if (isSignUp) {
           await createUserWithEmailAndPassword(auth, email, password);
+          // onLoginComplete will be called via auth state change listener
         } else {
           await signInWithEmailAndPassword(auth, email, password);
+          // onLoginComplete will be called via auth state change listener
         }
       }
     } catch (error: any) {
       alert(error.message);
-    } finally {
       setLoading(false);
     }
+    // Don't set loading to false here - let auth state change handle it
   };
 
   return (

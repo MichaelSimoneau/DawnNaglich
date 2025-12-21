@@ -34,3 +34,4 @@ google-services.json
 .expo/
 .vscode/
 .DS_Store
+GoogleService-Info.plist

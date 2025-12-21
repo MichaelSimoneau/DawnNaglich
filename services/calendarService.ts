@@ -7,9 +7,19 @@ export const CalendarService = {
     try {
       if (!functions) return [];
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      // Use relative /api/* path to hit Firebase Hosting rewrite (firebase.json)
-      // This avoids CORS by making same-origin requests instead of cross-origin
-      const url = `${origin}/api/getCalendarEventsSecure`;
+      
+      // Check if we're in emulator mode (localhost)
+      const isEmulator = origin.includes('localhost') || origin.includes('127.0.0.1');
+      
+      let url: string;
+      if (isEmulator) {
+        // For emulators, use direct function URL
+        url = 'http://127.0.0.1:5001/dawn-naglich/us-central1/getCalendarEventsSecure';
+      } else {
+        // For production, use relative /api/* path to hit Firebase Hosting rewrite
+        url = `${origin}/api/getCalendarEventsSecure`;
+      }
+      
       console.log('Calling secure function via URL:', url);
       const getEventsFunc = httpsCallableFromURL(functions, url);
       const response = await getEventsFunc({ timeMin, timeMax });
@@ -53,8 +63,11 @@ export const CalendarService = {
     try {
       if (!functions) return { success: false };
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      // Use relative /api/* path via Firebase Hosting rewrite to avoid CORS
-      const createEventFunc = httpsCallableFromURL(functions, `${origin}/api/createCalendarEventSecure`);
+      const isEmulator = origin.includes('localhost') || origin.includes('127.0.0.1');
+      const url = isEmulator 
+        ? 'http://127.0.0.1:5001/dawn-naglich/us-central1/createCalendarEventSecure'
+        : `${origin}/api/createCalendarEventSecure`;
+      const createEventFunc = httpsCallableFromURL(functions, url);
       const response = await createEventFunc(appointment);
       return response.data as any;
     } catch (error) { return { success: false }; }
@@ -64,8 +77,11 @@ export const CalendarService = {
     try {
       if (!functions) return false;
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      // Use relative /api/* path via Firebase Hosting rewrite to avoid CORS
-      const confirmFunc = httpsCallableFromURL(functions, `${origin}/api/confirmCalendarEventSecure`);
+      const isEmulator = origin.includes('localhost') || origin.includes('127.0.0.1');
+      const url = isEmulator 
+        ? 'http://127.0.0.1:5001/dawn-naglich/us-central1/confirmCalendarEventSecure'
+        : `${origin}/api/confirmCalendarEventSecure`;
+      const confirmFunc = httpsCallableFromURL(functions, url);
       const response = await confirmFunc({ eventId });
       return (response.data as any).success;
     } catch (error) { return false; }
@@ -75,8 +91,11 @@ export const CalendarService = {
     try {
       if (!functions) return false;
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      // Use relative /api/* path via Firebase Hosting rewrite to avoid CORS
-      const cancelEventFunc = httpsCallableFromURL(functions, `${origin}/api/cancelCalendarEventSecure`);
+      const isEmulator = origin.includes('localhost') || origin.includes('127.0.0.1');
+      const url = isEmulator 
+        ? 'http://127.0.0.1:5001/dawn-naglich/us-central1/cancelCalendarEventSecure'
+        : `${origin}/api/cancelCalendarEventSecure`;
+      const cancelEventFunc = httpsCallableFromURL(functions, url);
       const response = await cancelEventFunc({ eventId });
       return (response.data as any).success;
     } catch (error) { return false; }

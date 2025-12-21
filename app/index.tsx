@@ -46,6 +46,20 @@ export default function Home() {
     verticalScrollRef.current?.scrollTo({ y: agendaOffset, animated: true });
   };
 
+  const scrollToTop = () => {
+    verticalScrollRef.current?.scrollTo({ y: 0, animated: true });
+  };
+
+  const handleLoginComplete = () => {
+    setShowLogin(false);
+    // Scroll back to top (ClientLanding) after successful login
+    setTimeout(() => {
+      scrollToTop();
+      // Also reset to first landing page
+      setActiveLandingPage(0);
+    }, 100);
+  };
+
   if (showLogin) return (
     <View className="flex-1 bg-emerald-950">
       <TouchableOpacity 
@@ -55,7 +69,7 @@ export default function Home() {
         <Text className="fa-solid fa-arrow-left text-emerald-100" />
         <Text className="text-white font-black text-[10px] uppercase tracking-[2px] ml-3">Home</Text>
       </TouchableOpacity>
-      <Login onLoginComplete={() => setShowLogin(false)} />
+      <Login onLoginComplete={handleLoginComplete} />
     </View>
   );
 

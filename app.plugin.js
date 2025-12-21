@@ -1,8 +1,11 @@
-const { withAppBuildGradle, withProjectBuildGradle } = require('@expo/config-plugins');
+const { withAppBuildGradle, withProjectBuildGradle, withDangerousMod } = require('@expo/config-plugins');
+const fs = require('fs');
+const path = require('path');
 
 /**
- * Expo config plugin to add Google services Gradle plugin for Firebase
- * This ensures google-services.json is processed during Android builds
+ * Expo config plugin to add Google services for Firebase on both Android and iOS
+ * - Android: Adds Google services Gradle plugin to process google-services.json
+ * - iOS: Adds GoogleService-Info.plist to the Xcode project
  */
 const withGoogleServices = (config) => {
   // Modify root-level build.gradle to add the plugin dependency
@@ -106,6 +109,31 @@ const withGoogleServices = (config) => {
     }
     return config;
   });
+
+  // iOS: Copy GoogleService-Info.plist to iOS project directory
+  // The file will be automatically included in the Xcode project during prebuild
+  config = withDangerousMod(config, [
+    'ios',
+    async (config) => {
+      const sourcePlistPath = path.join(config.modRequest.projectRoot, 'GoogleService-Info.plist');
+      const iosProjectRoot = config.modRequest.platformProjectRoot;
+      const targetPlistPath = path.join(iosProjectRoot, 'GoogleService-Info.plist');
+      
+      // Check if GoogleService-Info.plist exists in project root
+      if (fs.existsSync(sourcePlistPath)) {
+        // Copy the file to the iOS project directory
+        if (!fs.existsSync(iosProjectRoot)) {
+          fs.mkdirSync(iosProjectRoot, { recursive: true });
+        }
+        fs.copyFileSync(sourcePlistPath, targetPlistPath);
+        console.log('✓ Copied GoogleService-Info.plist to iOS project');
+      } else {
+        console.warn('⚠ GoogleService-Info.plist not found in project root. iOS Firebase may not work correctly.');
+      }
+      
+      return config;
+    },
+  ]);
 
   return config;
 };

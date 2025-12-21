@@ -7,14 +7,14 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "prebuildCommand": "node scripts/setup-google-services.js"
+      "prebuildCommand": "pnpm build"
     },
     "preview": {
       "distribution": "internal",
-      "prebuildCommand": "node scripts/setup-google-services.js"
+      "prebuildCommand": "pnpm build"
     },
     "production": {
-      "prebuildCommand": "node scripts/setup-google-services.js",
+      "prebuildCommand": "pnpm build",
       "node": "v22.21.1",
       "pnpm": "10.25.0"
     }
