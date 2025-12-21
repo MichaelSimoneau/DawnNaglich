@@ -34,6 +34,7 @@
     "expo-crypto": "~15.0.8",
     "expo-dev-client": "~6.0.20",
     "expo-file-system": "^19.0.21",
+    "expo-font": "~14.0.10",
     "expo-gl": "^16.0.9",
     "expo-linking": "~8.0.11",
     "expo-router": "^6.0.21",
@@ -71,7 +72,7 @@
     "jiti": "^2.6.1",
     "prettier": "^3.7.4",
     "puppeteer": "^24.34.0",
-    "typescript": "~5.1.6",
+    "typescript": "~5.9.3",
     "typescript-eslint": "^8.50.0"
   },
   "pnpm": {
