@@ -3,16 +3,17 @@ import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getFunctions, Functions } from "firebase/functions";
 
-const firebaseConfig = require("./firebase-config.json");
-// Exact Firebase configuration provided by the user for project "dawn-naglich"
-// const firebaseConfig = {
-//   apiKey: process.env.API_KEY || "API_KEY_GOES_HERE",
-//   authDomain: "dawn-naglich.firebaseapp.com",
-//   projectId: "dawn-naglich",
-//   storageBucket: "dawn-naglich.firebasestorage.app",
-//   messagingSenderId: "333181114084",
-//   appId: "1:333181114084:web:7c59a39467396335173ef1"
-// };
+// Read Firebase config from environment variable (EAS builds) or local file (development)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let firebaseConfig: any;
+if (process.env.FIREBASE_CONFIG_JSON) {
+  // EAS build: Parse JSON from environment variable
+  firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG_JSON as string);
+} else {
+  // Local development: Read from local file
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  firebaseConfig = require("./firebase-config.json");
+}
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
