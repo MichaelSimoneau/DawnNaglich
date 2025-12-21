@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #022C22;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        #root {
+            width: 100%;
+            max-width: 430px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <!-- Component will be rendered here by React -->
+        <div style="color: white; text-align: center; padding: 40px;">
+            <p>Loading Login component...</p>
+            <p style="font-size: 12px; color: #94A3B8; margin-top: 10px;">
+                If you see this, the component failed to load.
+                Make sure to run: pnpm start --web
+                Then navigate to the login page.
+            </p>
+        </div>
+    </div>
+    <script>
+        // This will be replaced with actual component rendering
+        // For now, we'll use Puppeteer to navigate to the actual app
+        console.log('Preview page loaded');
+    </script>
+</body>
+</html>

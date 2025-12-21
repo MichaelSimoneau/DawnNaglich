@@ -2,7 +2,7 @@
   "expo": {
     "name": "Dawn Naglich Wellness",
     "slug": "dawn-naglich",
-    "scheme": "dawn-naglich-wellness",
+    "scheme": "dawn-naglich",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

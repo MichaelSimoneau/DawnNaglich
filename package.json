@@ -15,7 +15,8 @@
     "deploy": "pnpm deploy:all",
     "deploy:all": "pnpm exec firebase deploy --only functions,hosting",
     "deploy:web": "pnpm build:web && pnpm exec firebase deploy --only hosting",
-    "deploy:functions": "pnpm --filter functions deploy"
+    "deploy:functions": "pnpm --filter functions deploy",
+    "screenshot:login": "node scripts/screenshot-login.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
@@ -26,6 +27,7 @@
     "expo-av": "~16.0.8",
     "expo-constants": "^18.0.12",
     "expo-crypto": "~15.0.8",
+    "expo-dev-client": "~6.0.20",
     "expo-file-system": "^19.0.21",
     "expo-gl": "^16.0.9",
     "expo-linking": "~8.0.11",
@@ -51,11 +53,15 @@
   "devDependencies": {
     "@babel/runtime": "^7.28.4",
     "@types/react": "~19.1.17",
+    "puppeteer": "^23.11.1",
     "typescript": "~5.9.3"
   },
   "pnpm": {
     "ignoredBuiltDependencies": [
       "protobufjs"
+    ],
+    "onlyBuiltDependencies": [
+      "puppeteer"
     ]
   },
   "packageManager": "pnpm@10.25.0+sha512.5e82639027af37cf832061bcc6d639c219634488e0f2baebe785028a793de7b525ffcd3f7ff574f5e9860654e098fe852ba8ac5dd5cefe1767d23a020a92f501"
