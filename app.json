@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Dawn Naglich Wellness",
+    "name": "Dawn Naglich",
     "slug": "dawn-naglich",
     "scheme": "dawn-naglich",
     "version": "1.0.0",
@@ -19,6 +19,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.dawnnaglich.wellness",
       "infoPlist": {
+        "CFBundleDisplayName": "Dawn Naglich",
         "NSMicrophoneUsageDescription": "Dawn needs microphone access for the Becky AI scheduling assistant.",
         "ITSAppUsesNonExemptEncryption": false
       }
