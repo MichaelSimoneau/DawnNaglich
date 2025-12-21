@@ -5,13 +5,16 @@
   },
   "build": {
     "development": {
+      "prebuildCommand": "pnpm build:firebase --dev",
       "developmentClient": true,
       "distribution": "internal"
     },
     "preview": {
+      "prebuildCommand": "pnpm build:firebase --dev",
       "distribution": "internal"
     },
     "production": {
+      "prebuildCommand": "pnpm build:firebase",
       "node": "v22.21.1",
       "pnpm": "10.25.0",
       "android": {

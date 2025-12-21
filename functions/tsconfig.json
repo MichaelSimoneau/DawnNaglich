@@ -7,9 +7,30 @@
     "noUnusedLocals": true,
     "outDir": "lib",
     "sourceMap": true,
+    "target": "es2017",
+    "lib": ["es2017", "dom"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
     "strict": true,
-    "target": "es2017"
   },
   "compileOnSave": true,
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "lib",
+    "build",
+    "coverage",
+    "logs",
+    "tmp",
+    "cache",
+    "temp"
+  ]
 }

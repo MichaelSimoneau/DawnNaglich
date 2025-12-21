@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#173129"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -25,7 +25,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#173129"
       },
       "package": "com.dawnnaglich.wellness",
       "permissions": ["RECORD_AUDIO"]
