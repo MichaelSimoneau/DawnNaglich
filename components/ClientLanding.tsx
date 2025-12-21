@@ -66,6 +66,7 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
           ...StyleSheet.absoluteFillObject,
           opacity: interpolate(scrollX.value, [2.5, 3], [0, 1], Extrapolation.CLAMP),
           zIndex: scrollX.value > 2.5 ? 10 : -1,
+          pointerEvents: isMapActive ? 'auto' : 'none',
         }))}
       >
         <LocationMap isInteractive={isMapActive} />
@@ -83,6 +84,8 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
         snapToAlignment="start"
         disableIntervalMomentum={false}
         bounces={false}
+        scrollEnabled={!isMapActive}
+        pointerEvents={isMapActive ? 'none' : 'auto'}
         style={StyleSheet.absoluteFill}
         contentContainerStyle={{ width: SCREEN_WIDTH * PAGES.length }}
       >
@@ -274,6 +277,8 @@ const styles = StyleSheet.create({
     paddingTop: 48,
     paddingBottom: 20,
     minHeight: 88,
+    zIndex: 3002,
+    elevation: 3002,
   },
   spacer: {
     flex: 1,
@@ -326,6 +331,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
     gap: 10,
+    zIndex: 3003,
+    elevation: 3003,
   },
   logoutButton: {
     paddingHorizontal: 16,
