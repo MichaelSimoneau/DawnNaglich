@@ -61,7 +61,7 @@
   "devDependencies": {
     "@babel/runtime": "^7.28.4",
     "@types/react": "~19.1.17",
-    "puppeteer": "^23.11.1",
+    "puppeteer": "^24.34.0",
     "typescript": "~5.9.3"
   },
   "pnpm": {
