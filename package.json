@@ -7,7 +7,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "build": "all || pnpm build:firebase && echo 'Build Complete'",
+    "build": "pnpm build:firebase && echo 'Build Complete'",
     "build:firebase": "pnpm --filter functions build && pnpm build:web --clear",
     "build:dev": "pnpm build --dev",
     "build:eas": "eas build --profile production",
