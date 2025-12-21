@@ -10,9 +10,10 @@ if (process.env.FIREBASE_CONFIG_JSON) {
   // EAS build: Parse JSON from environment variable
   firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG_JSON as string);
 } else {
-  // Local development: Read from local file
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  firebaseConfig = require("./firebase-config");
+  // Local development: set FIREBASE_CONFIG_JSON 
+  // to the contents of firebase-config.json
+  // via the `source ./.zshrc` command
+  throw new Error("Firebase config not found");
 }
 
 let app: FirebaseApp | undefined;

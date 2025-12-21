@@ -1,0 +1,1 @@
+export FIREBASE_CONFIG_JSON=$(cat firebase-config.json)
