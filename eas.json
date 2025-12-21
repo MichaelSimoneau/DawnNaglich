@@ -6,20 +6,30 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "prebuildCommand": "node scripts/setup-google-services.js",
+      "environment": {
+        "GOOGLE_SERVICES_JSON": "${GOOGLE_SERVICES_JSON}"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "prebuildCommand": "node scripts/setup-google-services.js",
+      "environment": {
+        "GOOGLE_SERVICES_JSON": "${GOOGLE_SERVICES_JSON}"
+      }
     },
     "production": {
       "buildCommands": [
         "pnpm build:web"
       ],
+      "prebuildCommand": "node scripts/setup-google-services.js",
       "node": "v22.21.1",
       "pnpm": "10.25.0",
       "environment": {
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "${EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID}",
-        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "${EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID}"
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "${EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID}",
+        "GOOGLE_SERVICES_JSON": "${GOOGLE_SERVICES_JSON}"
       }
     }
   },
