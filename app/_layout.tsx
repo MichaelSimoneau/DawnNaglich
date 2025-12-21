@@ -14,7 +14,7 @@ import ClientAssistant from '../components/ClientAssistant';
 import Logo from '../components/Logo';
 import Login from '../components/Login';
 
-// Lazy load SnowOverlay to avoid Three.js import issues in static exports
+// Lazy load SnowOverlay to avoid Three.js import issues
 const SnowOverlay = React.lazy(() => import('../components/SnowOverlay'));
 
 // Check if we're before December 26, 2025
