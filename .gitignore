@@ -27,11 +27,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Credentials
 firebase-config.json
 dawn-naglich-firebase.json
-.firebase/*
 google-services.json
-.expo/
-.vscode/
-.DS_Store
 GoogleService-Info.plist
+
+# Build directories and files
+.expo/
+.firebase/*
+ios/
+android/
