@@ -289,15 +289,25 @@ const styles = StyleSheet.create({
     elevation: 3000,
     // Subtle backdrop for better visibility
     backgroundColor: 'rgba(2, 44, 34, 0.3)',
+    ...Platform.select({
+      web: {
+        position: 'sticky',
+        top: 0,
+      },
+      default: {
+        position: 'absolute',
+        top: 0,
+      },
+    }),
   },
   topBarContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
-    paddingTop: 48,
-    paddingBottom: 20,
-    minHeight: 88,
+    paddingTop: 12,
+    paddingBottom: 12,
+    minHeight: 64,
     zIndex: 3002,
     elevation: 3002,
   },
