@@ -30,3 +30,4 @@ dist-ssr
 firebase-config.json
 dawn-naglich-firebase.json
 .firebase/*
+google-services.json

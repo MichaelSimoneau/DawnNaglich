@@ -46,7 +46,8 @@
     },
     "plugins": [
       "expo-asset",
-      "expo-router"
+      "expo-router",
+      "./app.plugin.js"
     ],
     "owner": "michael-simoneau"
   }
