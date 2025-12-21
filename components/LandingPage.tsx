@@ -10,10 +10,19 @@ import { PAGES } from '../content';
 
 interface Props {
   progress: ReturnType<typeof useSharedValue<number>>;
+  isMapActive: boolean;
 }
 
-const LandingPage: React.FC<Props> = ({ progress }) => {
+const LandingPage: React.FC<Props> = ({ progress, isMapActive }) => {
   const { width: SCREEN_WIDTH } = useWindowDimensions();
+
+  const overlayStyle = useAnimatedStyle(() => {
+    // Keep overlay fully visible until user clicks "Explore Facility"
+    // Only fade out when map is actively being used
+    return {
+      opacity: isMapActive ? 0 : 1,
+    };
+  });
 
   return (
     <View style={styles.container}>
@@ -49,7 +58,7 @@ const LandingPage: React.FC<Props> = ({ progress }) => {
           </Animated.View>
         );
       })}
-      <View style={styles.overlay} pointerEvents="none" />
+      <Animated.View style={[styles.overlay, overlayStyle]} pointerEvents="none" />
     </View>
   );
 };

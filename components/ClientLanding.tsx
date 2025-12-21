@@ -58,7 +58,7 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
 
   return (
     <View style={styles.container}>
-      <LandingPage progress={scrollX} />
+      <LandingPage progress={scrollX} isMapActive={isMapActive} />
 
       {/* Map Section for index 3 */}
       <Animated.View 
@@ -86,7 +86,7 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
         bounces={false}
         scrollEnabled={!isMapActive}
         pointerEvents={isMapActive ? 'none' : 'auto'}
-        style={StyleSheet.absoluteFill}
+        style={[StyleSheet.absoluteFill, { zIndex: 15 }]}
         contentContainerStyle={{ width: SCREEN_WIDTH * PAGES.length }}
       >
         {PAGES.map((page, idx) => (
@@ -376,6 +376,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
+    zIndex: 10,
   },
   badgeContainer: {
     paddingVertical: 8,
