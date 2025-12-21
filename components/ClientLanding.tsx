@@ -37,17 +37,20 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
   const isScrollingRef = useRef(false);
 
   useEffect(() => {
-    // Only programmatically scroll if user isn't actively scrolling
-    if (!isScrollingRef.current) {
-      scrollX.value = activePageIndex;
-      const targetPos = activePageIndex * SCREEN_WIDTH;
-      // Use a small delay to ensure smooth transition
-      const timeoutId = setTimeout(() => {
-        scrollViewRef.current?.scrollTo({ x: targetPos, animated: false });
-      }, 0);
-      return () => clearTimeout(timeoutId);
-    }
+    scrollX.value = activePageIndex;
+    const targetPos = activePageIndex * SCREEN_WIDTH;
+    // Reset scrolling flag and scroll to exact position
+    isScrollingRef.current = false;
+    // Use requestAnimationFrame for smooth scroll
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollTo({ x: targetPos, animated: false });
+    });
+    // Double-check position after a brief delay to ensure it's exact
+    const timeoutId = setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ x: targetPos, animated: false });
+    }, 100);
     if (activePageIndex !== 3) setIsMapActive(false);
+    return () => clearTimeout(timeoutId);
   }, [activePageIndex, SCREEN_WIDTH]);
 
   const snapToExactPosition = (index: number) => {
