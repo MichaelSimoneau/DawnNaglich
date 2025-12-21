@@ -11,7 +11,7 @@
     "prebuild:eas": "node scripts/setup-google-services.js",
     "prebuild:ios": "node scripts/setup-google-services.js --platform ios",
     "prebuild:android": "node scripts/setup-google-services.js --platform android",
-    "build": "pnpm build:firebase && echo 'Build Complete'",
+    "build": "all || pnpm build:firebase && echo 'Build Complete'",
     "build:firebase": "pnpm --filter functions build && pnpm build:web --clear",
     "build:dev": "pnpm build --dev",
     "build:eas": "eas build --profile production",
