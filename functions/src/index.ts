@@ -29,6 +29,7 @@ async function getCalendarClient() {
     scopes: ["https://www.googleapis.com/auth/calendar"],
   });
   const authClient = await auth.getClient();
+  // Type assertion needed due to Google Calendar API client typing incompatibility
   return google.calendar({version: "v3", auth: authClient as any});
 }
 
@@ -79,26 +80,29 @@ export const getCalendarEventsSecure = onCall(
       });
 
       return {success: true, items: filteredEvents};
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching calendar events:", error);
-      
+
       // Check if this is a Google Calendar API not enabled error
-      const errorMessage = error?.message || '';
-      const isApiNotEnabled = 
-        error?.code === 403 || 
-        errorMessage.includes('API has not been used') ||
-        errorMessage.includes('it is disabled') ||
-        errorMessage.includes('PERMISSION_DENIED');
-      
+      const errorMessage = (error && typeof error === "object" && "message" in error) ?
+        String(error.message) : "";
+      const errorCode = (error && typeof error === "object" && "code" in error) ?
+        error.code : undefined;
+      const isApiNotEnabled =
+        errorCode === 403 ||
+        errorMessage.includes("API has not been used") ||
+        errorMessage.includes("it is disabled") ||
+        errorMessage.includes("PERMISSION_DENIED");
+
       if (isApiNotEnabled) {
         console.warn(
-          '⚠️ Google Calendar API is not enabled for this project. ' +
-          'Please enable it at: https://console.developers.google.com/apis/api/calendar-json.googleapis.com/overview'
+          "⚠️ Google Calendar API is not enabled for this project. " +
+          "Please enable it at: https://console.developers.google.com/apis/api/calendar-json.googleapis.com/overview"
         );
         // Return empty array instead of throwing to allow graceful fallback
         return {success: true, items: []};
       }
-      
+
       throw new HttpsError("internal", "Failed to fetch calendar events.");
     }
   }
