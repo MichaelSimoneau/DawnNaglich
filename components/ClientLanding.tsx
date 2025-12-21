@@ -34,27 +34,45 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
   const [isMapActive, setIsMapActive] = useState(false);
   const scrollX = useSharedValue(activePageIndex);
   const scrollViewRef = useRef<Animated.ScrollView>(null);
+  const isScrollingRef = useRef(false);
 
   useEffect(() => {
-    scrollX.value = activePageIndex;
-    const targetPos = activePageIndex * SCREEN_WIDTH;
-    // Use requestAnimationFrame to ensure scroll happens after render
-    requestAnimationFrame(() => {
-      scrollViewRef.current?.scrollTo({ x: targetPos, animated: false });
-    });
+    // Only programmatically scroll if user isn't actively scrolling
+    if (!isScrollingRef.current) {
+      scrollX.value = activePageIndex;
+      const targetPos = activePageIndex * SCREEN_WIDTH;
+      // Use a small delay to ensure smooth transition
+      const timeoutId = setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ x: targetPos, animated: false });
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    }
     if (activePageIndex !== 3) setIsMapActive(false);
   }, [activePageIndex, SCREEN_WIDTH]);
 
-  const snapToPage = (index: number) => {
+  const snapToExactPosition = (index: number) => {
     const clampedIndex = Math.max(0, Math.min(index, PAGES.length - 1));
     const expectedOffset = clampedIndex * SCREEN_WIDTH;
-    scrollViewRef.current?.scrollTo({ x: expectedOffset, animated: true });
+    scrollViewRef.current?.scrollTo({ x: expectedOffset, animated: false });
     onNavigateToPage(clampedIndex);
+    setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 100);
+  };
+
+  const handleScrollEnd = (index: number) => {
+    onNavigateToPage(index);
+    setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 100);
   };
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollX.value = event.contentOffset.x / SCREEN_WIDTH;
+    },
+    onScrollBeginDrag: () => {
+      isScrollingRef.current = true;
     },
     onMomentumScrollEnd: (event) => {
       const currentOffset = event.contentOffset.x;
@@ -62,11 +80,22 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
       const clampedIndex = Math.max(0, Math.min(index, PAGES.length - 1));
       const expectedOffset = clampedIndex * SCREEN_WIDTH;
       
-      // If scroll didn't complete to exact position, snap to it
-      if (Math.abs(currentOffset - expectedOffset) > 1) {
-        runOnJS(snapToPage)(clampedIndex);
+      // Always snap to exact position to prevent stuttering
+      if (Math.abs(currentOffset - expectedOffset) > 0.5) {
+        runOnJS(snapToExactPosition)(clampedIndex);
       } else {
-        runOnJS(onNavigateToPage)(clampedIndex);
+        runOnJS(handleScrollEnd)(clampedIndex);
+      }
+    },
+    onScrollEndDrag: (event) => {
+      const currentOffset = event.contentOffset.x;
+      const index = Math.round(currentOffset / SCREEN_WIDTH);
+      const clampedIndex = Math.max(0, Math.min(index, PAGES.length - 1));
+      const expectedOffset = clampedIndex * SCREEN_WIDTH;
+      
+      // Snap immediately on drag end if not at exact position
+      if (Math.abs(currentOffset - expectedOffset) > 0.5) {
+        runOnJS(snapToExactPosition)(clampedIndex);
       }
     }
   });
@@ -81,12 +110,19 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
 
       {/* Map Section for index 3 */}
       <Animated.View 
-        style={useAnimatedStyle(() => ({
-          ...StyleSheet.absoluteFillObject,
-          opacity: interpolate(scrollX.value, [2.5, 3], [0, 1], Extrapolation.CLAMP),
-          zIndex: scrollX.value > 2.5 ? 10 : -1,
-          pointerEvents: isMapActive ? 'auto' : 'none',
-        }))}
+        style={useAnimatedStyle(() => {
+          const topBarHeight = 64; // Match top bar height
+          return {
+            position: 'absolute',
+            top: topBarHeight,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            opacity: interpolate(scrollX.value, [2.5, 3], [0, 1], Extrapolation.CLAMP),
+            zIndex: scrollX.value > 2.5 ? 10 : -1,
+            pointerEvents: isMapActive ? 'auto' : 'none',
+          };
+        })}
       >
         <LocationMap isInteractive={isMapActive} />
       </Animated.View>
@@ -133,27 +169,6 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
           <View style={styles.logoContainer} pointerEvents="auto">
             <Logo color="#10B981" size={Platform.OS === 'web' ? 42 : 36} />
           </View>
-          
-          {/* Pagination Indicators - CENTERED AND HIGHLY VISIBLE */}
-          <View style={styles.indicatorContainer}>
-            {PAGES.map((_, dotIdx) => (
-              <TouchableOpacity
-                key={dotIdx}
-                onPress={() => onNavigateToPage(dotIdx)}
-                activeOpacity={0.7}
-                style={[
-                  styles.indicator,
-                  activePageIndex === dotIdx && styles.indicatorActive,
-                  Platform.select({
-                    web: {
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    },
-                    default: {},
-                  }),
-                ]}
-              />
-            ))}
-          </View>
 
           {/* Login/Logout Buttons - RIGHT SIDE */}
           <View style={styles.buttonContainer} pointerEvents="auto">
@@ -178,22 +193,6 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
           </View>
         </View>
       </View>
-
-      {/* Vertical Hint Button - Show on all pages except map */}
-      <Animated.View 
-        style={useAnimatedStyle(() => ({
-          opacity: interpolate(scrollX.value, [2.5, 3], [1, 0], Extrapolation.CLAMP),
-          pointerEvents: scrollX.value > 2.5 ? 'none' : 'auto',
-        }))}
-      >
-        <TouchableOpacity 
-          style={styles.reserveButton}
-          onPress={onBookNow}
-        >
-          <Text style={styles.reserveButtonText}>Reserve Now</Text>
-          <Text style={styles.reserveIcon}>↓</Text>
-        </TouchableOpacity>
-      </Animated.View>
 
       {/* Exit Map Button */}
       {isMapActive && (
@@ -271,6 +270,17 @@ const ContentSlide: React.FC<ContentSlideProps> = ({
           <Text style={styles.bookButtonText}>View Available Times</Text>
         </TouchableOpacity>
       )}
+
+      {/* Reserve Now Button - Bottom of slide */}
+      {index !== 3 && (
+        <TouchableOpacity 
+          style={styles.reserveButton}
+          onPress={onBookNow}
+        >
+          <Text style={styles.reserveButtonText}>Reserve Now</Text>
+          <Text style={styles.reserveIcon}>↓</Text>
+        </TouchableOpacity>
+      )}
     </Animated.View>
   );
 };
@@ -279,6 +289,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#022c22',
+    position: 'relative',
   },
   topBar: {
     position: 'absolute',
@@ -324,12 +335,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: 'rgba(2, 44, 34, 0.98)',
+    backgroundColor: 'rgba(2, 44, 34, 0.6)',
     borderWidth: 1.5,
     borderColor: '#10B981',
     shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.6,
+    shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 16,
     // Ensure it's above other elements
@@ -409,6 +420,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
+    paddingBottom: 80,
     zIndex: 10,
   },
   badgeContainer: {
@@ -436,6 +448,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     textTransform: 'uppercase',
     fontStyle: 'italic',
+    textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.95)',
     textShadowOffset: { width: 0, height: 3 },
     textShadowRadius: 12,
@@ -485,11 +498,12 @@ const styles = StyleSheet.create({
   },
   reserveButton: {
     position: 'absolute',
-    bottom: 32,
-    alignSelf: 'center',
+    bottom: 16,
+    left: 0,
+    right: 0,
     alignItems: 'center',
     gap: 4,
-    zIndex: 100,
+    paddingBottom: 4,
   },
   reserveButtonText: {
     fontSize: 8,

@@ -176,10 +176,10 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
           <View key={dIdx} className="w-full relative">
             {/* 
                STICKY HEADER:
-               top-[85px] aligns it right below the main Nav bar (which is ~88px).
-               z-index needs to be high enough to sit over content, but lower than Nav (100).
+               top-0 since the top bar doesn't persist in this scroll context.
+               z-index needs to be high enough to sit over content, but lower than Nav (3000).
             */}
-            <View className="sticky top-[85px] z-[50] bg-white/95 border-b border-emerald-50 px-8 py-5 flex-row items-center">
+            <View className="sticky top-0 z-[50] bg-white/95 border-b border-emerald-50 px-8 py-5 flex-row items-center">
               <View style={styles.dayIndicator}>
                 <Text style={styles.dayIndicatorText}>{day.getDate()}</Text>
               </View>
