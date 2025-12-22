@@ -8,7 +8,6 @@
  */
 
 import { setGlobalOptions } from 'firebase-functions';
-// eslint-ignore-next-line import/no-unresolved
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { google } from 'googleapis';
 import { GoogleAuth, OAuth2Client } from 'google-auth-library';
@@ -306,7 +305,8 @@ export const generateGeminiResponse = onCall(
         model: 'gemini-3-flash-preview',
         contents: contents,
         config: {
-          systemInstruction: systemInstruction || `You are Dawn Naglich's elite concierge. Dawn is a specialist in Muscle Activation (MAT). 
+          systemInstruction: systemInstruction
+            || `You are Dawn Naglich's elite concierge. Dawn is a specialist in Muscle Activation (MAT). 
           Location: 31005 Bainbridge Rd, Solon, OH 44139. 
           Keep answers concise, healing-focused, and encourage booking for realignment.`,
         },
