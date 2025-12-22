@@ -15,7 +15,8 @@ import {
   ScrollView,
 } from "react-native";
 import { FontAwesome6 } from "@expo/vector-icons";
-import { GoogleGenAI } from "@google/genai";
+import { httpsCallableFromURL } from "firebase/functions";
+import { functions } from "../firebaseConfig";
 
 const FACILITY_ADDRESS = "31005 Bainbridge Rd, Solon, OH 44139";
 const DIRECTIONS_URL = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(FACILITY_ADDRESS)}`;
@@ -159,62 +160,58 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
     }, 50);
 
     try {
-      // Use EXPO_PUBLIC_API_KEY for web, fallback to API_KEY for native
-      const apiKey =
-        process.env.EXPO_PUBLIC_API_KEY || process.env.API_KEY;
-      
-      if (!apiKey) {
-        throw new Error("API key not configured");
+      if (!functions) {
+        throw new Error("Firebase functions not initialized");
       }
 
-      const ai = new GoogleGenAI({ apiKey });
-      
-      // Build conversation history for context
-      const conversationHistory = messages.map((msg) => ({
-        role: msg.role === "user" ? "user" : "model",
-        parts: [{ text: msg.text }],
-      }));
-      
-      // Add current user message
-      conversationHistory.push({
-        role: "user",
-        parts: [{ text: userMsg }],
-      });
+      // Build conversation history (excluding the current user message we just added)
+      const conversationHistory = messages
+        .slice(0, -1) // Exclude the user message we just added
+        .map((msg) => ({
+          role: msg.role,
+          text: msg.text,
+        }));
 
-      const result = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: conversationHistory,
-        config: {
-          systemInstruction: `You are Dawn Naglich's elite concierge. Dawn is a specialist in Muscle Activation (MAT). 
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : "";
+
+      // Check if we're in emulator mode (localhost)
+      const isEmulator =
+        origin.includes("localhost") || origin.includes("127.0.0.1");
+
+      let url: string;
+      if (isEmulator) {
+        // For emulators, use direct function URL
+        url =
+          "http://127.0.0.1:5001/dawn-naglich/us-central1/generateGeminiResponse";
+      } else {
+        // For production, use relative /api/* path to hit Firebase Hosting rewrite
+        url = `${origin}/api/generateGeminiResponse`;
+      }
+
+      const generateResponseFunc = httpsCallableFromURL(functions, url);
+      const response = await generateResponseFunc({
+        conversationHistory,
+        userMessage: userMsg,
+        systemInstruction: `You are Dawn Naglich's elite concierge. Dawn is a specialist in Muscle Activation (MAT). 
           Location: ${FACILITY_ADDRESS}. 
           If the user asks for directions or location, tell them the address and explain they can click the 'Get Directions' button in the assistant header or provide this link: ${DIRECTIONS_URL}.
           Keep answers concise, healing-focused, and encourage booking for realignment.`,
-        },
       });
 
-      // Extract text from response - handle different response structures
-      let responseText: string;
-      if (typeof result === "string") {
-        responseText = result;
-      } else if (result?.response?.text) {
-        responseText = typeof result.response.text === "function" 
-          ? result.response.text() 
-          : result.response.text;
-      } else if (result?.text) {
-        responseText = typeof result.text === "function" 
-          ? result.text() 
-          : result.text;
+      const data = response.data as { success: boolean; text: string };
+      
+      if (data.success && data.text) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "ai",
+            text: data.text,
+          },
+        ]);
       } else {
-        responseText = "I missed that. Please try again.";
+        throw new Error("Invalid response from server");
       }
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "ai",
-          text: responseText,
-        },
-      ]);
     } catch (e) {
       console.error("ClientAssistant API error:", e);
       setMessages((prev) => [
@@ -222,7 +219,7 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         {
           role: "ai",
           text:
-            e instanceof Error && e.message.includes("API key")
+            e instanceof Error && e.message.includes("not initialized")
               ? "Service configuration issue. Please contact support."
               : "I'm having trouble connecting right now. Please try again in a moment, or use the booking calendar to schedule directly.",
         },
@@ -235,7 +232,6 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   // Dynamic Styles for Desktop
   const desktopStyles = isDesktop
     ? {
-        left: "auto",
         right: 32,
         bottom: 32,
         width: DESKTOP_WIDTH,

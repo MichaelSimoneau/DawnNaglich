@@ -21,6 +21,7 @@ import LocationMap from "./LocationMap";
 import LandingPage from "./LandingPage";
 import Logo from "./Logo";
 import { PAGES } from "../content";
+import { useRouter } from "expo-router";
 
 interface ClientLandingProps {
   onBookNow: () => void;
@@ -42,6 +43,8 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
   const scrollX = useSharedValue(activePageIndex);
   const scrollViewRef = useRef<Animated.ScrollView>(null);
   const isScrollingRef = useRef(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     scrollX.value = activePageIndex;
@@ -111,7 +114,10 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
   });
 
   const handleLogout = () => {
-    if (auth) signOut(auth);
+    if (auth) signOut(auth).catch((error) => {
+      console.error("Error signing out:", error);
+      router.push("/");
+    });
   };
 
   return (
@@ -233,7 +239,7 @@ const ContentSlide: React.FC<ContentSlideProps> = ({
   page,
   index,
   scrollX,
-  SCREEN_WIDTH,
+  SCREEN_WIDTH, // eslint-disable-line @typescript-eslint/no-unused-vars
   onBookNow,
   isMapActive,
   setIsMapActive,

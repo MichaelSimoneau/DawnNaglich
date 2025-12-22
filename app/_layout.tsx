@@ -14,8 +14,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { FontAwesome6 } from "@expo/vector-icons";
-import { auth } from "../firebaseConfig";
-import { signOut } from "firebase/auth";
 import { UserRole } from "../types";
 import { UserProvider, useUser } from "../UserContext";
 
@@ -44,11 +42,14 @@ function RootLayoutContent() {
     setIsSnowing(isBeforeSnowEndDate());
   }, []);
 
-  const handleLogout = () => {
-    if (auth) signOut(auth);
-  };
-
-  const handleSnowToggle = () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSnowToggle = (e: any) => {
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+    if (e && e.stopPropagation) {
+      e.stopPropagation();
+    }
     setIsSnowing(!isSnowing);
   };
 
@@ -83,38 +84,43 @@ function RootLayoutContent() {
         {/* FABs */}
         {!isAssistantOpen && (
           <View className="absolute bottom-10 right-8 gap-4 z-[1001] items-center">
-            <Pressable
-              onPress={handleSnowToggle}
-              className={`w-12 h-12 rounded-full items-center justify-center border ${isSnowing ? "bg-emerald-400 border-white" : "bg-emerald-950/90 border-emerald-400/40"}`}
-              style={({ pressed }) => ({
-                opacity: pressed ? 0.7 : 1,
-              })}
-              {...(Platform.OS === "web"
-                ? {
-                    // @ts-ignore - prevent default button behavior on web
-                    onClick: (e: any) => {
-                      if (e && e.preventDefault) {
-                        e.preventDefault();
-                      }
-                      if (e && e.stopPropagation) {
-                        e.stopPropagation();
-                      }
-                    },
-                  }
-                : {})}
-            >
-              <FontAwesome6
-                name="snowflake"
-                size={18}
-                color={isSnowing ? "#FFFFFF" : "#10B981"}
-              />
-            </Pressable>
+            {Platform.OS === "web" && (
+              <Pressable
+                onPress={handleSnowToggle}
+                className={`w-12 h-12 rounded-full items-center justify-center border ${isSnowing ? "bg-emerald-400 border-white" : "bg-emerald-950/90 border-emerald-400/40"}`}
+                style={({ pressed }) => ({
+                  opacity: pressed ? 0.7 : 1,
+                })}
+                {...(Platform.OS === "web"
+                  ? {
+                    onClick: (e: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                        if (e && e.preventDefault) {
+                          e.preventDefault();
+                        }
+                        if (e && e.stopPropagation) {
+                          e.stopPropagation();
+                        }
+                      },
+                    }
+                  : {})}
+              >
+                <FontAwesome6
+                  name="snowflake"
+                  size={18}
+                  color={isSnowing ? "#FFFFFF" : "#10B981"}
+                />
+              </Pressable>
+            )}
             <TouchableOpacity
               onPress={handleAssistantToggle}
               activeOpacity={0.7}
               className="w-[60px] h-[60px] rounded-full bg-emerald-600 items-center justify-center"
             >
-              <FontAwesome6 name="wand-magic-sparkles" size={20} color="#FFFFFF" />
+              <FontAwesome6
+                name="wand-magic-sparkles"
+                size={20}
+                color="#FFFFFF"
+              />
             </TouchableOpacity>
           </View>
         )}

@@ -13,6 +13,8 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { google } from 'googleapis';
 import { GoogleAuth, OAuth2Client } from 'google-auth-library';
 import * as path from 'path';
+// Use dynamic import for ES module compatibility
+let GoogleGenAI: any;
 
 // Set global options for all functions
 setGlobalOptions({ maxInstances: 10 });
@@ -250,6 +252,99 @@ export const cancelCalendarEventSecure = onCall(
     } catch (error) {
       console.error('Error deleting calendar event:', error);
       throw new HttpsError('internal', 'Failed to cancel calendar event.');
+    }
+  },
+);
+
+/**
+ * Generate Gemini AI response securely using server-side API key.
+ * This keeps the API key secret and prevents client-side exposure.
+ */
+export const generateGeminiResponse = onCall(
+  {
+    cors: true,
+    secrets: ['GEMINI_API_KEY'],
+  },
+  async (request: any) => {
+    const { conversationHistory, userMessage, systemInstruction } = request.data;
+
+    if (!userMessage || typeof userMessage !== 'string') {
+      throw new HttpsError('invalid-argument', 'User message is required.');
+    }
+
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new HttpsError(
+          'internal',
+          'Gemini API key not configured.',
+        );
+      }
+
+      // Dynamic import for ES module compatibility
+      if (!GoogleGenAI) {
+        const genaiModule = await import('@google/genai');
+        GoogleGenAI = genaiModule.GoogleGenAI;
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+
+      // Build conversation history for context
+      const history = conversationHistory || [];
+      const contents = [
+        ...history.map((msg: { role: string; text: string }) => ({
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: msg.text }],
+        })),
+        {
+          role: 'user',
+          parts: [{ text: userMessage }],
+        },
+      ];
+
+      const result = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: contents,
+        config: {
+          systemInstruction: systemInstruction || `You are Dawn Naglich's elite concierge. Dawn is a specialist in Muscle Activation (MAT). 
+          Location: 31005 Bainbridge Rd, Solon, OH 44139. 
+          Keep answers concise, healing-focused, and encourage booking for realignment.`,
+        },
+      });
+
+      // Extract text from response - the API returns text directly
+      let responseText: string;
+      if (typeof result === 'string') {
+        responseText = result;
+      } else if (result && typeof result === 'object') {
+        // Try to get text from the response object
+        const textProperty = (result as any).text;
+        if (typeof textProperty === 'string') {
+          responseText = textProperty;
+        } else if (typeof textProperty === 'function') {
+          responseText = textProperty();
+        } else {
+          // Try alternative structure
+          const candidates = result as any;
+          responseText = candidates.response?.text
+            || candidates.candidates?.[0]?.content?.parts?.[0]?.text
+            || 'I missed that. Please try again.';
+        }
+      } else {
+        responseText = 'I missed that. Please try again.';
+      }
+
+      return { success: true, text: responseText };
+    } catch (error: unknown) {
+      console.error('Error generating Gemini response:', error);
+      const errorMessage
+        = error && typeof error === 'object' && 'message' in error
+          ? String(error.message)
+          : 'Unknown error';
+      throw new HttpsError(
+        'internal',
+        `Failed to generate response: ${errorMessage}`,
+      );
     }
   },
 );

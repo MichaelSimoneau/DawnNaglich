@@ -42,6 +42,10 @@
         "function": "cancelCalendarEventSecure"
       },
       {
+        "source": "/api/generateGeminiResponse",
+        "function": "generateGeminiResponse"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

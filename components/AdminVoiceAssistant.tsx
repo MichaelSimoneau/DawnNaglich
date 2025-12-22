@@ -155,7 +155,15 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
   const startAssistant = async () => {
     setIsConnecting(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      // Use EXPO_PUBLIC_GEMINI_API_KEY for web, fallback to GEMINI_API_KEY for native
+      const apiKey =
+        process.env.EXPO_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+      
+      if (!apiKey) {
+        throw new Error("Gemini API key not configured");
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
       audioContextInputRef.current = new (
         window.AudioContext || (window as any).webkitAudioContext
       )({ sampleRate: 16000 });
