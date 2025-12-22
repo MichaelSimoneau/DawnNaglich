@@ -6,11 +6,11 @@ import {
   StatusBar,
   TouchableOpacity,
   Text,
-  SafeAreaView,
   ActivityIndicator,
   Platform,
   Pressable,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { FontAwesome6 } from "@expo/vector-icons";

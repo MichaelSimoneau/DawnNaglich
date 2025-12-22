@@ -8,8 +8,8 @@ import {
   ActivityIndicator,
   Animated,
   Dimensions,
-  SafeAreaView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome6 } from "@expo/vector-icons";
 import {
   GoogleGenAI,
