@@ -22,17 +22,6 @@ module.exports = {
     '/generated/**/*', // Ignore generated files.
   ],
   plugins: ['@typescript-eslint', 'import'],
-  settings: {
-    'import/resolver': {
-      typescript: {
-        alwaysTryTypes: true,
-        project: './tsconfig.json',
-      },
-      node: {
-        extensions: ['.js', '.jsx', '.ts', '.tsx'],
-      },
-    },
-  },
   rules: {
     'quotes': ['error', 'single'],
     'import/no-unresolved': ['error', { ignore: ['^firebase-functions/'] }],
