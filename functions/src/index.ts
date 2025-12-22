@@ -40,9 +40,6 @@ async function getCalendarClient() {
  * Admins see full details, clients see "Busy" for non-public events.
  */
 export const getCalendarEventsSecure = onCall(
-  {
-    cors: true,
-  },
   async (request: any) => {
     const { timeMin, timeMax } = request.data;
     const userEmail = request.auth?.token.email;
@@ -63,7 +60,7 @@ export const getCalendarEventsSecure = onCall(
       const events = response.data.items || [];
 
       // Filter events for privacy if not admin
-      const filteredEvents = events.map((event) => {
+      const filteredEvents = events.map((event: any) => {
         const isPublic
           = event.extendedProperties?.private?.status === 'confirmed'
           || event.extendedProperties?.private?.status === 'pending';
@@ -119,9 +116,6 @@ export const getCalendarEventsSecure = onCall(
  * Create a calendar event for a booking.
  */
 export const createCalendarEventSecure = onCall(
-  {
-    cors: true,
-  },
   async (request: any) => {
     const { clientName, service, startTime, endTime } = request.data;
     const userEmail = request.auth?.token.email;
@@ -168,9 +162,6 @@ export const createCalendarEventSecure = onCall(
  * Confirm a pending calendar event. Admin only.
  */
 export const confirmCalendarEventSecure = onCall(
-  {
-    cors: true,
-  },
   async (request: any) => {
     const userEmail = request.auth?.token.email;
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
@@ -221,9 +212,6 @@ export const confirmCalendarEventSecure = onCall(
  * Cancel/Delete a calendar event. Admin only.
  */
 export const cancelCalendarEventSecure = onCall(
-  {
-    cors: true,
-  },
   async (request: any) => {
     const userEmail = request.auth?.token.email;
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
@@ -261,7 +249,6 @@ export const cancelCalendarEventSecure = onCall(
  */
 export const generateGeminiResponse = onCall(
   {
-    cors: true,
     secrets: ['GEMINI_API_KEY'],
   },
   async (request: any) => {

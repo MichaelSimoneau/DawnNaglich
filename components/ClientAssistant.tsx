@@ -15,7 +15,7 @@ import {
   ScrollView,
 } from "react-native";
 import { FontAwesome6 } from "@expo/vector-icons";
-import { httpsCallableFromURL } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
 import { functions } from "../firebaseConfig";
 
 const FACILITY_ADDRESS = "31005 Bainbridge Rd, Solon, OH 44139";
@@ -172,24 +172,7 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           text: msg.text,
         }));
 
-      const origin =
-        typeof window !== "undefined" ? window.location.origin : "";
-
-      // Check if we're in emulator mode (localhost)
-      const isEmulator =
-        origin.includes("localhost") || origin.includes("127.0.0.1");
-
-      let url: string;
-      if (isEmulator) {
-        // For emulators, use direct function URL
-        url =
-          "http://127.0.0.1:5001/dawn-naglich/us-central1/generateGeminiResponse";
-      } else {
-        // For production, use relative /api/* path to hit Firebase Hosting rewrite
-        url = `${origin}/api/generateGeminiResponse`;
-      }
-
-      const generateResponseFunc = httpsCallableFromURL(functions, url);
+      const generateResponseFunc = httpsCallable(functions, 'generateGeminiResponse');
       const response = await generateResponseFunc({
         conversationHistory,
         userMessage: userMsg,

@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useFonts } from "expo-font";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { UserRole } from "../types";
 import { UserProvider, useUser } from "../UserContext";
@@ -37,10 +38,28 @@ function RootLayoutContent() {
   const [isSnowing, setIsSnowing] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
 
+  // Load FontAwesome6 fonts for web
+  const [fontsLoaded, fontError] = useFonts({
+    'FontAwesome6_Solid': require('../assets/FontAwesome6_Solid.ttf'),
+    'FontAwesome6_Regular': require('../assets/FontAwesome6_Regular.ttf'),
+  });
+
   // Initialize snow state based on date
   useEffect(() => {
     setIsSnowing(isBeforeSnowEndDate());
   }, []);
+
+  // Show loading state while fonts are loading (web only)
+  if (Platform.OS === 'web' && !fontsLoaded && !fontError) {
+    return (
+      <View className="flex-1 bg-emerald-950 justify-center items-center">
+        <ActivityIndicator size="large" color="#10B981" />
+        <Text className="mt-5 text-[12px] text-emerald-400 font-black tracking-[8px]">
+          LOADING
+        </Text>
+      </View>
+    );
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSnowToggle = (e: any) => {
