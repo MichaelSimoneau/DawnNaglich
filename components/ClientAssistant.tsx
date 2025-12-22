@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   Animated,
-  Dimensions,
   PanResponder,
   Keyboard,
   Platform,
@@ -69,9 +68,15 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   }, []);
 
   useEffect(() => {
-    if (chatScrollRef.current) {
-      chatScrollRef.current.scrollToEnd({ animated: true });
-    }
+    // Auto-scroll to bottom when messages change or loading state changes
+    // Use setTimeout to ensure DOM updates complete, especially on web
+    const scrollTimer = setTimeout(() => {
+      if (chatScrollRef.current) {
+        chatScrollRef.current.scrollToEnd({ animated: true });
+      }
+    }, 100);
+
+    return () => clearTimeout(scrollTimer);
   }, [messages, loading]);
 
   const animateTo = (state: HeightState) => {
@@ -146,11 +151,39 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
     setInput("");
     setLoading(true);
 
+    // Scroll to bottom immediately after adding user message
+    setTimeout(() => {
+      if (chatScrollRef.current) {
+        chatScrollRef.current.scrollToEnd({ animated: true });
+      }
+    }, 50);
+
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
+      // Use EXPO_PUBLIC_API_KEY for web, fallback to API_KEY for native
+      const apiKey =
+        process.env.EXPO_PUBLIC_API_KEY || process.env.API_KEY;
+      
+      if (!apiKey) {
+        throw new Error("API key not configured");
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      
+      // Build conversation history for context
+      const conversationHistory = messages.map((msg) => ({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.text }],
+      }));
+      
+      // Add current user message
+      conversationHistory.push({
+        role: "user",
+        parts: [{ text: userMsg }],
+      });
+
+      const result = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: userMsg,
+        contents: conversationHistory,
         config: {
           systemInstruction: `You are Dawn Naglich's elite concierge. Dawn is a specialist in Muscle Activation (MAT). 
           Location: ${FACILITY_ADDRESS}. 
@@ -158,19 +191,40 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           Keep answers concise, healing-focused, and encourage booking for realignment.`,
         },
       });
+
+      // Extract text from response - handle different response structures
+      let responseText: string;
+      if (typeof result === "string") {
+        responseText = result;
+      } else if (result?.response?.text) {
+        responseText = typeof result.response.text === "function" 
+          ? result.response.text() 
+          : result.response.text;
+      } else if (result?.text) {
+        responseText = typeof result.text === "function" 
+          ? result.text() 
+          : result.text;
+      } else {
+        responseText = "I missed that. Please try again.";
+      }
+
       setMessages((prev) => [
         ...prev,
         {
           role: "ai",
-          text: response.text || "I missed that. Please try again.",
+          text: responseText,
         },
       ]);
     } catch (e) {
+      console.error("ClientAssistant API error:", e);
       setMessages((prev) => [
         ...prev,
         {
           role: "ai",
-          text: "Connection issue. Please use the booking calendar.",
+          text:
+            e instanceof Error && e.message.includes("API key")
+              ? "Service configuration issue. Please contact support."
+              : "I'm having trouble connecting right now. Please try again in a moment, or use the booking calendar to schedule directly.",
         },
       ]);
     } finally {
@@ -197,7 +251,7 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         styles.sheet,
         desktopStyles,
         { height: heightAnim },
-        !isOpen && ({ pointerEvents: "none" } as any),
+        !isOpen && ({ pointerEvents: "none" } as { pointerEvents: "none" }),
       ]}
     >
       <KeyboardAvoidingView
@@ -227,6 +281,7 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         </View>
 
         <ScrollView
+          ref={chatScrollRef}
           className="flex-1 p-6 space-y-6 scroll-smooth no-scrollbar"
           contentContainerStyle={{ gap: 24 }}
         >
@@ -304,7 +359,7 @@ const styles = StyleSheet.create({
     zIndex: 2000,
     borderTopWidth: 1,
     borderColor: "rgba(16, 185, 129, 0.1)",
-  } as any,
+  },
   handleArea: {
     width: "100%",
     height: 30,
