@@ -40,8 +40,8 @@ function RootLayoutContent() {
 
   // Load FontAwesome6 fonts for web
   const [fontsLoaded, fontError] = useFonts({
-    'FontAwesome6_Solid': require('../assets/FontAwesome6_Solid.ttf'),
-    'FontAwesome6_Regular': require('../assets/FontAwesome6_Regular.ttf'),
+    'FontAwesome6_Solid': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Solid.ttf'),
+    'FontAwesome6_Regular': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Regular.ttf'),
   });
 
   // Initialize snow state based on date
