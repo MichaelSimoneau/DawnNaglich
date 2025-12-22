@@ -1,0 +1,973 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
+		51DA07BBC445CFCCCE50A420 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 642742781C4FCEA636376A1C /* PrivacyInfo.xcprivacy */; };
+		858B2322F739706B87EC11CA /* libPods-DawnNaglichWellness.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D6654ABC0845C20B09992297 /* libPods-DawnNaglichWellness.a */; };
+		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		CB4F6F51374439AFE65D0752 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B15EAAEEB72BF583434F04E /* ExpoModulesProvider.swift */; };
+		DD35CA9D2EF89C1200497003 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DD35CA9C2EF89C1200497003 /* GoogleService-Info.plist */; };
+		DD3703F92EF8A03C0085E0D0 /* MaterialCommunityIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703F32EF8A03B0085E0D0 /* MaterialCommunityIcons.ttf */; };
+		DD3703FA2EF8A03C0085E0D0 /* SimpleLineIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703F62EF8A03B0085E0D0 /* SimpleLineIcons.ttf */; };
+		DD3703FB2EF8A03C0085E0D0 /* MaterialIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703F42EF8A03B0085E0D0 /* MaterialIcons.ttf */; };
+		DD3703FC2EF8A03C0085E0D0 /* inter_medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703EB2EF8A03B0085E0D0 /* inter_medium.ttf */; };
+		DD3703FD2EF8A03C0085E0D0 /* inter_semibold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703ED2EF8A03B0085E0D0 /* inter_semibold.ttf */; };
+		DD3703FE2EF8A03C0085E0D0 /* FontAwesome5_Solid.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703E42EF8A03B0085E0D0 /* FontAwesome5_Solid.ttf */; };
+		DD3703FF2EF8A03C0085E0D0 /* Fontisto.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703E82EF8A03B0085E0D0 /* Fontisto.ttf */; };
+		DD3704002EF8A03C0085E0D0 /* Zocial.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703F72EF8A03B0085E0D0 /* Zocial.ttf */; };
+		DD3704012EF8A03C0085E0D0 /* Entypo.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703DE2EF8A03B0085E0D0 /* Entypo.ttf */; };
+		DD3704022EF8A03C0085E0D0 /* EvilIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703DF2EF8A03B0085E0D0 /* EvilIcons.ttf */; };
+		DD3704032EF8A03C0085E0D0 /* FontAwesome.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703E12EF8A03B0085E0D0 /* FontAwesome.ttf */; };
+		DD3704042EF8A03C0085E0D0 /* Foundation.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703E92EF8A03B0085E0D0 /* Foundation.ttf */; };
+		DD3704052EF8A03C0085E0D0 /* FontAwesome5_Brands.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703E22EF8A03B0085E0D0 /* FontAwesome5_Brands.ttf */; };
+		DD3704062EF8A03C0085E0D0 /* Octicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703F52EF8A03B0085E0D0 /* Octicons.ttf */; };
+		DD3704072EF8A03C0085E0D0 /* Ionicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703EE2EF8A03B0085E0D0 /* Ionicons.ttf */; };
+		DD3704082EF8A03C0085E0D0 /* inter_bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703EA2EF8A03B0085E0D0 /* inter_bold.ttf */; };
+		DD3704092EF8A03C0085E0D0 /* inter_regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703EC2EF8A03B0085E0D0 /* inter_regular.ttf */; };
+		DD37040A2EF8A03C0085E0D0 /* FontAwesome6_Solid.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703E72EF8A03B0085E0D0 /* FontAwesome6_Solid.ttf */; };
+		DD37040B2EF8A03C0085E0D0 /* FontAwesome6_Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703E62EF8A03B0085E0D0 /* FontAwesome6_Regular.ttf */; };
+		DD37040C2EF8A03C0085E0D0 /* Feather.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703E02EF8A03B0085E0D0 /* Feather.ttf */; };
+		DD37040D2EF8A03C0085E0D0 /* jetbrains_mono_regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703F12EF8A03B0085E0D0 /* jetbrains_mono_regular.ttf */; };
+		DD37040E2EF8A03C0085E0D0 /* jetbrains_mono_light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703EF2EF8A03B0085E0D0 /* jetbrains_mono_light.ttf */; };
+		DD37040F2EF8A03C0085E0D0 /* AntDesign.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703DD2EF8A03B0085E0D0 /* AntDesign.ttf */; };
+		DD3704102EF8A03C0085E0D0 /* jetbrains_mono_medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703F02EF8A03B0085E0D0 /* jetbrains_mono_medium.ttf */; };
+		DD3704112EF8A03C0085E0D0 /* FontAwesome5_Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703E32EF8A03B0085E0D0 /* FontAwesome5_Regular.ttf */; };
+		DD3704122EF8A03C0085E0D0 /* FontAwesome6_Brands.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703E52EF8A03B0085E0D0 /* FontAwesome6_Brands.ttf */; };
+		DD3704132EF8A03C0085E0D0 /* kenpixel.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD3703F22EF8A03B0085E0D0 /* kenpixel.ttf */; };
+		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0B15EAAEEB72BF583434F04E /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-DawnNaglichWellness/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* DawnNaglichWellness.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DawnNaglichWellness.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = DawnNaglichWellness/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = DawnNaglichWellness/Info.plist; sourceTree = "<group>"; };
+		280FB83D51BA5D4007B9A877 /* Pods-DawnNaglichWellness.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DawnNaglichWellness.debug.xcconfig"; path = "Target Support Files/Pods-DawnNaglichWellness/Pods-DawnNaglichWellness.debug.xcconfig"; sourceTree = "<group>"; };
+		642742781C4FCEA636376A1C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = DawnNaglichWellness/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		64D219A5C78B07117C6D8D45 /* Pods-DawnNaglichWellness.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DawnNaglichWellness.release.xcconfig"; path = "Target Support Files/Pods-DawnNaglichWellness/Pods-DawnNaglichWellness.release.xcconfig"; sourceTree = "<group>"; };
+		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = DawnNaglichWellness/SplashScreen.storyboard; sourceTree = "<group>"; };
+		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
+		D6654ABC0845C20B09992297 /* libPods-DawnNaglichWellness.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-DawnNaglichWellness.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DD35CA9C2EF89C1200497003 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		DD35CA9E2EF89D1100497003 /* AntDesign.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = AntDesign.ttf; sourceTree = "<group>"; };
+		DD35CA9F2EF89D1100497003 /* Entypo.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Entypo.ttf; sourceTree = "<group>"; };
+		DD35CAA02EF89D1100497003 /* EvilIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = EvilIcons.ttf; sourceTree = "<group>"; };
+		DD35CAA12EF89D1100497003 /* Feather.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Feather.ttf; sourceTree = "<group>"; };
+		DD35CAA22EF89D1100497003 /* FontAwesome.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FontAwesome.ttf; sourceTree = "<group>"; };
+		DD35CAA32EF89D1100497003 /* FontAwesome5_Brands.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FontAwesome5_Brands.ttf; sourceTree = "<group>"; };
+		DD35CAA42EF89D1100497003 /* FontAwesome5_Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FontAwesome5_Regular.ttf; sourceTree = "<group>"; };
+		DD35CAA52EF89D1100497003 /* FontAwesome5_Solid.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FontAwesome5_Solid.ttf; sourceTree = "<group>"; };
+		DD35CAA62EF89D1100497003 /* FontAwesome6_Brands.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FontAwesome6_Brands.ttf; sourceTree = "<group>"; };
+		DD35CAA72EF89D1100497003 /* FontAwesome6_Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FontAwesome6_Regular.ttf; sourceTree = "<group>"; };
+		DD35CAA82EF89D1100497003 /* FontAwesome6_Solid.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FontAwesome6_Solid.ttf; sourceTree = "<group>"; };
+		DD35CAA92EF89D1100497003 /* Fontisto.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fontisto.ttf; sourceTree = "<group>"; };
+		DD35CAAA2EF89D1100497003 /* Foundation.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Foundation.ttf; sourceTree = "<group>"; };
+		DD35CAAB2EF89D1100497003 /* inter_bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = inter_bold.ttf; sourceTree = "<group>"; };
+		DD35CAAC2EF89D1100497003 /* inter_medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = inter_medium.ttf; sourceTree = "<group>"; };
+		DD35CAAD2EF89D1100497003 /* inter_regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = inter_regular.ttf; sourceTree = "<group>"; };
+		DD35CAAE2EF89D1100497003 /* inter_semibold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = inter_semibold.ttf; sourceTree = "<group>"; };
+		DD35CAAF2EF89D1100497003 /* Ionicons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Ionicons.ttf; sourceTree = "<group>"; };
+		DD35CAB02EF89D1100497003 /* jetbrains_mono_light.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = jetbrains_mono_light.ttf; sourceTree = "<group>"; };
+		DD35CAB12EF89D1100497003 /* jetbrains_mono_medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = jetbrains_mono_medium.ttf; sourceTree = "<group>"; };
+		DD35CAB22EF89D1100497003 /* jetbrains_mono_regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = jetbrains_mono_regular.ttf; sourceTree = "<group>"; };
+		DD35CAB32EF89D1100497003 /* kenpixel.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = kenpixel.ttf; sourceTree = "<group>"; };
+		DD35CAB42EF89D1100497003 /* MaterialCommunityIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = MaterialCommunityIcons.ttf; sourceTree = "<group>"; };
+		DD35CAB52EF89D1100497003 /* MaterialIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = MaterialIcons.ttf; sourceTree = "<group>"; };
+		DD35CAB62EF89D1100497003 /* Octicons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Octicons.ttf; sourceTree = "<group>"; };
+		DD35CAB72EF89D1100497003 /* SimpleLineIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = SimpleLineIcons.ttf; sourceTree = "<group>"; };
+		DD35CAB82EF89D1100497003 /* Zocial.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Zocial.ttf; sourceTree = "<group>"; };
+		DD3703DD2EF8A03B0085E0D0 /* AntDesign.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = AntDesign.ttf; sourceTree = "<group>"; };
+		DD3703DE2EF8A03B0085E0D0 /* Entypo.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Entypo.ttf; sourceTree = "<group>"; };
+		DD3703DF2EF8A03B0085E0D0 /* EvilIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = EvilIcons.ttf; sourceTree = "<group>"; };
+		DD3703E02EF8A03B0085E0D0 /* Feather.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Feather.ttf; sourceTree = "<group>"; };
+		DD3703E12EF8A03B0085E0D0 /* FontAwesome.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FontAwesome.ttf; sourceTree = "<group>"; };
+		DD3703E22EF8A03B0085E0D0 /* FontAwesome5_Brands.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FontAwesome5_Brands.ttf; sourceTree = "<group>"; };
+		DD3703E32EF8A03B0085E0D0 /* FontAwesome5_Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FontAwesome5_Regular.ttf; sourceTree = "<group>"; };
+		DD3703E42EF8A03B0085E0D0 /* FontAwesome5_Solid.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FontAwesome5_Solid.ttf; sourceTree = "<group>"; };
+		DD3703E52EF8A03B0085E0D0 /* FontAwesome6_Brands.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FontAwesome6_Brands.ttf; sourceTree = "<group>"; };
+		DD3703E62EF8A03B0085E0D0 /* FontAwesome6_Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FontAwesome6_Regular.ttf; sourceTree = "<group>"; };
+		DD3703E72EF8A03B0085E0D0 /* FontAwesome6_Solid.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FontAwesome6_Solid.ttf; sourceTree = "<group>"; };
+		DD3703E82EF8A03B0085E0D0 /* Fontisto.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fontisto.ttf; sourceTree = "<group>"; };
+		DD3703E92EF8A03B0085E0D0 /* Foundation.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Foundation.ttf; sourceTree = "<group>"; };
+		DD3703EA2EF8A03B0085E0D0 /* inter_bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = inter_bold.ttf; sourceTree = "<group>"; };
+		DD3703EB2EF8A03B0085E0D0 /* inter_medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = inter_medium.ttf; sourceTree = "<group>"; };
+		DD3703EC2EF8A03B0085E0D0 /* inter_regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = inter_regular.ttf; sourceTree = "<group>"; };
+		DD3703ED2EF8A03B0085E0D0 /* inter_semibold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = inter_semibold.ttf; sourceTree = "<group>"; };
+		DD3703EE2EF8A03B0085E0D0 /* Ionicons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Ionicons.ttf; sourceTree = "<group>"; };
+		DD3703EF2EF8A03B0085E0D0 /* jetbrains_mono_light.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = jetbrains_mono_light.ttf; sourceTree = "<group>"; };
+		DD3703F02EF8A03B0085E0D0 /* jetbrains_mono_medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = jetbrains_mono_medium.ttf; sourceTree = "<group>"; };
+		DD3703F12EF8A03B0085E0D0 /* jetbrains_mono_regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = jetbrains_mono_regular.ttf; sourceTree = "<group>"; };
+		DD3703F22EF8A03B0085E0D0 /* kenpixel.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = kenpixel.ttf; sourceTree = "<group>"; };
+		DD3703F32EF8A03B0085E0D0 /* MaterialCommunityIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = MaterialCommunityIcons.ttf; sourceTree = "<group>"; };
+		DD3703F42EF8A03B0085E0D0 /* MaterialIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = MaterialIcons.ttf; sourceTree = "<group>"; };
+		DD3703F52EF8A03B0085E0D0 /* Octicons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Octicons.ttf; sourceTree = "<group>"; };
+		DD3703F62EF8A03B0085E0D0 /* SimpleLineIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = SimpleLineIcons.ttf; sourceTree = "<group>"; };
+		DD3703F72EF8A03B0085E0D0 /* Zocial.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Zocial.ttf; sourceTree = "<group>"; };
+		DD3704142EF8A2620085E0D0 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = DawnNaglichWellness/AppDelegate.swift; sourceTree = "<group>"; };
+		F11748442D0722820044C1D9 /* DawnNaglichWellness-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "DawnNaglichWellness-Bridging-Header.h"; path = "DawnNaglichWellness/DawnNaglichWellness-Bridging-Header.h"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				858B2322F739706B87EC11CA /* libPods-DawnNaglichWellness.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		067A00995EC39D5C48FB313A /* DawnNaglichWellness */ = {
+			isa = PBXGroup;
+			children = (
+				0B15EAAEEB72BF583434F04E /* ExpoModulesProvider.swift */,
+			);
+			name = DawnNaglichWellness;
+			sourceTree = "<group>";
+		};
+		13B07FAE1A68108700A75B9A /* DawnNaglichWellness */ = {
+			isa = PBXGroup;
+			children = (
+				DD35CA9C2EF89C1200497003 /* GoogleService-Info.plist */,
+				DD3703F82EF8A03B0085E0D0 /* assets */,
+				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
+				F11748442D0722820044C1D9 /* DawnNaglichWellness-Bridging-Header.h */,
+				BB2F792B24A3F905000567C9 /* Supporting */,
+				13B07FB51A68108700A75B9A /* Images.xcassets */,
+				13B07FB61A68108700A75B9A /* Info.plist */,
+				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
+				642742781C4FCEA636376A1C /* PrivacyInfo.xcprivacy */,
+			);
+			name = DawnNaglichWellness;
+			sourceTree = "<group>";
+		};
+		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
+				D6654ABC0845C20B09992297 /* libPods-DawnNaglichWellness.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		5D42E185A7B0101F09590C7D /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				280FB83D51BA5D4007B9A877 /* Pods-DawnNaglichWellness.debug.xcconfig */,
+				64D219A5C78B07117C6D8D45 /* Pods-DawnNaglichWellness.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Libraries;
+			sourceTree = "<group>";
+		};
+		83CBB9F61A601CBA00E9B192 = {
+			isa = PBXGroup;
+			children = (
+				DD3704142EF8A2620085E0D0 /* GoogleService-Info.plist */,
+				13B07FAE1A68108700A75B9A /* DawnNaglichWellness */,
+				832341AE1AAA6A7D00B99B32 /* Libraries */,
+				83CBBA001A601CBA00E9B192 /* Products */,
+				2D16E6871FA4F8E400B85C8A /* Frameworks */,
+				5D42E185A7B0101F09590C7D /* Pods */,
+				CB0B1A6B374C51452AD8260C /* ExpoModulesProviders */,
+			);
+			indentWidth = 2;
+			sourceTree = "<group>";
+			tabWidth = 2;
+			usesTabs = 0;
+		};
+		83CBBA001A601CBA00E9B192 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				13B07F961A680F5B00A75B9A /* DawnNaglichWellness.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BB2F792B24A3F905000567C9 /* Supporting */ = {
+			isa = PBXGroup;
+			children = (
+				DD35CA9E2EF89D1100497003 /* AntDesign.ttf */,
+				DD35CA9F2EF89D1100497003 /* Entypo.ttf */,
+				DD35CAA02EF89D1100497003 /* EvilIcons.ttf */,
+				DD35CAA12EF89D1100497003 /* Feather.ttf */,
+				DD35CAA22EF89D1100497003 /* FontAwesome.ttf */,
+				DD35CAA32EF89D1100497003 /* FontAwesome5_Brands.ttf */,
+				DD35CAA42EF89D1100497003 /* FontAwesome5_Regular.ttf */,
+				DD35CAA52EF89D1100497003 /* FontAwesome5_Solid.ttf */,
+				DD35CAA62EF89D1100497003 /* FontAwesome6_Brands.ttf */,
+				DD35CAA72EF89D1100497003 /* FontAwesome6_Regular.ttf */,
+				DD35CAA82EF89D1100497003 /* FontAwesome6_Solid.ttf */,
+				DD35CAA92EF89D1100497003 /* Fontisto.ttf */,
+				DD35CAAA2EF89D1100497003 /* Foundation.ttf */,
+				DD35CAAB2EF89D1100497003 /* inter_bold.ttf */,
+				DD35CAAC2EF89D1100497003 /* inter_medium.ttf */,
+				DD35CAAD2EF89D1100497003 /* inter_regular.ttf */,
+				DD35CAAE2EF89D1100497003 /* inter_semibold.ttf */,
+				DD35CAAF2EF89D1100497003 /* Ionicons.ttf */,
+				DD35CAB02EF89D1100497003 /* jetbrains_mono_light.ttf */,
+				DD35CAB12EF89D1100497003 /* jetbrains_mono_medium.ttf */,
+				DD35CAB22EF89D1100497003 /* jetbrains_mono_regular.ttf */,
+				DD35CAB32EF89D1100497003 /* kenpixel.ttf */,
+				DD35CAB42EF89D1100497003 /* MaterialCommunityIcons.ttf */,
+				DD35CAB52EF89D1100497003 /* MaterialIcons.ttf */,
+				DD35CAB62EF89D1100497003 /* Octicons.ttf */,
+				DD35CAB72EF89D1100497003 /* SimpleLineIcons.ttf */,
+				DD35CAB82EF89D1100497003 /* Zocial.ttf */,
+				BB2F792C24A3F905000567C9 /* Expo.plist */,
+			);
+			name = Supporting;
+			path = DawnNaglichWellness/Supporting;
+			sourceTree = "<group>";
+		};
+		CB0B1A6B374C51452AD8260C /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				067A00995EC39D5C48FB313A /* DawnNaglichWellness */,
+			);
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		DD3703F82EF8A03B0085E0D0 /* assets */ = {
+			isa = PBXGroup;
+			children = (
+				DD3703DD2EF8A03B0085E0D0 /* AntDesign.ttf */,
+				DD3703DE2EF8A03B0085E0D0 /* Entypo.ttf */,
+				DD3703DF2EF8A03B0085E0D0 /* EvilIcons.ttf */,
+				DD3703E02EF8A03B0085E0D0 /* Feather.ttf */,
+				DD3703E12EF8A03B0085E0D0 /* FontAwesome.ttf */,
+				DD3703E22EF8A03B0085E0D0 /* FontAwesome5_Brands.ttf */,
+				DD3703E32EF8A03B0085E0D0 /* FontAwesome5_Regular.ttf */,
+				DD3703E42EF8A03B0085E0D0 /* FontAwesome5_Solid.ttf */,
+				DD3703E52EF8A03B0085E0D0 /* FontAwesome6_Brands.ttf */,
+				DD3703E62EF8A03B0085E0D0 /* FontAwesome6_Regular.ttf */,
+				DD3703E72EF8A03B0085E0D0 /* FontAwesome6_Solid.ttf */,
+				DD3703E82EF8A03B0085E0D0 /* Fontisto.ttf */,
+				DD3703E92EF8A03B0085E0D0 /* Foundation.ttf */,
+				DD3703EA2EF8A03B0085E0D0 /* inter_bold.ttf */,
+				DD3703EB2EF8A03B0085E0D0 /* inter_medium.ttf */,
+				DD3703EC2EF8A03B0085E0D0 /* inter_regular.ttf */,
+				DD3703ED2EF8A03B0085E0D0 /* inter_semibold.ttf */,
+				DD3703EE2EF8A03B0085E0D0 /* Ionicons.ttf */,
+				DD3703EF2EF8A03B0085E0D0 /* jetbrains_mono_light.ttf */,
+				DD3703F02EF8A03B0085E0D0 /* jetbrains_mono_medium.ttf */,
+				DD3703F12EF8A03B0085E0D0 /* jetbrains_mono_regular.ttf */,
+				DD3703F22EF8A03B0085E0D0 /* kenpixel.ttf */,
+				DD3703F32EF8A03B0085E0D0 /* MaterialCommunityIcons.ttf */,
+				DD3703F42EF8A03B0085E0D0 /* MaterialIcons.ttf */,
+				DD3703F52EF8A03B0085E0D0 /* Octicons.ttf */,
+				DD3703F62EF8A03B0085E0D0 /* SimpleLineIcons.ttf */,
+				DD3703F72EF8A03B0085E0D0 /* Zocial.ttf */,
+			);
+			path = assets;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		13B07F861A680F5B00A75B9A /* DawnNaglichWellness */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "DawnNaglichWellness" */;
+			buildPhases = (
+				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
+				AB3D65F5EA0DB8C7F28F3EAF /* [Expo] Configure project */,
+				13B07F871A680F5B00A75B9A /* Sources */,
+				13B07F8C1A680F5B00A75B9A /* Frameworks */,
+				13B07F8E1A680F5B00A75B9A /* Resources */,
+				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
+				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
+				C080B01E601B407CC6967270 /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DDDB54E62EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB54E82EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB54EA2EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB54EC2EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB54EE2EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB54F02EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB54F22EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB54F42EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB54F62EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB54F82EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB54FA2EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB54FC2EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB54FE2EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB55002EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB55022EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB55042EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB55062EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB55082EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB550A2EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB550C2EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB550E2EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB55102EF8C89F00067728 /* PBXTargetDependency */,
+				DDDB55122EF8C89F00067728 /* PBXTargetDependency */,
+			);
+			name = DawnNaglichWellness;
+			productName = DawnNaglichWellness;
+			productReference = 13B07F961A680F5B00A75B9A /* DawnNaglichWellness.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		83CBB9F71A601CBA00E9B192 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1130;
+				TargetAttributes = {
+					13B07F861A680F5B00A75B9A = {
+						LastSwiftMigration = 1250;
+					};
+				};
+			};
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "DawnNaglichWellness" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 83CBB9F61A601CBA00E9B192;
+			packageReferences = (
+				DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
+			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				13B07F861A680F5B00A75B9A /* DawnNaglichWellness */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		13B07F8E1A680F5B00A75B9A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD35CA9D2EF89C1200497003 /* GoogleService-Info.plist in Resources */,
+				DD3703FE2EF8A03C0085E0D0 /* FontAwesome5_Solid.ttf in Resources */,
+				DD3704032EF8A03C0085E0D0 /* FontAwesome.ttf in Resources */,
+				DD3704052EF8A03C0085E0D0 /* FontAwesome5_Brands.ttf in Resources */,
+				DD37040A2EF8A03C0085E0D0 /* FontAwesome6_Solid.ttf in Resources */,
+				DD37040B2EF8A03C0085E0D0 /* FontAwesome6_Regular.ttf in Resources */,
+				DD3704112EF8A03C0085E0D0 /* FontAwesome5_Regular.ttf in Resources */,
+				DD3704122EF8A03C0085E0D0 /* FontAwesome6_Brands.ttf in Resources */,
+				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
+				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				DD3703F92EF8A03C0085E0D0 /* MaterialCommunityIcons.ttf in Resources */,
+				DD3703FA2EF8A03C0085E0D0 /* SimpleLineIcons.ttf in Resources */,
+				DD3703FB2EF8A03C0085E0D0 /* MaterialIcons.ttf in Resources */,
+				DD3703FC2EF8A03C0085E0D0 /* inter_medium.ttf in Resources */,
+				DD3703FD2EF8A03C0085E0D0 /* inter_semibold.ttf in Resources */,
+				DD3703FF2EF8A03C0085E0D0 /* Fontisto.ttf in Resources */,
+				DD3704002EF8A03C0085E0D0 /* Zocial.ttf in Resources */,
+				DD3704012EF8A03C0085E0D0 /* Entypo.ttf in Resources */,
+				DD3704022EF8A03C0085E0D0 /* EvilIcons.ttf in Resources */,
+				DD3704042EF8A03C0085E0D0 /* Foundation.ttf in Resources */,
+				DD3704062EF8A03C0085E0D0 /* Octicons.ttf in Resources */,
+				DD3704072EF8A03C0085E0D0 /* Ionicons.ttf in Resources */,
+				DD3704082EF8A03C0085E0D0 /* inter_bold.ttf in Resources */,
+				DD3704092EF8A03C0085E0D0 /* inter_regular.ttf in Resources */,
+				DD37040C2EF8A03C0085E0D0 /* Feather.ttf in Resources */,
+				DD37040D2EF8A03C0085E0D0 /* jetbrains_mono_regular.ttf in Resources */,
+				DD37040E2EF8A03C0085E0D0 /* jetbrains_mono_light.ttf in Resources */,
+				DD37040F2EF8A03C0085E0D0 /* AntDesign.ttf in Resources */,
+				DD3704102EF8A03C0085E0D0 /* jetbrains_mono_medium.ttf in Resources */,
+				DD3704132EF8A03C0085E0D0 /* kenpixel.ttf in Resources */,
+				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
+				51DA07BBC445CFCCCE50A420 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+			);
+			name = "Bundle React Native code and images";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\n# Firebase Config\nsource \"$PROJECT_ROOT/.zshrc\"\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n# Source .xcode.env.updates if it exists to allow\n# SKIP_BUNDLING to be unset if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.updates\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.updates\"\nfi\n# Source local changes to allow overrides\n# if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n\n";
+		};
+		08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-DawnNaglichWellness-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-DawnNaglichWellness/Pods-DawnNaglichWellness-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXApplication/ExpoApplication_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/expo-dev-launcher/EXDevLauncher.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/expo-dev-menu/EXDevMenu.bundle",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoApplication_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXDevLauncher.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXDevMenu.bundle",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-DawnNaglichWellness/Pods-DawnNaglichWellness-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		AB3D65F5EA0DB8C7F28F3EAF /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/DawnNaglichWellness/DawnNaglichWellness.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-DawnNaglichWellness/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-DawnNaglichWellness/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-DawnNaglichWellness/expo-configure-project.sh\"\n";
+		};
+		C080B01E601B407CC6967270 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-DawnNaglichWellness/Pods-DawnNaglichWellness-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-DawnNaglichWellness/Pods-DawnNaglichWellness-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		13B07F871A680F5B00A75B9A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
+				CB4F6F51374439AFE65D0752 /* ExpoModulesProvider.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DDDB54E62EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB54E52EF8C89F00067728 /* FirebaseAI */;
+		};
+		DDDB54E82EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB54E72EF8C89F00067728 /* FirebaseAILogic */;
+		};
+		DDDB54EA2EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB54E92EF8C89F00067728 /* FirebaseAnalytics */;
+		};
+		DDDB54EC2EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB54EB2EF8C89F00067728 /* FirebaseAnalyticsCore */;
+		};
+		DDDB54EE2EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB54ED2EF8C89F00067728 /* FirebaseAnalyticsIdentitySupport */;
+		};
+		DDDB54F02EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB54EF2EF8C89F00067728 /* FirebaseAppCheck */;
+		};
+		DDDB54F22EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB54F12EF8C89F00067728 /* FirebaseAppDistribution-Beta */;
+		};
+		DDDB54F42EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB54F32EF8C89F00067728 /* FirebaseAuth */;
+		};
+		DDDB54F62EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB54F52EF8C89F00067728 /* FirebaseAuthCombine-Community */;
+		};
+		DDDB54F82EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB54F72EF8C89F00067728 /* FirebaseCore */;
+		};
+		DDDB54FA2EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB54F92EF8C89F00067728 /* FirebaseCrashlytics */;
+		};
+		DDDB54FC2EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB54FB2EF8C89F00067728 /* FirebaseFirestore */;
+		};
+		DDDB54FE2EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB54FD2EF8C89F00067728 /* FirebaseFirestoreCombine-Community */;
+		};
+		DDDB55002EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB54FF2EF8C89F00067728 /* FirebaseFunctions */;
+		};
+		DDDB55022EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB55012EF8C89F00067728 /* FirebaseFunctionsCombine-Community */;
+		};
+		DDDB55042EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB55032EF8C89F00067728 /* FirebaseInAppMessaging-Beta */;
+		};
+		DDDB55062EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB55052EF8C89F00067728 /* FirebaseInstallations */;
+		};
+		DDDB55082EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB55072EF8C89F00067728 /* FirebaseMLModelDownloader */;
+		};
+		DDDB550A2EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB55092EF8C89F00067728 /* FirebaseMessaging */;
+		};
+		DDDB550C2EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB550B2EF8C89F00067728 /* FirebasePerformance */;
+		};
+		DDDB550E2EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB550D2EF8C89F00067728 /* FirebaseRemoteConfig */;
+		};
+		DDDB55102EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB550F2EF8C89F00067728 /* FirebaseStorage */;
+		};
+		DDDB55122EF8C89F00067728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = DDDB55112EF8C89F00067728 /* FirebaseStorageCombine-Community */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		13B07F941A680F5B00A75B9A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 280FB83D51BA5D4007B9A877 /* Pods-DawnNaglichWellness.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = DawnNaglichWellness/DawnNaglichWellness.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DH6B4U9WS7;
+				ENABLE_BITCODE = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"FB_SONARKIT_ENABLED=1",
+				);
+				INFOPLIST_FILE = DawnNaglichWellness/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-lc++",
+				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = com.dawnnaglich.wellness;
+				PRODUCT_NAME = DawnNaglichWellness;
+				SWIFT_OBJC_BRIDGING_HEADER = "DawnNaglichWellness/DawnNaglichWellness-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		13B07F951A680F5B00A75B9A /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 64D219A5C78B07117C6D8D45 /* Pods-DawnNaglichWellness.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = DawnNaglichWellness/DawnNaglichWellness.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DH6B4U9WS7;
+				INFOPLIST_FILE = DawnNaglichWellness/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-lc++",
+				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
+				PRODUCT_BUNDLE_IDENTIFIER = com.dawnnaglich.wellness;
+				PRODUCT_NAME = DawnNaglichWellness;
+				SWIFT_OBJC_BRIDGING_HEADER = "DawnNaglichWellness/DawnNaglichWellness-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		83CBBA201A601CBA00E9B192 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					/usr/lib/swift,
+					"$(inherited)",
+				);
+				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.28.5_@react-native-community+cli@13.6.9_@types+react@19.1.17_react@19.1.0/node_modules/react-native";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
+				USE_HERMES = true;
+			};
+			name = Debug;
+		};
+		83CBBA211A601CBA00E9B192 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					/usr/lib/swift,
+					"$(inherited)",
+				);
+				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.28.5_@react-native-community+cli@13.6.9_@types+react@19.1.17_react@19.1.0/node_modules/react-native";
+				SDKROOT = iphoneos;
+				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
+				USE_HERMES = true;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "DawnNaglichWellness" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				13B07F941A680F5B00A75B9A /* Debug */,
+				13B07F951A680F5B00A75B9A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "DawnNaglichWellness" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				83CBBA201A601CBA00E9B192 /* Debug */,
+				83CBBA211A601CBA00E9B192 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.7.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DDDB54E52EF8C89F00067728 /* FirebaseAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAI;
+		};
+		DDDB54E72EF8C89F00067728 /* FirebaseAILogic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAILogic;
+		};
+		DDDB54E92EF8C89F00067728 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		DDDB54EB2EF8C89F00067728 /* FirebaseAnalyticsCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsCore;
+		};
+		DDDB54ED2EF8C89F00067728 /* FirebaseAnalyticsIdentitySupport */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsIdentitySupport;
+		};
+		DDDB54EF2EF8C89F00067728 /* FirebaseAppCheck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAppCheck;
+		};
+		DDDB54F12EF8C89F00067728 /* FirebaseAppDistribution-Beta */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseAppDistribution-Beta";
+		};
+		DDDB54F32EF8C89F00067728 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		DDDB54F52EF8C89F00067728 /* FirebaseAuthCombine-Community */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseAuthCombine-Community";
+		};
+		DDDB54F72EF8C89F00067728 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		DDDB54F92EF8C89F00067728 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		DDDB54FB2EF8C89F00067728 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		DDDB54FD2EF8C89F00067728 /* FirebaseFirestoreCombine-Community */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseFirestoreCombine-Community";
+		};
+		DDDB54FF2EF8C89F00067728 /* FirebaseFunctions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFunctions;
+		};
+		DDDB55012EF8C89F00067728 /* FirebaseFunctionsCombine-Community */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseFunctionsCombine-Community";
+		};
+		DDDB55032EF8C89F00067728 /* FirebaseInAppMessaging-Beta */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseInAppMessaging-Beta";
+		};
+		DDDB55052EF8C89F00067728 /* FirebaseInstallations */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseInstallations;
+		};
+		DDDB55072EF8C89F00067728 /* FirebaseMLModelDownloader */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMLModelDownloader;
+		};
+		DDDB55092EF8C89F00067728 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		DDDB550B2EF8C89F00067728 /* FirebasePerformance */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebasePerformance;
+		};
+		DDDB550D2EF8C89F00067728 /* FirebaseRemoteConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseRemoteConfig;
+		};
+		DDDB550F2EF8C89F00067728 /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+		DDDB55112EF8C89F00067728 /* FirebaseStorageCombine-Community */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDB54E42EF8C82600067728 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseStorageCombine-Community";
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
+}

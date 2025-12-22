@@ -37,8 +37,23 @@ GoogleService-Info.plist
 # Build directories and files
 .expo/
 .firebase/*
-ios/
-android/
 @michael-simoneau__dawn-naglich.jks
 .xcode.env
 .xcode.env.local
+
+# keep `ios/` and `android/` except built and large files
+ios/build/
+ios/Pods/
+ios/DerivedData/
+ios/**/*.ipa
+ios/**/*.app
+ios/**/*.xcarchive
+ios/**/*.xcuserstate
+ios/**/*.xcodeproj/project.xcworkspace/
+ios/**/*.xcodeproj/xcuserdata/
+android/app/build/*
+android/.kotlin/*
+**/*.keystore
+android/app/src/debugOptimized/AndroidManifest.xml
+ios/DawnNaglichWellness.xcworkspace/contents.xcworkspacedata
+ios/DawnNaglichWellness.xcworkspace/xcshareddata/swiftpm/Package.resolved

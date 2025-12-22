@@ -10,7 +10,6 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
-  ImageSourcePropType,
 } from "react-native";
 import { auth } from "../firebaseConfig";
 import {
@@ -42,12 +41,17 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
   const [loading, setLoading] = useState(false);
 
   // Configure Google OAuth for native platforms
+  // iOS requires using REVERSED_CLIENT_ID from GoogleService-Info.plist
   const redirectUri =
     Platform.OS !== "web"
-      ? makeRedirectUri({
-          scheme: "dawn-naglich",
-          path: "auth",
-        })
+      ? Platform.OS === "ios"
+        ? makeRedirectUri({
+            scheme: "com.googleusercontent.apps.333181114084-jlhi5ji8j3mc20mecaf0lo7u5urse2ip",
+          })
+        : makeRedirectUri({
+            scheme: "dawn-naglich",
+            path: "auth",
+          })
       : undefined;
 
   const [request, response, promptAsync] = Google.useAuthRequest({
@@ -172,7 +176,6 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
           // onLoginComplete will be called via auth state change listener
         }
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error) {
       if (error instanceof Error) {
         alert(error.message);
@@ -184,9 +187,6 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
     // Don't set loading to false here - let auth state change handle it
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const logoImage = require("../assets/icon.png") as ImageSourcePropType;
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -194,9 +194,6 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.brandSection}>
-          <View style={styles.logoBox}>
-            <Image source={logoImage} resizeMode="contain" />
-          </View>
           <Text style={styles.brandName}>Dawn Naglich</Text>
           <Text style={styles.brandTagline}>WELLNESS & MUSCLE ACTIVATION</Text>
         </View>
