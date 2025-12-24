@@ -67,6 +67,7 @@ interface GoogleCalendarEvent {
   extendedProperties?: {
     private?: {
       status?: string;
+      source?: string;
     };
   };
 }
