@@ -188,53 +188,51 @@ async function getCalendarEventsCore(
     const events = (response.data?.items as GoogleCalendarEvent[]) || [];
 
     // If sync is enabled, also fetch busy times from Dawn's personal calendars
-    // Always check sync for availability
-    {
-      try {
-        const syncConfig = await db.collection(CONFIG_COLLECTION).doc(CALENDAR_SYNC_DOC).get();
-        if (syncConfig.exists) {
-          const syncData = syncConfig.data();
-          if (syncData?.enabled && syncData?.syncedCalendarIds && Array.isArray(syncData.syncedCalendarIds)) {
-            // Fetch busy times from synced calendars
-            for (const syncedCalendarId of syncData.syncedCalendarIds) {
-              try {
-                const busyResponse = await calendar.events.list({
-                  calendarId: syncedCalendarId,
-                  timeMin: timeMin || new Date().toISOString(),
-                  timeMax: timeMax || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-                  singleEvents: true,
-                  orderBy: 'startTime',
-                  showDeleted: false,
-                });
+    try {
+      const syncConfig = await db.collection(CONFIG_COLLECTION).doc(CALENDAR_SYNC_DOC).get();
+      if (syncConfig.exists) {
+        const syncData = syncConfig.data();
+        if (syncData?.enabled && syncData?.syncedCalendarIds && Array.isArray(syncData.syncedCalendarIds)) {
+          // Fetch busy times from synced calendars
+          for (const syncedCalendarId of syncData.syncedCalendarIds) {
+            try {
+              const busyResponse = await calendar.events.list({
+                calendarId: syncedCalendarId,
+                timeMin: timeMin || new Date().toISOString(),
+                timeMax: timeMax || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                singleEvents: true,
+                orderBy: 'startTime',
+                showDeleted: false,
+              });
 
-                const busyEvents = (busyResponse.data?.items || []) as GoogleCalendarEvent[];
-                // Add busy events as masked "Busy" entries
-                for (const busyEvent of busyEvents) {
-                  if (busyEvent.start && busyEvent.end) {
-                    events.push({
-                      id: `busy-${busyEvent.id}`,
-                      summary: 'Busy',
-                      start: busyEvent.start,
-                      end: busyEvent.end,
-                      transparency: 'opaque',
-                      extendedProperties: {
-                        private: {
-                          status: 'busy',
-                          source: 'synced',
-                        },
+              const busyEvents = (busyResponse.data?.items || []) as GoogleCalendarEvent[];
+              // Add busy events as masked "Busy" entries
+              for (const busyEvent of busyEvents) {
+                if (busyEvent.start && busyEvent.end) {
+                  events.push({
+                    id: `busy-${busyEvent.id}`,
+                    summary: 'Busy',
+                    start: busyEvent.start,
+                    end: busyEvent.end,
+                    transparency: 'opaque',
+                    extendedProperties: {
+                      private: {
+                        status: 'busy',
+                        source: 'synced',
                       },
-                    });
-                  }
+                    },
+                  });
                 }
-              } catch (error) {
-                console.warn(`Failed to fetch busy times from calendar ${syncedCalendarId}:`, error);
               }
+            } catch (error) {
+              console.warn(`Failed to fetch busy times from calendar ${syncedCalendarId}:`, error);
             }
           }
         }
-      } catch (error) {
-        console.warn('Error fetching synced calendar busy times:', error);
       }
+    } catch (error) {
+      // Silently fail sync - don't break the main calendar fetch
+      console.warn('Error fetching synced calendar busy times:', error);
     }
 
     // Sort all events by start time
@@ -813,7 +811,7 @@ export const proxyGeminiLiveMessage = onCall(
     invoker: 'public',
   },
   async (request: CallableRequest) => {
-    const { media, message, config } = request.data as ProxyRequestData;
+    const { media, message, config, functionResponse } = request.data as ProxyRequestData;
 
     try {
       const apiKey = process.env.EXPO_PUBLIC_FIREBASE_GEMINI_API_KEY;
@@ -837,6 +835,38 @@ export const proxyGeminiLiveMessage = onCall(
         systemInstruction: systemInstruction,
         tools: [{ functionDeclarations: allToolDeclarations }],
       });
+
+      // Handle function response (from tool call execution)
+      if (functionResponse) {
+        // For function responses, we need to send it back to Gemini to continue the conversation
+        // Format matches what Gemini expects for function responses
+        const result = await model.generateContent([
+          {
+            role: 'model',
+            parts: [
+              {
+                functionResponse: {
+                  name: functionResponse.name,
+                  response: functionResponse.response,
+                },
+              },
+            ],
+          },
+        ]);
+        const response = await result.response;
+        const text = response.text();
+        
+        // Check for additional tool calls
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const functionCalls = (response.candidates?.[0]?.content?.parts as any[])?.filter((p: any) => p.functionCall);
+        
+        return {
+          success: true,
+          text,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          functionCalls: functionCalls?.map((p: any) => p.functionCall) || [],
+        };
+      }
 
       // Handle audio input (media) or text input (message)
       // This is a simplified "per-turn" proxy for the "Live" experience
@@ -882,7 +912,11 @@ export const proxyGeminiLiveMessage = onCall(
       };
     } catch (error: unknown) {
       console.error('Error in proxyGeminiLiveMessage:', error);
-      throw new HttpsError('internal', 'Failed to proxy message.');
+      const errorMessage = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : 'Unknown error';
+      console.error('Error details:', errorMessage);
+      throw new HttpsError('internal', `Failed to proxy message: ${errorMessage}`);
     }
   },
 );
