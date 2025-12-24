@@ -175,10 +175,11 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         const origin = window.location.origin;
         const isLocal = origin.includes("localhost") || origin.includes("127.0.0.1");
         
-        // Use direct function URL for localhost, /api/ path for deployed
+        // Use direct function URL for localhost, direct Cloud Functions URL for deployed
+        // Firebase Hosting rewrites don't work reliably with callable functions via HTTP
         const apiUrl = isLocal
           ? "http://127.0.0.1:5001/dawn-naglich/us-central1/generateGeminiResponse"
-          : `${origin}/api/generateGeminiResponse`;
+          : "https://us-central1-dawn-naglich.cloudfunctions.net/generateGeminiResponse";
         
         // Firebase callable functions via HTTP expect the data wrapped in { data: {...} }
         const requestBody = {

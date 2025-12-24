@@ -30,9 +30,10 @@ export const CalendarService = {
           typeof window !== "undefined" ? window.location.origin : "";
         const isEmulator =
           origin.includes("localhost") || origin.includes("127.0.0.1");
+        // Use direct Cloud Functions URL - Hosting rewrites don't work reliably with callable functions
         url = isEmulator
           ? "http://127.0.0.1:5001/dawn-naglich/us-central1/getCalendarEventsSecure"
-          : `${origin}/api/getCalendarEventsSecure`;
+          : "https://us-central1-dawn-naglich.cloudfunctions.net/getCalendarEventsSecure";
       } else {
         // For native, use the Firebase Hosting domain with /api/ path
         url = "https://dawn-naglich.firebaseapp.com/api/getCalendarEventsSecure";
@@ -111,9 +112,10 @@ export const CalendarService = {
           typeof window !== "undefined" ? window.location.origin : "";
         const isEmulator =
           origin.includes("localhost") || origin.includes("127.0.0.1");
+        // Use direct Cloud Functions URL - Hosting rewrites don't work reliably with callable functions
         url = isEmulator
           ? "http://127.0.0.1:5001/dawn-naglich/us-central1/createCalendarEventSecure"
-          : `${origin}/api/createCalendarEventSecure`;
+          : "https://us-central1-dawn-naglich.cloudfunctions.net/createCalendarEventSecure";
       } else {
         // For native, use the Firebase Hosting domain with /api/ path
         url = "https://dawn-naglich.firebaseapp.com/api/createCalendarEventSecure";
@@ -173,9 +175,10 @@ export const CalendarService = {
           typeof window !== "undefined" ? window.location.origin : "";
         const isEmulator =
           origin.includes("localhost") || origin.includes("127.0.0.1");
+        // Use direct Cloud Functions URL - Hosting rewrites don't work reliably with callable functions
         url = isEmulator
           ? "http://127.0.0.1:5001/dawn-naglich/us-central1/confirmCalendarEventSecure"
-          : `${origin}/api/confirmCalendarEventSecure`;
+          : "https://us-central1-dawn-naglich.cloudfunctions.net/confirmCalendarEventSecure";
       } else {
         // For native, use the Firebase Hosting domain with /api/ path
         url = "https://dawn-naglich.firebaseapp.com/api/confirmCalendarEventSecure";
@@ -235,9 +238,10 @@ export const CalendarService = {
           typeof window !== "undefined" ? window.location.origin : "";
         const isEmulator =
           origin.includes("localhost") || origin.includes("127.0.0.1");
+        // Use direct Cloud Functions URL - Hosting rewrites don't work reliably with callable functions
         url = isEmulator
           ? "http://127.0.0.1:5001/dawn-naglich/us-central1/cancelCalendarEventSecure"
-          : `${origin}/api/cancelCalendarEventSecure`;
+          : "https://us-central1-dawn-naglich.cloudfunctions.net/cancelCalendarEventSecure";
       } else {
         // For native, use the Firebase Hosting domain with /api/ path
         url = "https://dawn-naglich.firebaseapp.com/api/cancelCalendarEventSecure";

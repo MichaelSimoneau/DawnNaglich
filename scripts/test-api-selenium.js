@@ -22,7 +22,7 @@ async function testApiCalls() {
     console.log('Test 1: Testing generateGeminiResponse API...');
     try {
       const result = await page.evaluate(async () => {
-        const response = await fetch('/api/generateGeminiResponse', {
+        const response = await fetch('https://us-central1-dawn-naglich.cloudfunctions.net/generateGeminiResponse', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ async function testApiCalls() {
     console.log('\nTest 2: Testing getCalendarEventsSecure API...');
     try {
       const result = await page.evaluate(async () => {
-        const response = await fetch('/api/getCalendarEventsSecure', {
+        const response = await fetch('https://us-central1-dawn-naglich.cloudfunctions.net/getCalendarEventsSecure', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ async function testApiCalls() {
     console.log('\nTest 3: Testing createGeminiLiveSession API...');
     try {
       const result = await page.evaluate(async () => {
-        const response = await fetch('/api/createGeminiLiveSession', {
+        const response = await fetch('https://us-central1-dawn-naglich.cloudfunctions.net/createGeminiLiveSession', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

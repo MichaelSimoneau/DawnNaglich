@@ -107,10 +107,11 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
         const origin = window.location.origin;
         const isLocal = origin.includes("localhost") || origin.includes("127.0.0.1");
         
-        // Use direct function URL for localhost, /api/ path for deployed
+        // Use direct function URL for localhost, direct Cloud Functions URL for deployed
+        // Firebase Hosting rewrites don't work reliably with callable functions via HTTP
         const apiUrl = isLocal
           ? "http://127.0.0.1:5001/dawn-naglich/us-central1/createGeminiLiveSession"
-          : `${origin}/api/createGeminiLiveSession`;
+          : "https://us-central1-dawn-naglich.cloudfunctions.net/createGeminiLiveSession";
         
         const requestBody = {
           data: {},
@@ -220,10 +221,11 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
             const origin = window.location.origin;
             const isLocal = origin.includes("localhost") || origin.includes("127.0.0.1");
             
-            // Use direct function URL for localhost, /api/ path for deployed
+            // Use direct function URL for localhost, direct Cloud Functions URL for deployed
+            // Firebase Hosting rewrites don't work reliably with callable functions via HTTP
             const apiUrl = isLocal
               ? "http://127.0.0.1:5001/dawn-naglich/us-central1/proxyGeminiLiveMessage"
-              : `${origin}/api/proxyGeminiLiveMessage`;
+              : "https://us-central1-dawn-naglich.cloudfunctions.net/proxyGeminiLiveMessage";
             
             const requestBody = {
               data: {

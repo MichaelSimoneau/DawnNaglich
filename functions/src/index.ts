@@ -222,6 +222,9 @@ export const createCalendarEventSecure = onCall(
  * Confirm a pending calendar event. Admin only.
  */
 export const confirmCalendarEventSecure = onCall(
+  {
+    invoker: 'public',
+  },
   async (request: CallableRequest) => {
     const userEmail = request.auth?.token?.email;
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
@@ -272,6 +275,9 @@ export const confirmCalendarEventSecure = onCall(
  * Cancel/Delete a calendar event. Admin only.
  */
 export const cancelCalendarEventSecure = onCall(
+  {
+    invoker: 'public',
+  },
   async (request: CallableRequest) => {
     const userEmail = request.auth?.token?.email;
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
