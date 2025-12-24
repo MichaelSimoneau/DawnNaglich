@@ -7,6 +7,7 @@ import {
   useWindowDimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  LayoutAnimation,
 } from "react-native";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { useUser } from "../UserContext";
@@ -27,13 +28,41 @@ export default function Home() {
 
   const verticalScrollRef = useRef<ScrollView>(null);
   const lastScrollY = useRef(0);
+  const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const currentY = event.nativeEvent.contentOffset.y;
     const diff = Math.abs(currentY - lastScrollY.current);
     lastScrollY.current = currentY;
+    
     if (activeSlotId && diff > 50) {
-      setActiveSlotId(null);
+      // Clear any existing timeout
+      if (collapseTimeoutRef.current) {
+        clearTimeout(collapseTimeoutRef.current);
+      }
+      
+      // Configure LayoutAnimation for smooth collapse
+      LayoutAnimation.configureNext({
+        duration: 300,
+        create: {
+          type: LayoutAnimation.Types.easeInEaseOut,
+          property: LayoutAnimation.Properties.opacity,
+        },
+        update: {
+          type: LayoutAnimation.Types.easeInEaseOut,
+          property: LayoutAnimation.Properties.scaleY,
+        },
+        delete: {
+          type: LayoutAnimation.Types.easeInEaseOut,
+          property: LayoutAnimation.Properties.opacity,
+        },
+      });
+      
+      // Delay the collapse slightly to allow animation to start
+      collapseTimeoutRef.current = setTimeout(() => {
+        setActiveSlotId(null);
+        collapseTimeoutRef.current = null;
+      }, 50);
     }
   };
 
@@ -53,6 +82,15 @@ export default function Home() {
       document.title = pageTitle;
     }
   }, [activeLandingPage]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (collapseTimeoutRef.current) {
+        clearTimeout(collapseTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const scrollToAgenda = () => {
     verticalScrollRef.current?.scrollTo({ y: agendaOffset, animated: true });

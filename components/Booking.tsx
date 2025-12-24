@@ -87,10 +87,24 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
     }
   }, [activeSlotId]);
 
-  // Animate layout changes when selectedSlots changes
+  // Animate layout changes when selectedSlots or activeSlotId changes
   useEffect(() => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-  }, [selectedSlots]);
+    LayoutAnimation.configureNext({
+      duration: 300,
+      create: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+        property: LayoutAnimation.Properties.opacity,
+      },
+      update: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+        property: LayoutAnimation.Properties.scaleY,
+      },
+      delete: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+        property: LayoutAnimation.Properties.opacity,
+      },
+    });
+  }, [selectedSlots, activeSlotId]);
 
   const generateDays = () => {
     const days = [];
@@ -303,6 +317,11 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
     }
   };
 
+  const collapseAllRows = () => {
+    onSlotSelect(null);
+    setSelectedSlots([]);
+  };
+
   const toggleSlot = (id: string, day: Date, time: string, slots: string[]) => {
     const slotIndex = getTimeSlotIndex(day, time, slots);
     const existingIndex = selectedSlots.findIndex((s) => s.id === id);
@@ -450,9 +469,18 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
                   >
                     {/* Expand indicator above */}
                     {canExpandUp && (
-                      <View style={styles.expandIndicator}>
-                        <Text style={styles.expandIndicatorText}>↑ Expand</Text>
-                      </View>
+                      selectedSlots.length > 0 ? (
+                        <TouchableOpacity
+                          style={styles.expandIndicator}
+                          onPress={collapseAllRows}
+                        >
+                          <Text style={styles.expandIndicatorText}>Undo</Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <View style={styles.expandIndicator}>
+                          <Text style={styles.expandIndicatorText}>↑ Expand</Text>
+                        </View>
+                      )
                     )}
 
                     <TouchableOpacity
@@ -528,14 +556,26 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
 
                     {/* Expand indicator below */}
                     {canExpandDown && (
-                      <View
-                        style={[
-                          styles.expandIndicator,
-                          styles.expandIndicatorBottom,
-                        ]}
-                      >
-                        <Text style={styles.expandIndicatorText}>↓ Expand</Text>
-                      </View>
+                      selectedSlots.length > 0 ? (
+                        <TouchableOpacity
+                          style={[
+                            styles.expandIndicator,
+                            styles.expandIndicatorBottom,
+                          ]}
+                          onPress={collapseAllRows}
+                        >
+                          <Text style={styles.expandIndicatorText}>Undo</Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <View
+                          style={[
+                            styles.expandIndicator,
+                            styles.expandIndicatorBottom,
+                          ]}
+                        >
+                          <Text style={styles.expandIndicatorText}>↓ Expand</Text>
+                        </View>
+                      )
                     )}
 
                     {isSelected &&
@@ -701,10 +741,10 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
 
                               <TouchableOpacity
                                 style={styles.cancelBtn}
-                                onPress={() => toggleSlot(id, day, time, slots)}
+                                onPress={collapseAllRows}
                               >
                                 <Text style={styles.cancelBtnText}>
-                                  Collapse Row
+                                  Collapse All
                                 </Text>
                               </TouchableOpacity>
                             </View>
