@@ -361,6 +361,7 @@ async function createCalendarEventCore(
       extendedProperties: {
         private: {
           status: 'pending', // New bookings start as pending
+          clientEmail: userEmail || '', // Store client email for identification
         },
       },
     };

@@ -149,6 +149,26 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
     });
   };
 
+  const isSlotClientAppointment = (day: Date, time: string) => {
+    if (!user || !user.email) return false;
+    
+    return appointments.some((b) => {
+      if (b.clientEmail?.toLowerCase() !== user.email.toLowerCase()) return false;
+      
+      const bStart = new Date(b.startTime);
+      const bEnd = new Date(b.endTime);
+      const isSameDay = bStart.toDateString() === day.toDateString();
+      if (!isSameDay) return false;
+
+      const slotMinutes = parseTimeToMinutes(time);
+      const slotEndMinutes = slotMinutes + 30;
+      const bStartMinutes = bStart.getHours() * 60 + bStart.getMinutes();
+      const bEndMinutes = bEnd.getHours() * 60 + bEnd.getMinutes();
+
+      return bStartMinutes < slotEndMinutes && bEndMinutes > slotMinutes;
+    });
+  };
+
   const canExpandToSlot = (
     day: Date,
     time: string,
@@ -401,6 +421,7 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
               return slots.map((time) => {
                 const id = `${day.toDateString()}-${time}`;
                 const taken = isSlotTaken(day, time);
+                const isClientAppointment = isSlotClientAppointment(day, time);
                 const isSelected = activeSlotId === id;
                 const isInSelectedRange = isSlotInSelectedRange(
                   day,
@@ -421,6 +442,7 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
                       styles.agendaRowContainer,
                       isSelected && styles.agendaRowExpanded,
                       taken && styles.agendaRowTaken,
+                      isClientAppointment && styles.agendaRowClientAppointment,
                       isInSelectedRange &&
                         !isSelected &&
                         styles.agendaRowInRange,
@@ -447,7 +469,8 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
                         <Text
                           style={[
                             styles.rowTimeText,
-                            taken && styles.textMuted,
+                            taken && !isClientAppointment && styles.textMuted,
+                            isClientAppointment && styles.textClientAppointment,
                             (isSelected || isInSelectedRange) &&
                               styles.textSelected,
                           ]}
@@ -458,8 +481,16 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
                       <View className="w-[1px] h-8 bg-slate-100 mx-5" />
                       <View style={styles.rowMain}>
                         {taken ? (
-                          <View style={styles.takenContainer}>
-                            <Text style={styles.takenLabel}>Reserved</Text>
+                          <View style={[
+                            styles.takenContainer,
+                            isClientAppointment && styles.clientAppointmentContainer,
+                          ]}>
+                            <Text style={[
+                              styles.takenLabel,
+                              isClientAppointment && styles.clientAppointmentLabel,
+                            ]}>
+                              {isClientAppointment ? "Your Appointment" : "Reserved"}
+                            </Text>
                           </View>
                         ) : (
                           <View style={styles.availableContainer}>
@@ -728,12 +759,14 @@ const styles = StyleSheet.create({
   agendaRowHeaderSelected: { backgroundColor: "#F0FDF4" },
   agendaRowExpanded: { minHeight: 520, backgroundColor: "#FFF" },
   agendaRowTaken: { backgroundColor: "#F8FAFC" },
+  agendaRowClientAppointment: { backgroundColor: "#ECFDF5" },
   agendaRowInRange: { backgroundColor: "#F0FDF4" },
 
   rowTimeBox: { width: 85 },
   rowTimeText: { fontSize: 13, fontWeight: "900", color: "#334155" },
   textSelected: { color: "#064E3B" },
   textMuted: { color: "#CBD5E1", fontWeight: "600" },
+  textClientAppointment: { color: "#059669", fontWeight: "900" },
   rowMain: { flex: 1, flexDirection: "row", alignItems: "center" },
 
   availableContainer: { flex: 1, flexDirection: "row", alignItems: "center" },
@@ -751,6 +784,15 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  clientAppointmentContainer: {
+    backgroundColor: "#D1FAE5",
+    borderWidth: 1,
+    borderColor: "#10B981",
+  },
+  clientAppointmentLabel: {
+    color: "#059669",
+    fontWeight: "900",
   },
 
   formContent: {

@@ -16,6 +16,7 @@ interface GoogleCalendarEvent {
   extendedProperties?: {
     private?: {
       status?: string;
+      clientEmail?: string;
     };
   };
 }
@@ -98,6 +99,7 @@ export const CalendarService = {
         item.start?.dateTime || item.start?.date || new Date().toISOString(),
       endTime: item.end?.dateTime || item.end?.date || new Date().toISOString(),
       status: (item.extendedProperties?.private?.status as Appointment['status']) || "confirmed",
+      clientEmail: item.extendedProperties?.private?.clientEmail, // Extract client email
     }));
   },
 

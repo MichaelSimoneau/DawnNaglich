@@ -7,25 +7,25 @@ todos:
     status: completed
   - id: "2"
     content: Update Appointment interface to include optional clientEmail field
-    status: in_progress
+    status: completed
   - id: "3"
     content: Update mapGoogleEventsToAppointments to extract and include clientEmail
-    status: pending
+    status: completed
     dependencies:
       - "2"
   - id: "4"
     content: Add isSlotClientAppointment function to Booking component
-    status: pending
+    status: completed
     dependencies:
       - "3"
   - id: "5"
     content: Update slot rendering to show 'Your Appointment' for client's appointments with green styling
-    status: pending
+    status: completed
     dependencies:
       - "4"
   - id: "6"
     content: Add new styles for client appointment containers and labels
-    status: pending
+    status: completed
     dependencies:
       - "5"
 ---

@@ -19,6 +19,7 @@ export interface Appointment {
   startTime: string;
   endTime: string;
   status: "confirmed" | "pending" | "cancelled";
+  clientEmail?: string; // Email of the client who booked this appointment
 }
 
 export interface Service {
