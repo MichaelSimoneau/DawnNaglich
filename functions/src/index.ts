@@ -89,14 +89,14 @@ const CALENDAR_SYNC_DOC = 'calendarSync';
 async function getAppCalendarId(): Promise<string> {
   try {
     const configDoc = await db.collection(CONFIG_COLLECTION).doc(APP_CALENDAR_DOC).get();
-    
+
     if (configDoc.exists) {
       const data = configDoc.data();
       if (data?.calendarId) {
         return data.calendarId;
       }
     }
-    
+
     // Calendar doesn't exist, create it
     const calendar = await getCalendarClient();
     const calendarResponse = await calendar.calendars.insert({
@@ -106,12 +106,12 @@ async function getAppCalendarId(): Promise<string> {
         timeZone: 'America/New_York',
       },
     });
-    
+
     const newCalendarId = calendarResponse.data.id;
     if (!newCalendarId) {
       throw new Error('Failed to create app calendar');
     }
-    
+
     // Share calendar with admins
     for (const adminEmail of ADMIN_EMAILS) {
       try {
@@ -129,14 +129,14 @@ async function getAppCalendarId(): Promise<string> {
         console.warn(`Failed to share calendar with ${adminEmail}:`, error);
       }
     }
-    
+
     // Store calendar ID in Firestore
     await db.collection(CONFIG_COLLECTION).doc(APP_CALENDAR_DOC).set({
       calendarId: newCalendarId,
       calendarName: APP_CALENDAR_NAME,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
-    
+
     return newCalendarId;
   } catch (error) {
     console.error('Error getting app calendar ID:', error);
@@ -175,7 +175,7 @@ async function getCalendarEventsCore(
   try {
     const calendar = await getCalendarClient();
     const appCalendarId = await getAppCalendarId();
-    
+
     // Get events from app calendar
     const response = await calendar.events.list({
       calendarId: appCalendarId,
@@ -184,11 +184,12 @@ async function getCalendarEventsCore(
       singleEvents: true,
       orderBy: 'startTime',
     });
-    
-    let events = (response.data?.items as GoogleCalendarEvent[]) || [];
-    
+
+    const events = (response.data?.items as GoogleCalendarEvent[]) || [];
+
     // If sync is enabled, also fetch busy times from Dawn's personal calendars
-    if (isAdmin || true) { // Always check sync for availability
+    // Always check sync for availability
+    {
       try {
         const syncConfig = await db.collection(CONFIG_COLLECTION).doc(CALENDAR_SYNC_DOC).get();
         if (syncConfig.exists) {
@@ -205,7 +206,7 @@ async function getCalendarEventsCore(
                   orderBy: 'startTime',
                   showDeleted: false,
                 });
-                
+
                 const busyEvents = (busyResponse.data?.items || []) as GoogleCalendarEvent[];
                 // Add busy events as masked "Busy" entries
                 for (const busyEvent of busyEvents) {
@@ -235,7 +236,7 @@ async function getCalendarEventsCore(
         console.warn('Error fetching synced calendar busy times:', error);
       }
     }
-    
+
     // Sort all events by start time
     events.sort((a, b) => {
       const aStart = a.start?.dateTime || a.start?.date || '';
@@ -248,7 +249,7 @@ async function getCalendarEventsCore(
       const isPublic
         = event.extendedProperties?.private?.status === 'confirmed'
         || event.extendedProperties?.private?.status === 'pending';
-      
+
       const isBusy = event.extendedProperties?.private?.status === 'busy';
 
       // Busy events from synced calendars are always shown as "Busy"
@@ -352,7 +353,7 @@ async function createCalendarEventCore(
   try {
     const calendar = await getCalendarClient();
     const appCalendarId = await getAppCalendarId();
-    
+
     const event = {
       summary: `${clientName} - ${service}`,
       description: `Booking for ${service}`,
@@ -371,7 +372,7 @@ async function createCalendarEventCore(
       calendarId: appCalendarId,
       requestBody: event,
     });
-    
+
     // If sync is enabled and syncToCalendarId is set, also add to Dawn's personal calendar
     try {
       const syncConfig = await db.collection(CONFIG_COLLECTION).doc(CALENDAR_SYNC_DOC).get();
@@ -508,7 +509,7 @@ async function cancelCalendarEventCore(
   try {
     const calendar = await getCalendarClient();
     const appCalendarId = await getAppCalendarId();
-    
+
     await calendar.events.delete({
       calendarId: appCalendarId,
       eventId: eventId,
@@ -908,8 +909,9 @@ export const getCalendarConfig = onCall(
       const appCalendarDoc = await db.collection(CONFIG_COLLECTION).doc(APP_CALENDAR_DOC).get();
       const syncConfigDoc = await db.collection(CONFIG_COLLECTION).doc(CALENDAR_SYNC_DOC).get();
 
-      const appCalendarId = appCalendarDoc.exists && appCalendarDoc.data()?.calendarId
-        ? appCalendarDoc.data()!.calendarId
+      const appCalendarData = appCalendarDoc.data();
+      const appCalendarId = appCalendarDoc.exists && appCalendarData?.calendarId
+        ? appCalendarData.calendarId
         : await getAppCalendarId();
 
       const calendar = await getCalendarClient();
@@ -1059,7 +1061,7 @@ export const syncCalendars = onCall(
 
     try {
       const syncConfig = await db.collection(CONFIG_COLLECTION).doc(CALENDAR_SYNC_DOC).get();
-      
+
       if (!syncConfig.exists || !syncConfig.data()?.enabled) {
         return {
           success: false,
@@ -1067,7 +1069,13 @@ export const syncCalendars = onCall(
         };
       }
 
-      const syncData = syncConfig.data()!;
+      const syncData = syncConfig.data();
+      if (!syncData) {
+        return {
+          success: false,
+          message: 'Calendar sync configuration not found.',
+        };
+      }
       const syncedCalendarIds = syncData.syncedCalendarIds || [];
 
       if (syncedCalendarIds.length === 0) {
