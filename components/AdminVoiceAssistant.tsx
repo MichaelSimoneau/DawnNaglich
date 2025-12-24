@@ -142,6 +142,13 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
         const responseData = await response.json();
         console.log("AdminVoiceAssistant createGeminiLiveSession response:", JSON.stringify(responseData, null, 2));
         
+        // Check for error responses first (Firebase callable functions return errors in { error: {...} } format)
+        if (responseData.error) {
+          const errorMsg = responseData.error.message || JSON.stringify(responseData.error);
+          console.error("Function returned error:", errorMsg);
+          throw new Error(`Function error: ${errorMsg}`);
+        }
+        
         // Firebase callable functions via HTTP return: { result: { data: {...} } }
         if (responseData.result?.data) {
           sessionData = responseData.result.data as { success: boolean; config?: Record<string, unknown> };
@@ -151,7 +158,7 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
           sessionData = responseData as { success: boolean; config?: Record<string, unknown> };
         } else {
           console.error("Unexpected response format:", responseData);
-          throw new Error("Unexpected response format from server");
+          throw new Error(`Unexpected response format from server: ${JSON.stringify(responseData).substring(0, 200)}`);
         }
       } else {
         // For native, use Firebase SDK
@@ -259,6 +266,13 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
             const responseData = await response.json();
             console.log("AI Proxy Response:", JSON.stringify(responseData, null, 2));
             
+            // Check for error responses first (Firebase callable functions return errors in { error: {...} } format)
+            if (responseData.error) {
+              const errorMsg = responseData.error.message || JSON.stringify(responseData.error);
+              console.error("Function returned error:", errorMsg);
+              throw new Error(`Function error: ${errorMsg}`);
+            }
+            
             // Firebase callable functions via HTTP return: { result: { data: {...} } }
             let proxyResult;
             if (responseData.result?.data) {
@@ -269,7 +283,7 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
               proxyResult = responseData;
             } else {
               console.error("Unexpected response format:", responseData);
-              throw new Error("Unexpected response format from server");
+              throw new Error(`Unexpected response format from server: ${JSON.stringify(responseData).substring(0, 200)}`);
             }
             
             data = proxyResult as typeof data;

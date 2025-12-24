@@ -216,6 +216,13 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         const responseData = await response.json();
         console.log("ClientAssistant response:", JSON.stringify(responseData, null, 2));
         
+        // Check for error responses first (Firebase callable functions return errors in { error: {...} } format)
+        if (responseData.error) {
+          const errorMsg = responseData.error.message || JSON.stringify(responseData.error);
+          console.error("Function returned error:", errorMsg);
+          throw new Error(`Function error: ${errorMsg}`);
+        }
+        
         // Firebase callable functions via HTTP return: { result: { data: { success, text } } }
         if (responseData.result?.data) {
           result = responseData.result.data as { success: boolean; text: string };
@@ -225,7 +232,7 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           result = responseData as { success: boolean; text: string };
         } else {
           console.error("Unexpected response format:", responseData);
-          throw new Error("Unexpected response format from server");
+          throw new Error(`Unexpected response format from server: ${JSON.stringify(responseData).substring(0, 200)}`);
         }
       } else {
         // For native, use Firebase SDK
@@ -269,7 +276,14 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         } else if (e.message.includes("Failed to fetch") || e.message.includes("NetworkError")) {
           errorMessage = "Network error. Please check your connection and try again.";
         } else if (e.message.includes("HTTP error")) {
-          errorMessage = `Server error (${e.message}). Please try again later.`;
+          // Show the actual HTTP error details
+          errorMessage = `Server error: ${e.message}`;
+        } else if (e.message.includes("Function error:")) {
+          // Show the actual function error details (includes API key errors, etc.)
+          errorMessage = `Error: ${e.message.replace("Function error: ", "")}`;
+        } else if (e.message.includes("Unexpected response format")) {
+          // Show the unexpected format details
+          errorMessage = `Server response error: ${e.message}`;
         }
       }
       
