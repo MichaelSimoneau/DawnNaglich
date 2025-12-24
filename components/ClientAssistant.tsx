@@ -194,7 +194,6 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'same-origin', // Include credentials for same-origin requests
           body: JSON.stringify(requestBody),
         });
 

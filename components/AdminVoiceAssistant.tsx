@@ -112,23 +112,46 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
           ? "http://127.0.0.1:5001/dawn-naglich/us-central1/createGeminiLiveSession"
           : `${origin}/api/createGeminiLiveSession`;
         
+        const requestBody = {
+          data: {},
+        };
+        
         const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            data: {},
-          }),
+          body: JSON.stringify(requestBody),
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorText = await response.text();
+          console.error("HTTP error response:", errorText);
+          console.error("Request URL:", apiUrl);
+          throw new Error(`HTTP error! status: ${response.status}, body: ${errorText.substring(0, 200)}`);
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error("Non-JSON response:", text.substring(0, 500));
+          throw new Error(`Expected JSON but got ${contentType}`);
         }
 
         const responseData = await response.json();
-        // Handle both direct function response and wrapped response
-        sessionData = responseData.result?.data || responseData as { success: boolean; config?: Record<string, unknown> };
+        console.log("AdminVoiceAssistant createGeminiLiveSession response:", JSON.stringify(responseData, null, 2));
+        
+        // Firebase callable functions via HTTP return: { result: { data: {...} } }
+        if (responseData.result?.data) {
+          sessionData = responseData.result.data as { success: boolean; config?: Record<string, unknown> };
+        } else if (responseData.data) {
+          sessionData = responseData.data as { success: boolean; config?: Record<string, unknown> };
+        } else if (responseData.success !== undefined) {
+          sessionData = responseData as { success: boolean; config?: Record<string, unknown> };
+        } else {
+          console.error("Unexpected response format:", responseData);
+          throw new Error("Unexpected response format from server");
+        }
       } else {
         // For native, use Firebase SDK
         if (!functions) {
@@ -202,27 +225,51 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
               ? "http://127.0.0.1:5001/dawn-naglich/us-central1/proxyGeminiLiveMessage"
               : `${origin}/api/proxyGeminiLiveMessage`;
             
+            const requestBody = {
+              data: {
+                media: mediaData,
+                config: sessionConfig,
+              },
+            };
+            
             const response = await fetch(apiUrl, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({
-                data: {
-                  media: mediaData,
-                  config: sessionConfig,
-                },
-              }),
+              body: JSON.stringify(requestBody),
             });
 
             if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
+              const errorText = await response.text();
+              console.error("HTTP error response:", errorText);
+              console.error("Request URL:", apiUrl);
+              throw new Error(`HTTP error! status: ${response.status}, body: ${errorText.substring(0, 200)}`);
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+              const text = await response.text();
+              console.error("Non-JSON response:", text.substring(0, 500));
+              throw new Error(`Expected JSON but got ${contentType}`);
             }
 
             const responseData = await response.json();
-            // Handle both direct function response and wrapped response
-            const proxyResult = responseData.result?.data || responseData;
-            console.log("AI Proxy Response:", proxyResult); // Validation Log
+            console.log("AI Proxy Response:", JSON.stringify(responseData, null, 2));
+            
+            // Firebase callable functions via HTTP return: { result: { data: {...} } }
+            let proxyResult;
+            if (responseData.result?.data) {
+              proxyResult = responseData.result.data;
+            } else if (responseData.data) {
+              proxyResult = responseData.data;
+            } else if (responseData.success !== undefined) {
+              proxyResult = responseData;
+            } else {
+              console.error("Unexpected response format:", responseData);
+              throw new Error("Unexpected response format from server");
+            }
+            
             data = proxyResult as typeof data;
           } else {
             // For native, use Firebase SDK

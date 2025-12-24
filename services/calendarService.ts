@@ -38,26 +38,48 @@ export const CalendarService = {
         url = "https://dawn-naglich.firebaseapp.com/api/getCalendarEventsSecure";
       }
 
+      const requestBody = {
+        data: {
+          timeMin,
+          timeMax,
+        },
+      };
+      
       console.log("Calling secure function via URL:", url);
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          data: {
-            timeMin,
-            timeMax,
-          },
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response || !response.ok) {
-        throw new Error(`HTTP error! status: ${response?.status || 'unknown'}`);
+        const errorText = await response.text();
+        console.error("HTTP error response:", errorText);
+        console.error("Request URL:", url);
+        throw new Error(`HTTP error! status: ${response?.status || 'unknown'}, body: ${errorText.substring(0, 200)}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error("Non-JSON response:", text.substring(0, 500));
+        throw new Error(`Expected JSON but got ${contentType}`);
       }
 
       const result = await response.json() as { result?: { data?: { items?: GoogleCalendarEvent[] } }; items?: GoogleCalendarEvent[] };
-      const data = result.result?.data || result;
+      
+      // Firebase callable functions via HTTP return: { result: { data: { items: [...] } } }
+      let data;
+      if (result.result?.data) {
+        data = result.result.data;
+      } else if (result.items) {
+        data = result;
+      } else {
+        data = result;
+      }
+      
       return data.items || [];
     } catch (error) {
       console.error("Secure Fetch Error:", error);
@@ -97,23 +119,45 @@ export const CalendarService = {
         url = "https://dawn-naglich.firebaseapp.com/api/createCalendarEventSecure";
       }
 
+      const requestBody = {
+        data: appointment,
+      };
+      
       const response = await fetch(url, {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          data: appointment,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response || !response.ok) {
-        throw new Error(`HTTP error! status: ${response?.status || 'unknown'}`);
+        const errorText = await response.text();
+        console.error("HTTP error response:", errorText);
+        console.error("Request URL:", url);
+        throw new Error(`HTTP error! status: ${response?.status || 'unknown'}, body: ${errorText.substring(0, 200)}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error("Non-JSON response:", text.substring(0, 500));
+        throw new Error(`Expected JSON but got ${contentType}`);
       }
 
       const result = await response.json();
-      const data = (result.result?.data || result) as { success: boolean; eventId?: string };
-      return data;
+      
+      // Firebase callable functions via HTTP return: { result: { data: {...} } }
+      let data;
+      if (result.result?.data) {
+        data = result.result.data;
+      } else if (result.success !== undefined) {
+        data = result;
+      } else {
+        data = result;
+      }
+      
+      return data as { success: boolean; eventId?: string };
     } catch (error) {
       console.error("Create event error:", error);
       return { success: false };
@@ -137,23 +181,45 @@ export const CalendarService = {
         url = "https://dawn-naglich.firebaseapp.com/api/confirmCalendarEventSecure";
       }
 
+      const requestBody = {
+        data: { eventId },
+      };
+      
       const response = await fetch(url, {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          data: { eventId },
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response || !response.ok) {
-        throw new Error(`HTTP error! status: ${response?.status || 'unknown'}`);
+        const errorText = await response.text();
+        console.error("HTTP error response:", errorText);
+        console.error("Request URL:", url);
+        throw new Error(`HTTP error! status: ${response?.status || 'unknown'}, body: ${errorText.substring(0, 200)}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error("Non-JSON response:", text.substring(0, 500));
+        throw new Error(`Expected JSON but got ${contentType}`);
       }
 
       const result = await response.json();
-      const data = (result.result?.data || result) as { success: boolean };
-      return data.success || false;
+      
+      // Firebase callable functions via HTTP return: { result: { data: {...} } }
+      let data;
+      if (result.result?.data) {
+        data = result.result.data;
+      } else if (result.success !== undefined) {
+        data = result;
+      } else {
+        data = result;
+      }
+      
+      return (data as { success: boolean }).success || false;
     } catch (error) {
       console.error("Confirm event error:", error);
       return false;
@@ -177,23 +243,45 @@ export const CalendarService = {
         url = "https://dawn-naglich.firebaseapp.com/api/cancelCalendarEventSecure";
       }
 
+      const requestBody = {
+        data: { eventId },
+      };
+      
       const response = await fetch(url, {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          data: { eventId },
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response || !response.ok) {
-        throw new Error(`HTTP error! status: ${response?.status || 'unknown'}`);
+        const errorText = await response.text();
+        console.error("HTTP error response:", errorText);
+        console.error("Request URL:", url);
+        throw new Error(`HTTP error! status: ${response?.status || 'unknown'}, body: ${errorText.substring(0, 200)}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error("Non-JSON response:", text.substring(0, 500));
+        throw new Error(`Expected JSON but got ${contentType}`);
       }
 
       const result = await response.json();
-      const data = (result.result?.data || result) as { success: boolean };
-      return data.success || false;
+      
+      // Firebase callable functions via HTTP return: { result: { data: {...} } }
+      let data;
+      if (result.result?.data) {
+        data = result.result.data;
+      } else if (result.success !== undefined) {
+        data = result;
+      } else {
+        data = result;
+      }
+      
+      return (data as { success: boolean }).success || false;
     } catch (error) {
       console.error("Cancel event error:", error);
       return false;
