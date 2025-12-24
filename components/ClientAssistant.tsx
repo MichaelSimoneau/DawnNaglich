@@ -180,23 +180,29 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           ? "http://127.0.0.1:5001/dawn-naglich/us-central1/generateGeminiResponse"
           : `${origin}/api/generateGeminiResponse`;
         
+        // Firebase callable functions via HTTP expect the data wrapped in { data: {...} }
+        const requestBody = {
+          data: {
+            conversationHistory,
+            userMessage: userMsg,
+            userRole: 'client',
+          },
+        };
+        
         const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            data: {
-              conversationHistory,
-              userMessage: userMsg,
-              userRole: 'client',
-            },
-          }),
+          credentials: 'same-origin', // Include credentials for same-origin requests
+          body: JSON.stringify(requestBody),
         });
 
         if (!response.ok) {
           const errorText = await response.text();
           console.error("HTTP error response:", errorText);
+          console.error("Request URL:", apiUrl);
+          console.error("Request body:", JSON.stringify(requestBody, null, 2));
           throw new Error(`HTTP error! status: ${response.status}, body: ${errorText.substring(0, 200)}`);
         }
 
@@ -208,12 +214,9 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         }
 
         const responseData = await response.json();
-        console.log("ClientAssistant response:", JSON.stringify(responseData, null, 2)); // Debug log
+        console.log("ClientAssistant response:", JSON.stringify(responseData, null, 2));
         
-        // Handle Firebase callable function response format
-        // When called via HTTP through Hosting rewrite, Firebase wraps it: { result: { data: { success, text } } }
-        // When called via SDK, it's just: { success, text }
-        // Direct function call might return: { success, text }
+        // Firebase callable functions via HTTP return: { result: { data: { success, text } } }
         if (responseData.result?.data) {
           result = responseData.result.data as { success: boolean; text: string };
         } else if (responseData.data) {
