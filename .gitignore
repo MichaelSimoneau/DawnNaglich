@@ -40,6 +40,10 @@ GoogleService-Info.plist
 @michael-simoneau__dawn-naglich.jks
 .xcode.env
 .xcode.env.local
+*.apk
+*.aab
+build-*.apk
+build-*.aab
 
 # keep `ios/` and `android/` except built and large files
 ios/build/
