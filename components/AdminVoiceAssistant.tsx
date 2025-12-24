@@ -7,6 +7,7 @@ import {
   ScrollView,
   Animated,
   Dimensions,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome6 } from "@expo/vector-icons";
@@ -101,15 +102,45 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
   const startAssistant = async () => {
     setIsConnecting(true);
     try {
-      if (!functions) {
-        throw new Error("Functions not initialized");
-      }
-
-      // Initialize session server-side via SDK
-      const createGeminiLiveSession = httpsCallable(functions, 'createGeminiLiveSession');
-      const sessionResult = await createGeminiLiveSession({});
+      let sessionData: { success: boolean; config?: Record<string, unknown> };
       
-      const sessionData = sessionResult.data as { success: boolean; config?: Record<string, unknown> };
+      // On web, use the /api/ path for deployed sites to go through Firebase Hosting rewrites
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const origin = window.location.origin;
+        const isLocal = origin.includes("localhost") || origin.includes("127.0.0.1");
+        
+        // Use direct function URL for localhost, /api/ path for deployed
+        const apiUrl = isLocal
+          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/createGeminiLiveSession"
+          : `${origin}/api/createGeminiLiveSession`;
+        
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            data: {},
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        // Handle both direct function response and wrapped response
+        sessionData = responseData.result?.data || responseData as { success: boolean; config?: Record<string, unknown> };
+      } else {
+        // For native, use Firebase SDK
+        if (!functions) {
+          throw new Error("Functions not initialized");
+        }
+        
+        const createGeminiLiveSession = httpsCallable(functions, 'createGeminiLiveSession');
+        const sessionResult = await createGeminiLiveSession({});
+        sessionData = sessionResult.data as { success: boolean; config?: Record<string, unknown> };
+      }
 
       if (!sessionData.success) {
         throw new Error("Failed to create AI session");
@@ -153,17 +184,63 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
 
       audioBufferQueue = [];
 
-        // Proxy audio chunk to backend via SDK
+        // Proxy audio chunk to backend
         try {
-          const proxyGeminiLiveMessage = httpsCallable(functions, 'proxyGeminiLiveMessage');
-          const proxyResult = await proxyGeminiLiveMessage({
-            media: mediaData,
-            config: sessionConfig,
-          });
+          let data: {
+            success: boolean;
+            text?: string;
+            functionCalls?: Array<{ id: string; name: string; args?: Record<string, unknown> }>;
+            audio?: string;
+            turnComplete?: boolean;
+          };
+          
+          // On web, use the /api/ path for deployed sites to go through Firebase Hosting rewrites
+          if (Platform.OS === 'web' && typeof window !== 'undefined') {
+            const origin = window.location.origin;
+            const isLocal = origin.includes("localhost") || origin.includes("127.0.0.1");
+            
+            // Use direct function URL for localhost, /api/ path for deployed
+            const apiUrl = isLocal
+              ? "http://127.0.0.1:5001/dawn-naglich/us-central1/proxyGeminiLiveMessage"
+              : `${origin}/api/proxyGeminiLiveMessage`;
+            
+            const response = await fetch(apiUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                data: {
+                  media: mediaData,
+                  config: sessionConfig,
+                },
+              }),
+            });
 
-          console.log("AI Proxy Response:", proxyResult.data); // Validation Log
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
-          const data = proxyResult.data as {
+            const responseData = await response.json();
+            // Handle both direct function response and wrapped response
+            const proxyResult = responseData.result?.data || responseData;
+            console.log("AI Proxy Response:", proxyResult); // Validation Log
+            data = proxyResult as typeof data;
+          } else {
+            // For native, use Firebase SDK
+            if (!functions) {
+              throw new Error("Functions not initialized");
+            }
+            
+            const proxyGeminiLiveMessage = httpsCallable(functions, 'proxyGeminiLiveMessage');
+            const proxyResult = await proxyGeminiLiveMessage({
+              media: mediaData,
+              config: sessionConfig,
+            });
+
+            console.log("AI Proxy Response:", proxyResult.data); // Validation Log
+            data = proxyResult.data as typeof data;
+          }
             success: boolean;
             text?: string;
             functionCalls?: Array<{ id: string; name: string; args?: Record<string, unknown> }>;
@@ -282,17 +359,46 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
         }
       }
 
-      // Send tool response back to the proxy using SDK
-      if (!functions) throw new Error("Functions not initialized");
-      const proxyGeminiLiveMessage = httpsCallable(functions, 'proxyGeminiLiveMessage');
-      await proxyGeminiLiveMessage({
-        functionResponse: {
-          id: fc.id,
-          name: fc.name,
-          response: { result: toolResult },
-        },
-        config: sessionConfig || {},
-      });
+      // Send tool response back to the proxy
+      // On web, use the /api/ path for deployed sites to go through Firebase Hosting rewrites
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const origin = window.location.origin;
+        const isLocal = origin.includes("localhost") || origin.includes("127.0.0.1");
+        
+        // Use direct function URL for localhost, /api/ path for deployed
+        const apiUrl = isLocal
+          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/proxyGeminiLiveMessage"
+          : `${origin}/api/proxyGeminiLiveMessage`;
+        
+        await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            data: {
+              functionResponse: {
+                id: fc.id,
+                name: fc.name,
+                response: { result: toolResult },
+              },
+              config: sessionConfig || {},
+            },
+          }),
+        });
+      } else {
+        // For native, use Firebase SDK
+        if (!functions) throw new Error("Functions not initialized");
+        const proxyGeminiLiveMessage = httpsCallable(functions, 'proxyGeminiLiveMessage');
+        await proxyGeminiLiveMessage({
+          functionResponse: {
+            id: fc.id,
+            name: fc.name,
+            response: { result: toolResult },
+          },
+          config: sessionConfig || {},
+        });
+      }
       
     } catch (error) {
       console.error("Function call error:", error);

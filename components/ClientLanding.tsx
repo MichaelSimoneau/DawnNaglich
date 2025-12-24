@@ -134,31 +134,12 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
 
   return (
     <View style={styles.container}>
-      <LandingPage progress={scrollX} isMapActive={isMapActive} />
-
-      {/* Map Section for index 3 */}
-      <Animated.View
-        style={useAnimatedStyle(() => {
-          const topBarHeight = 64; // Match top bar height
-          return {
-            position: "absolute",
-            top: topBarHeight,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            opacity: interpolate(
-              scrollX.value,
-              [2.5, 3],
-              [0, 1],
-              Extrapolation.CLAMP,
-            ),
-            zIndex: scrollX.value > 2.5 ? 10 : -1,
-            pointerEvents: isMapActive ? "auto" : "none",
-          };
-        })}
-      >
+      {/* Background Map - Always Rendered */}
+      <View style={StyleSheet.absoluteFill} pointerEvents={isMapActive ? "auto" : "none"}>
         <LocationMap isInteractive={isMapActive} />
-      </Animated.View>
+      </View>
+
+      <LandingPage progress={scrollX} isMapActive={isMapActive} />
 
       <Animated.ScrollView
         ref={scrollViewRef}
@@ -344,7 +325,7 @@ const ContentSlide: React.FC<ContentSlideProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#022c22",
+    backgroundColor: "transparent",
     position: "relative",
   },
   topBar: {

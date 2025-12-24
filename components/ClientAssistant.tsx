@@ -160,10 +160,6 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
     }, 50);
 
     try {
-      if (!functions) {
-         throw new Error("Functions not initialized");
-      }
-      
       // Build conversation history (excluding the current user message we just added)
       const conversationHistory = messages
         .slice(0, -1) // Exclude the user message we just added
@@ -172,23 +168,61 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           text: msg.text,
         }));
 
-      // Call the cloud function using the Firebase SDK
-      // This handles Auth, CORS, and URL resolution automatically
-      const generateResponse = httpsCallable(functions, 'generateGeminiResponse');
-      const result = await generateResponse({
-        conversationHistory,
-        userMessage: userMsg,
-        userRole: 'client', // Pass role context
-      });
+      let result: { success: boolean; text: string };
       
-      const data = result.data as { success: boolean; text: string };
+      // On web, use the /api/ path for deployed sites to go through Firebase Hosting rewrites
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const origin = window.location.origin;
+        const isLocal = origin.includes("localhost") || origin.includes("127.0.0.1");
+        
+        // Use direct function URL for localhost, /api/ path for deployed
+        const apiUrl = isLocal
+          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/generateGeminiResponse"
+          : `${origin}/api/generateGeminiResponse`;
+        
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            data: {
+              conversationHistory,
+              userMessage: userMsg,
+              userRole: 'client',
+            },
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        // Handle both direct function response and wrapped response
+        result = responseData.result?.data || responseData as { success: boolean; text: string };
+      } else {
+        // For native, use Firebase SDK
+        if (!functions) {
+          throw new Error("Functions not initialized");
+        }
+        
+        const generateResponse = httpsCallable(functions, 'generateGeminiResponse');
+        const callableResult = await generateResponse({
+          conversationHistory,
+          userMessage: userMsg,
+          userRole: 'client',
+        });
+        
+        result = callableResult.data as { success: boolean; text: string };
+      }
       
-      if (data.success && data.text) {
+      if (result.success && result.text) {
         setMessages((prev) => [
           ...prev,
           {
             role: "ai",
-            text: data.text,
+            text: result.text,
           },
         ]);
       } else {

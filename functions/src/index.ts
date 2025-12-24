@@ -303,7 +303,7 @@ export const cancelCalendarEventSecure = onCall(
  */
 export const generateGeminiResponse = onCall(
   {
-    secrets: ['GEMINI_API_KEY'],
+    secrets: ['EXPO_PUBLIC_FIREBASE_GEMINI_API_KEY'],
   },
   async (request: CallableRequest) => {
     const { conversationHistory, userMessage, systemInstruction } = request.data;
@@ -313,8 +313,9 @@ export const generateGeminiResponse = onCall(
     }
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = process.env.EXPO_PUBLIC_FIREBASE_GEMINI_API_KEY;
       if (!apiKey) {
+        console.error('Missing API Key: EXPO_PUBLIC_FIREBASE_GEMINI_API_KEY is not set.');
         throw new HttpsError(
           'internal',
           'Gemini API key not configured.',
@@ -343,7 +344,7 @@ export const generateGeminiResponse = onCall(
       ];
 
       const result = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-pro',
         contents: contents,
         config: {
           systemInstruction: systemInstruction || CLIENT_ASSISTANT_INSTRUCTION,
@@ -396,12 +397,13 @@ export const generateGeminiResponse = onCall(
  */
 export const createGeminiLiveSession = onCall(
   {
-    secrets: ['GEMINI_API_KEY'],
+    secrets: ['EXPO_PUBLIC_FIREBASE_GEMINI_API_KEY'],
   },
   async () => {
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = process.env.EXPO_PUBLIC_FIREBASE_GEMINI_API_KEY;
       if (!apiKey) {
+        console.error('Missing API Key: EXPO_PUBLIC_FIREBASE_GEMINI_API_KEY is not set.');
         throw new HttpsError('internal', 'Gemini API key not configured.');
       }
 
@@ -410,7 +412,7 @@ export const createGeminiLiveSession = onCall(
       return {
         success: true,
         config: {
-          model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+          model: 'gemini-2.5-pro',
           systemInstruction: ADMIN_VOICE_ASSISTANT_INSTRUCTION(new Date().toLocaleString()),
           tools: [{ functionDeclarations: allToolDeclarations }],
         },
@@ -428,14 +430,15 @@ export const createGeminiLiveSession = onCall(
  */
 export const proxyGeminiLiveMessage = onCall(
   {
-    secrets: ['GEMINI_API_KEY'],
+    secrets: ['EXPO_PUBLIC_FIREBASE_GEMINI_API_KEY'],
   },
   async (request: CallableRequest) => {
     const { media, message, config } = request.data as ProxyRequestData;
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = process.env.EXPO_PUBLIC_FIREBASE_GEMINI_API_KEY;
       if (!apiKey) {
+        console.error('Missing API Key: EXPO_PUBLIC_FIREBASE_GEMINI_API_KEY is not set.');
         throw new HttpsError('internal', 'Gemini API key not configured.');
       }
 
@@ -450,7 +453,7 @@ export const proxyGeminiLiveMessage = onCall(
       const systemInstruction = config?.systemInstruction
         || ADMIN_VOICE_ASSISTANT_INSTRUCTION(currentTime);
       const model = ai.getGenerativeModel({
-        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+        model: 'gemini-2.5-pro',
         systemInstruction: systemInstruction,
         tools: [{ functionDeclarations: allToolDeclarations }],
       });
