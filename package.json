@@ -19,7 +19,7 @@
     "deploy:firebase": "pnpm exec firebase deploy --only functions,hosting",
     "deploy:eas": "eas deploy --profile production --wait",
     "deploy:web": "pnpm build:web && pnpm exec firebase deploy --only hosting",
-    "deploy:functions": "pnpm --filter functions deploy",
+    "deploy:functions": "pnpm --filter functions run deploy",
     "screenshot:login": "node scripts/screenshot-login.js",
     "test:web": "node scripts/test-login.js"
   },
