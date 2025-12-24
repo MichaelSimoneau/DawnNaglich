@@ -54,6 +54,22 @@
         "function": "proxyGeminiLiveMessage"
       },
       {
+        "source": "/api/getCalendarConfig",
+        "function": "getCalendarConfig"
+      },
+      {
+        "source": "/api/listAvailableCalendars",
+        "function": "listAvailableCalendars"
+      },
+      {
+        "source": "/api/updateCalendarSync",
+        "function": "updateCalendarSync"
+      },
+      {
+        "source": "/api/syncCalendars",
+        "function": "syncCalendars"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

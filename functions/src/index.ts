@@ -12,8 +12,15 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { google } from 'googleapis';
 import { GoogleAuth, OAuth2Client } from 'google-auth-library';
 import * as path from 'path';
+import * as admin from 'firebase-admin';
 import { CLIENT_ASSISTANT_INSTRUCTION, ADMIN_VOICE_ASSISTANT_INSTRUCTION } from './systemInstructions';
 import { allToolDeclarations } from './functionDeclarations';
+
+// Initialize Firebase Admin if not already initialized
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+const db = admin.firestore();
 
 // Use dynamic import for ES module compatibility
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,8 +75,74 @@ interface GoogleCalendarEvent {
 setGlobalOptions({ maxInstances: 10 });
 
 const ADMIN_EMAILS = ['dawn.naglich@gmail.com', 'michael@brainycouch.com'];
-const MASTER_CALENDAR_ID = 'dawn.naglich@gmail.com';
+const PRIMARY_ADMIN_EMAIL = 'dawn.naglich@gmail.com';
 const KEY_FILE_PATH = path.join(__dirname, '../../dawn-naglich-firebase.json');
+const APP_CALENDAR_NAME = 'Dawn Naglich Wellness Appointments';
+const CONFIG_COLLECTION = 'config';
+const APP_CALENDAR_DOC = 'appCalendar';
+const CALENDAR_SYNC_DOC = 'calendarSync';
+
+/**
+ * Get the app calendar ID from Firestore, or create it if it doesn't exist
+ */
+async function getAppCalendarId(): Promise<string> {
+  try {
+    const configDoc = await db.collection(CONFIG_COLLECTION).doc(APP_CALENDAR_DOC).get();
+    
+    if (configDoc.exists) {
+      const data = configDoc.data();
+      if (data?.calendarId) {
+        return data.calendarId;
+      }
+    }
+    
+    // Calendar doesn't exist, create it
+    const calendar = await getCalendarClient();
+    const calendarResponse = await calendar.calendars.insert({
+      requestBody: {
+        summary: APP_CALENDAR_NAME,
+        description: 'Shared calendar for Dawn Naglich Wellness appointments',
+        timeZone: 'America/New_York',
+      },
+    });
+    
+    const newCalendarId = calendarResponse.data.id;
+    if (!newCalendarId) {
+      throw new Error('Failed to create app calendar');
+    }
+    
+    // Share calendar with admins
+    for (const adminEmail of ADMIN_EMAILS) {
+      try {
+        await calendar.acl.insert({
+          calendarId: newCalendarId,
+          requestBody: {
+            role: 'owner',
+            scope: {
+              type: 'user',
+              value: adminEmail,
+            },
+          },
+        });
+      } catch (error) {
+        console.warn(`Failed to share calendar with ${adminEmail}:`, error);
+      }
+    }
+    
+    // Store calendar ID in Firestore
+    await db.collection(CONFIG_COLLECTION).doc(APP_CALENDAR_DOC).set({
+      calendarId: newCalendarId,
+      calendarName: APP_CALENDAR_NAME,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    
+    return newCalendarId;
+  } catch (error) {
+    console.error('Error getting app calendar ID:', error);
+    // Fallback to primary admin's calendar if app calendar creation fails
+    return PRIMARY_ADMIN_EMAIL;
+  }
+}
 
 /**
  * Initialize Google Calendar API
@@ -100,21 +173,93 @@ async function getCalendarEventsCore(
 
   try {
     const calendar = await getCalendarClient();
+    const appCalendarId = await getAppCalendarId();
+    
+    // Get events from app calendar
     const response = await calendar.events.list({
-      calendarId: MASTER_CALENDAR_ID,
+      calendarId: appCalendarId,
       timeMin: timeMin || new Date().toISOString(),
       timeMax: timeMax || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       singleEvents: true,
       orderBy: 'startTime',
     });
-
-    const events = (response.data?.items as GoogleCalendarEvent[]) || [];
+    
+    let events = (response.data?.items as GoogleCalendarEvent[]) || [];
+    
+    // If sync is enabled, also fetch busy times from Dawn's personal calendars
+    if (isAdmin || true) { // Always check sync for availability
+      try {
+        const syncConfig = await db.collection(CONFIG_COLLECTION).doc(CALENDAR_SYNC_DOC).get();
+        if (syncConfig.exists) {
+          const syncData = syncConfig.data();
+          if (syncData?.enabled && syncData?.syncedCalendarIds && Array.isArray(syncData.syncedCalendarIds)) {
+            // Fetch busy times from synced calendars
+            for (const syncedCalendarId of syncData.syncedCalendarIds) {
+              try {
+                const busyResponse = await calendar.events.list({
+                  calendarId: syncedCalendarId,
+                  timeMin: timeMin || new Date().toISOString(),
+                  timeMax: timeMax || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                  singleEvents: true,
+                  orderBy: 'startTime',
+                  showDeleted: false,
+                });
+                
+                const busyEvents = (busyResponse.data?.items || []) as GoogleCalendarEvent[];
+                // Add busy events as masked "Busy" entries
+                for (const busyEvent of busyEvents) {
+                  if (busyEvent.start && busyEvent.end) {
+                    events.push({
+                      id: `busy-${busyEvent.id}`,
+                      summary: 'Busy',
+                      start: busyEvent.start,
+                      end: busyEvent.end,
+                      transparency: 'opaque',
+                      extendedProperties: {
+                        private: {
+                          status: 'busy',
+                          source: 'synced',
+                        },
+                      },
+                    });
+                  }
+                }
+              } catch (error) {
+                console.warn(`Failed to fetch busy times from calendar ${syncedCalendarId}:`, error);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Error fetching synced calendar busy times:', error);
+      }
+    }
+    
+    // Sort all events by start time
+    events.sort((a, b) => {
+      const aStart = a.start?.dateTime || a.start?.date || '';
+      const bStart = b.start?.dateTime || b.start?.date || '';
+      return aStart.localeCompare(bStart);
+    });
 
     // Filter events for privacy if not admin
     const filteredEvents = events.map((event: GoogleCalendarEvent) => {
       const isPublic
         = event.extendedProperties?.private?.status === 'confirmed'
         || event.extendedProperties?.private?.status === 'pending';
+      
+      const isBusy = event.extendedProperties?.private?.status === 'busy';
+
+      // Busy events from synced calendars are always shown as "Busy"
+      if (isBusy) {
+        return {
+          id: event.id,
+          summary: 'Busy',
+          start: event.start,
+          end: event.end,
+          transparency: 'opaque',
+        };
+      }
 
       if (isAdmin || isPublic) {
         return event;
@@ -205,6 +350,8 @@ async function createCalendarEventCore(
 
   try {
     const calendar = await getCalendarClient();
+    const appCalendarId = await getAppCalendarId();
+    
     const event = {
       summary: `${clientName} - ${service}`,
       description: `Booking for ${service}`,
@@ -219,9 +366,32 @@ async function createCalendarEventCore(
     };
 
     const response = await calendar.events.insert({
-      calendarId: MASTER_CALENDAR_ID,
+      calendarId: appCalendarId,
       requestBody: event,
     });
+    
+    // If sync is enabled and syncToCalendarId is set, also add to Dawn's personal calendar
+    try {
+      const syncConfig = await db.collection(CONFIG_COLLECTION).doc(CALENDAR_SYNC_DOC).get();
+      if (syncConfig.exists) {
+        const syncData = syncConfig.data();
+        if (syncData?.enabled && syncData?.syncToCalendarId) {
+          try {
+            await calendar.events.insert({
+              calendarId: syncData.syncToCalendarId,
+              requestBody: {
+                ...event,
+                summary: `${clientName} - ${service}`,
+              },
+            });
+          } catch (error) {
+            console.warn('Failed to sync event to personal calendar:', error);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Error syncing event to personal calendar:', error);
+    }
 
     return { success: true, eventId: response.data.id || undefined };
   } catch (error) {
@@ -281,10 +451,11 @@ export const confirmCalendarEventSecure = onCall(
 
     try {
       const calendar = await getCalendarClient();
+      const appCalendarId = await getAppCalendarId();
 
       // Get current event to preserve other properties
       const eventResponse = await calendar.events.get({
-        calendarId: MASTER_CALENDAR_ID,
+        calendarId: appCalendarId,
         eventId: eventId as string,
       });
 
@@ -294,7 +465,7 @@ export const confirmCalendarEventSecure = onCall(
       extendedProperties.private.status = 'confirmed';
 
       await calendar.events.patch({
-        calendarId: MASTER_CALENDAR_ID,
+        calendarId: appCalendarId,
         eventId: eventId,
         requestBody: {
           extendedProperties: extendedProperties,
@@ -334,8 +505,10 @@ async function cancelCalendarEventCore(
 
   try {
     const calendar = await getCalendarClient();
+    const appCalendarId = await getAppCalendarId();
+    
     await calendar.events.delete({
-      calendarId: MASTER_CALENDAR_ID,
+      calendarId: appCalendarId,
       eventId: eventId,
     });
 
@@ -707,6 +880,214 @@ export const proxyGeminiLiveMessage = onCall(
     } catch (error: unknown) {
       console.error('Error in proxyGeminiLiveMessage:', error);
       throw new HttpsError('internal', 'Failed to proxy message.');
+    }
+  },
+);
+
+/**
+ * Get app calendar information and sync status. Admin only.
+ */
+export const getCalendarConfig = onCall(
+  {
+    invoker: 'public',
+  },
+  async (request: CallableRequest) => {
+    const userEmail = request.auth?.token?.email;
+    const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
+
+    if (!isAdmin) {
+      throw new HttpsError(
+        'permission-denied',
+        'Only admins can access calendar configuration.',
+      );
+    }
+
+    try {
+      const appCalendarDoc = await db.collection(CONFIG_COLLECTION).doc(APP_CALENDAR_DOC).get();
+      const syncConfigDoc = await db.collection(CONFIG_COLLECTION).doc(CALENDAR_SYNC_DOC).get();
+
+      const appCalendarId = appCalendarDoc.exists && appCalendarDoc.data()?.calendarId
+        ? appCalendarDoc.data()!.calendarId
+        : await getAppCalendarId();
+
+      const calendar = await getCalendarClient();
+      const calendarInfo = await calendar.calendars.get({
+        calendarId: appCalendarId,
+      });
+
+      return {
+        success: true,
+        appCalendar: {
+          id: appCalendarId,
+          name: calendarInfo.data.summary || APP_CALENDAR_NAME,
+          description: calendarInfo.data.description,
+          timeZone: calendarInfo.data.timeZone,
+        },
+        syncConfig: syncConfigDoc.exists ? syncConfigDoc.data() : {
+          enabled: false,
+          syncedCalendarIds: [],
+          syncToCalendarId: null,
+          lastSyncTime: null,
+        },
+      };
+    } catch (error) {
+      console.error('Error getting calendar config:', error);
+      throw new HttpsError('internal', 'Failed to get calendar configuration.');
+    }
+  },
+);
+
+/**
+ * List available calendars for Dawn to sync. Admin only.
+ */
+export const listAvailableCalendars = onCall(
+  {
+    invoker: 'public',
+  },
+  async (request: CallableRequest) => {
+    const userEmail = request.auth?.token?.email;
+    const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
+
+    if (!isAdmin) {
+      throw new HttpsError(
+        'permission-denied',
+        'Only admins can list calendars.',
+      );
+    }
+
+    try {
+      const calendar = await getCalendarClient();
+      const calendarList = await calendar.calendarList.list();
+
+      const calendars = (calendarList.data.items || []).map((cal) => ({
+        id: cal.id,
+        summary: cal.summary || 'Untitled Calendar',
+        description: cal.description,
+        primary: cal.primary || false,
+        accessRole: cal.accessRole,
+      }));
+
+      return {
+        success: true,
+        calendars,
+      };
+    } catch (error) {
+      console.error('Error listing calendars:', error);
+      throw new HttpsError('internal', 'Failed to list calendars.');
+    }
+  },
+);
+
+/**
+ * Update calendar sync configuration. Admin only.
+ */
+export const updateCalendarSync = onCall(
+  {
+    invoker: 'public',
+  },
+  async (request: CallableRequest) => {
+    const userEmail = request.auth?.token?.email;
+    const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
+
+    if (!isAdmin) {
+      throw new HttpsError(
+        'permission-denied',
+        'Only admins can update calendar sync configuration.',
+      );
+    }
+
+    const {
+      enabled,
+      syncedCalendarIds,
+      syncToCalendarId,
+    } = request.data as {
+      enabled?: boolean;
+      syncedCalendarIds?: string[];
+      syncToCalendarId?: string;
+    };
+
+    try {
+      const syncData: Record<string, unknown> = {
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      if (enabled !== undefined) {
+        syncData.enabled = enabled;
+      }
+      if (syncedCalendarIds !== undefined) {
+        syncData.syncedCalendarIds = syncedCalendarIds;
+      }
+      if (syncToCalendarId !== undefined) {
+        syncData.syncToCalendarId = syncToCalendarId;
+      }
+
+      await db.collection(CONFIG_COLLECTION).doc(CALENDAR_SYNC_DOC).set(
+        syncData,
+        { merge: true },
+      );
+
+      return {
+        success: true,
+        message: 'Calendar sync configuration updated.',
+      };
+    } catch (error) {
+      console.error('Error updating calendar sync:', error);
+      throw new HttpsError('internal', 'Failed to update calendar sync configuration.');
+    }
+  },
+);
+
+/**
+ * Manually trigger calendar sync. Admin only.
+ */
+export const syncCalendars = onCall(
+  {
+    invoker: 'public',
+  },
+  async (request: CallableRequest) => {
+    const userEmail = request.auth?.token?.email;
+    const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
+
+    if (!isAdmin) {
+      throw new HttpsError(
+        'permission-denied',
+        'Only admins can sync calendars.',
+      );
+    }
+
+    try {
+      const syncConfig = await db.collection(CONFIG_COLLECTION).doc(CALENDAR_SYNC_DOC).get();
+      
+      if (!syncConfig.exists || !syncConfig.data()?.enabled) {
+        return {
+          success: false,
+          message: 'Calendar sync is not enabled.',
+        };
+      }
+
+      const syncData = syncConfig.data()!;
+      const syncedCalendarIds = syncData.syncedCalendarIds || [];
+
+      if (syncedCalendarIds.length === 0) {
+        return {
+          success: false,
+          message: 'No calendars selected for syncing.',
+        };
+      }
+
+      // Update last sync time
+      await db.collection(CONFIG_COLLECTION).doc(CALENDAR_SYNC_DOC).update({
+        lastSyncTime: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return {
+        success: true,
+        message: 'Calendar sync completed. Busy times will be reflected in the app calendar.',
+        syncedCalendars: syncedCalendarIds.length,
+      };
+    } catch (error) {
+      console.error('Error syncing calendars:', error);
+      throw new HttpsError('internal', 'Failed to sync calendars.');
     }
   },
 );

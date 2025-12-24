@@ -291,4 +291,179 @@ export const CalendarService = {
       return false;
     }
   },
+
+  async getCalendarConfig(): Promise<{
+    success: boolean;
+    appCalendar?: {
+      id: string;
+      name: string;
+      description?: string;
+      timeZone?: string;
+    };
+    syncConfig?: {
+      enabled: boolean;
+      syncedCalendarIds: string[];
+      syncToCalendarId?: string | null;
+      lastSyncTime?: string | null;
+    };
+  }> {
+    try {
+      let url: string;
+      if (Platform.OS === 'web') {
+        const origin =
+          typeof window !== "undefined" ? window.location.origin : "";
+        const isEmulator =
+          origin.includes("localhost") || origin.includes("127.0.0.1");
+        url = isEmulator
+          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/getCalendarConfig"
+          : "https://us-central1-dawn-naglich.cloudfunctions.net/getCalendarConfig";
+      } else {
+        url = "https://dawn-naglich.firebaseapp.com/api/getCalendarConfig";
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data: {} }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const data = result.result?.data || result;
+      return data as typeof data;
+    } catch (error) {
+      console.error("Get calendar config error:", error);
+      return { success: false };
+    }
+  },
+
+  async listAvailableCalendars(): Promise<{
+    success: boolean;
+    calendars?: Array<{
+      id: string;
+      summary: string;
+      description?: string;
+      primary: boolean;
+      accessRole?: string;
+    }>;
+  }> {
+    try {
+      let url: string;
+      if (Platform.OS === 'web') {
+        const origin =
+          typeof window !== "undefined" ? window.location.origin : "";
+        const isEmulator =
+          origin.includes("localhost") || origin.includes("127.0.0.1");
+        url = isEmulator
+          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/listAvailableCalendars"
+          : "https://us-central1-dawn-naglich.cloudfunctions.net/listAvailableCalendars";
+      } else {
+        url = "https://dawn-naglich.firebaseapp.com/api/listAvailableCalendars";
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data: {} }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const data = result.result?.data || result;
+      return data as typeof data;
+    } catch (error) {
+      console.error("List calendars error:", error);
+      return { success: false, calendars: [] };
+    }
+  },
+
+  async updateCalendarSync(config: {
+    enabled?: boolean;
+    syncedCalendarIds?: string[];
+    syncToCalendarId?: string;
+  }): Promise<{ success: boolean; message?: string }> {
+    try {
+      let url: string;
+      if (Platform.OS === 'web') {
+        const origin =
+          typeof window !== "undefined" ? window.location.origin : "";
+        const isEmulator =
+          origin.includes("localhost") || origin.includes("127.0.0.1");
+        url = isEmulator
+          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/updateCalendarSync"
+          : "https://us-central1-dawn-naglich.cloudfunctions.net/updateCalendarSync";
+      } else {
+        url = "https://dawn-naglich.firebaseapp.com/api/updateCalendarSync";
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data: config }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const data = result.result?.data || result;
+      return data as typeof data;
+    } catch (error) {
+      console.error("Update calendar sync error:", error);
+      return { success: false };
+    }
+  },
+
+  async syncCalendars(): Promise<{
+    success: boolean;
+    message?: string;
+    syncedCalendars?: number;
+  }> {
+    try {
+      let url: string;
+      if (Platform.OS === 'web') {
+        const origin =
+          typeof window !== "undefined" ? window.location.origin : "";
+        const isEmulator =
+          origin.includes("localhost") || origin.includes("127.0.0.1");
+        url = isEmulator
+          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/syncCalendars"
+          : "https://us-central1-dawn-naglich.cloudfunctions.net/syncCalendars";
+      } else {
+        url = "https://dawn-naglich.firebaseapp.com/api/syncCalendars";
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data: {} }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const data = result.result?.data || result;
+      return data as typeof data;
+    } catch (error) {
+      console.error("Sync calendars error:", error);
+      return { success: false };
+    }
+  },
 };
