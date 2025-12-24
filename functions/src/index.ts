@@ -89,6 +89,9 @@ async function getCalendarClient() {
  * Admins see full details, clients see "Busy" for non-public events.
  */
 export const getCalendarEventsSecure = onCall(
+  {
+    invoker: 'public',
+  },
   async (request: CallableRequest) => {
     const { timeMin, timeMax } = request.data as { timeMin?: string; timeMax?: string };
     const userEmail = request.auth?.token?.email;
@@ -165,6 +168,9 @@ export const getCalendarEventsSecure = onCall(
  * Create a calendar event for a booking.
  */
 export const createCalendarEventSecure = onCall(
+  {
+    invoker: 'public',
+  },
   async (request: CallableRequest) => {
     const { clientName, service, startTime, endTime } = request.data as {
       clientName?: string;
@@ -304,6 +310,7 @@ export const cancelCalendarEventSecure = onCall(
 export const generateGeminiResponse = onCall(
   {
     secrets: ['EXPO_PUBLIC_FIREBASE_GEMINI_API_KEY'],
+    invoker: 'public',
   },
   async (request: CallableRequest) => {
     const { conversationHistory, userMessage, systemInstruction } = request.data;
@@ -398,6 +405,7 @@ export const generateGeminiResponse = onCall(
 export const createGeminiLiveSession = onCall(
   {
     secrets: ['EXPO_PUBLIC_FIREBASE_GEMINI_API_KEY'],
+    invoker: 'public',
   },
   async () => {
     try {
@@ -431,6 +439,7 @@ export const createGeminiLiveSession = onCall(
 export const proxyGeminiLiveMessage = onCall(
   {
     secrets: ['EXPO_PUBLIC_FIREBASE_GEMINI_API_KEY'],
+    invoker: 'public',
   },
   async (request: CallableRequest) => {
     const { media, message, config } = request.data as ProxyRequestData;

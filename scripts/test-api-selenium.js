@@ -14,7 +14,7 @@ async function testApiCalls() {
   try {
     console.log('Navigating to', BASE_URL);
     await page.goto(BASE_URL, { waitUntil: 'networkidle0', timeout: 30000 });
-    await page.waitForTimeout(3000); // Wait for page to load
+    await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for page to load
 
     console.log('\n=== Testing API Calls ===\n');
 
@@ -36,25 +36,41 @@ async function testApiCalls() {
           }),
         });
         
-        const data = await response.json();
+        const contentType = response.headers.get('content-type');
+        let data;
+        const text = await response.text();
+        
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            data = { error: 'Failed to parse JSON', text: text.substring(0, 500) };
+          }
+        } else {
+          data = { error: 'Not JSON response', contentType, text: text.substring(0, 500) };
+        }
+        
         return {
           status: response.status,
           ok: response.ok,
+          contentType: contentType,
           data: data,
         };
       });
 
-      if (result.ok && result.status === 200) {
+      if (result.ok && result.status === 200 && result.contentType && result.contentType.includes('application/json')) {
         console.log('✓ generateGeminiResponse: SUCCESS');
-        console.log('  Response:', JSON.stringify(result.data, null, 2).substring(0, 200));
+        console.log('  Response:', JSON.stringify(result.data, null, 2).substring(0, 300));
       } else {
         console.log('✗ generateGeminiResponse: FAILED');
         console.log('  Status:', result.status);
-        console.log('  Response:', JSON.stringify(result.data, null, 2));
+        console.log('  Content-Type:', result.contentType);
+        console.log('  Response:', JSON.stringify(result.data, null, 2).substring(0, 500));
       }
     } catch (error) {
       console.log('✗ generateGeminiResponse: ERROR');
       console.log('  Error:', error.message);
+      console.log('  Stack:', error.stack);
     }
 
     // Test 2: getCalendarEventsSecure
@@ -74,21 +90,36 @@ async function testApiCalls() {
           }),
         });
         
-        const data = await response.json();
+        const contentType = response.headers.get('content-type');
+        let data;
+        const text = await response.text();
+        
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            data = { error: 'Failed to parse JSON', text: text.substring(0, 500) };
+          }
+        } else {
+          data = { error: 'Not JSON response', contentType, text: text.substring(0, 500) };
+        }
+        
         return {
           status: response.status,
           ok: response.ok,
+          contentType: contentType,
           data: data,
         };
       });
 
-      if (result.ok && result.status === 200) {
+      if (result.ok && result.status === 200 && result.contentType && result.contentType.includes('application/json')) {
         console.log('✓ getCalendarEventsSecure: SUCCESS');
         console.log('  Response items count:', result.data?.result?.data?.items?.length || result.data?.items?.length || 0);
       } else {
         console.log('✗ getCalendarEventsSecure: FAILED');
         console.log('  Status:', result.status);
-        console.log('  Response:', JSON.stringify(result.data, null, 2).substring(0, 200));
+        console.log('  Content-Type:', result.contentType);
+        console.log('  Response:', JSON.stringify(result.data, null, 2).substring(0, 500));
       }
     } catch (error) {
       console.log('✗ getCalendarEventsSecure: ERROR');
@@ -109,21 +140,36 @@ async function testApiCalls() {
           }),
         });
         
-        const data = await response.json();
+        const contentType = response.headers.get('content-type');
+        let data;
+        const text = await response.text();
+        
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            data = { error: 'Failed to parse JSON', text: text.substring(0, 500) };
+          }
+        } else {
+          data = { error: 'Not JSON response', contentType, text: text.substring(0, 500) };
+        }
+        
         return {
           status: response.status,
           ok: response.ok,
+          contentType: contentType,
           data: data,
         };
       });
 
-      if (result.ok && result.status === 200) {
+      if (result.ok && result.status === 200 && result.contentType && result.contentType.includes('application/json')) {
         console.log('✓ createGeminiLiveSession: SUCCESS');
-        console.log('  Response:', JSON.stringify(result.data, null, 2).substring(0, 200));
+        console.log('  Response:', JSON.stringify(result.data, null, 2).substring(0, 300));
       } else {
         console.log('✗ createGeminiLiveSession: FAILED');
         console.log('  Status:', result.status);
-        console.log('  Response:', JSON.stringify(result.data, null, 2));
+        console.log('  Content-Type:', result.contentType);
+        console.log('  Response:', JSON.stringify(result.data, null, 2).substring(0, 500));
       }
     } catch (error) {
       console.log('✗ createGeminiLiveSession: ERROR');
