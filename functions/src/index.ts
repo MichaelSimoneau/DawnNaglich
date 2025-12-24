@@ -86,6 +86,10 @@ async function getCalendarClient() {
 
 /**
  * Core logic for fetching calendar events (used by both callable function and function call handler)
+ * @param {string} [timeMin] - Minimum time for events (ISO string)
+ * @param {string} [timeMax] - Maximum time for events (ISO string)
+ * @param {string} [userEmail] - User email for admin check
+ * @return {Promise<Object>} Calendar events with success and items
  */
 async function getCalendarEventsCore(
   timeMin?: string,
@@ -175,6 +179,12 @@ export const getCalendarEventsSecure = onCall(
 
 /**
  * Core logic for creating calendar events
+ * @param {string} clientName - Name of the client
+ * @param {string} service - Service type
+ * @param {string} startTime - Start time (ISO string)
+ * @param {string} [endTime] - End time (ISO string)
+ * @param {string} [userEmail] - User email
+ * @return {Promise<Object>} Creation result with success and optional eventId
  */
 async function createCalendarEventCore(
   clientName: string,
@@ -301,6 +311,9 @@ export const confirmCalendarEventSecure = onCall(
 
 /**
  * Core logic for canceling calendar events
+ * @param {string} eventId - Event ID to cancel
+ * @param {string} [userEmail] - User email for admin check
+ * @return {Promise<{success: boolean}>} Cancellation result
  */
 async function cancelCalendarEventCore(
   eventId: string,
@@ -349,6 +362,9 @@ export const cancelCalendarEventSecure = onCall(
 
 /**
  * Execute a function call from Gemini
+ * @param {string} functionName - Name of the function to execute
+ * @param {Record<string, unknown>} args - Function arguments
+ * @return {Promise<unknown>} Function result
  */
 async function executeFunctionCall(
   functionName: string,
@@ -358,36 +374,36 @@ async function executeFunctionCall(
 
   try {
     switch (functionName) {
-      case 'getCalendarEvents': {
-        // Call core function directly (client requests are unauthenticated)
-        const result = await getCalendarEventsCore(
-          args.timeMin as string | undefined,
-          args.timeMax as string | undefined,
-          undefined, // No user email for client requests
-        );
-        return result;
-      }
-      case 'createCalendarEvent': {
-        // Call core function directly
-        const result = await createCalendarEventCore(
-          args.clientName as string,
-          args.service as string,
-          args.startTime as string,
-          args.endTime as string | undefined,
-          undefined, // No user email for client requests
-        );
-        return result;
-      }
-      case 'cancelCalendarEvent': {
-        // Client requests cannot cancel events (admin only)
-        return { success: false, error: 'Only admins can cancel events' };
-      }
-      case 'confirmPendingAction': {
-        // This is admin-only, return error for client
-        return { success: false, error: 'This action requires admin authentication' };
-      }
-      default:
-        return { success: false, error: `Unknown function: ${functionName}` };
+    case 'getCalendarEvents': {
+      // Call core function directly (client requests are unauthenticated)
+      const result = await getCalendarEventsCore(
+        args.timeMin as string | undefined,
+        args.timeMax as string | undefined,
+        undefined, // No user email for client requests
+      );
+      return result;
+    }
+    case 'createCalendarEvent': {
+      // Call core function directly
+      const result = await createCalendarEventCore(
+        args.clientName as string,
+        args.service as string,
+        args.startTime as string,
+        args.endTime as string | undefined,
+        undefined, // No user email for client requests
+      );
+      return result;
+    }
+    case 'cancelCalendarEvent': {
+      // Client requests cannot cancel events (admin only)
+      return { success: false, error: 'Only admins can cancel events' };
+    }
+    case 'confirmPendingAction': {
+      // This is admin-only, return error for client
+      return { success: false, error: 'This action requires admin authentication' };
+    }
+    default:
+      return { success: false, error: `Unknown function: ${functionName}` };
     }
   } catch (error: unknown) {
     const errorMessage
@@ -445,7 +461,7 @@ export const generateGeminiResponse = onCall(
 
       // Build conversation history for context
       const history = (conversationHistory || []) as Array<{ role: string; text: string }>;
-      let contents: Array<{ role: string; parts: Array<{ text?: string; functionResponse?: unknown }> }> = [
+      const contents: Array<{ role: string; parts: Array<{ text?: string; functionResponse?: unknown }> }> = [
         ...history.map((msg: { role: string; text: string }) => ({
           role: msg.role === 'user' ? 'user' : 'model',
           parts: [{ text: msg.text }],
@@ -478,7 +494,7 @@ export const generateGeminiResponse = onCall(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const resultAny = result as any;
         const candidates = resultAny.candidates || resultAny.response?.candidates || [];
-        
+
         let hasFunctionCall = false;
         const functionResponses: Array<{ name: string; response: unknown }> = [];
 
@@ -535,14 +551,14 @@ export const generateGeminiResponse = onCall(
       let responseText: string;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resultAny = result as any;
-      
+
       if (typeof result === 'string') {
         responseText = result;
       } else {
         // Try to get text from the response object
         const candidates = resultAny.candidates || resultAny.response?.candidates || [];
         const firstCandidate = candidates[0];
-        
+
         if (firstCandidate?.content?.parts) {
           // Find text part (not function call)
           const textPart = firstCandidate.content.parts.find(
