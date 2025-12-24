@@ -42,7 +42,6 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
   const audioContextOutputRef = useRef<AudioContext | null>(null);
   const nextStartTimeRef = useRef<number>(0);
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
-  const sessionRef = useRef<{ close?: () => void } | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
@@ -77,7 +76,6 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
     startAssistant();
 
     return () => {
-      wsRef.current?.close();
       if (audioContextInputRef.current?.state !== "closed") {
         audioContextInputRef.current?.close();
       }
@@ -241,12 +239,6 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
             console.log("AI Proxy Response:", proxyResult.data); // Validation Log
             data = proxyResult.data as typeof data;
           }
-            success: boolean;
-            text?: string;
-            functionCalls?: Array<{ id: string; name: string; args?: Record<string, unknown> }>;
-            audio?: string;
-            turnComplete?: boolean;
-          };
           
           // Handle function calls
           if (data.functionCalls && Array.isArray(data.functionCalls)) {
