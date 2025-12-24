@@ -12,8 +12,57 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { google } from 'googleapis';
 import { GoogleAuth, OAuth2Client } from 'google-auth-library';
 import * as path from 'path';
+import { CLIENT_ASSISTANT_INSTRUCTION, ADMIN_VOICE_ASSISTANT_INSTRUCTION } from './systemInstructions';
+import { allToolDeclarations } from './functionDeclarations';
+
 // Use dynamic import for ES module compatibility
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let GoogleGenAI: any;
+
+interface CallableRequest {
+  data: Record<string, unknown>;
+  auth?: {
+    token?: {
+      email?: string;
+    };
+  };
+}
+
+interface ProxyRequestData {
+  media?: {
+    data: string;
+    mimeType: string;
+  };
+  message?: unknown;
+  config?: {
+    systemInstruction?: string;
+  };
+  functionResponse?: {
+    id: string;
+    name: string;
+    response: { result: string };
+  };
+}
+
+interface GoogleCalendarEvent {
+  id?: string;
+  summary?: string;
+  description?: string;
+  start?: {
+    dateTime?: string;
+    date?: string;
+  };
+  end?: {
+    dateTime?: string;
+    date?: string;
+  };
+  transparency?: string;
+  extendedProperties?: {
+    private?: {
+      status?: string;
+    };
+  };
+}
 
 // Set global options for all functions
 setGlobalOptions({ maxInstances: 10 });
@@ -40,27 +89,27 @@ async function getCalendarClient() {
  * Admins see full details, clients see "Busy" for non-public events.
  */
 export const getCalendarEventsSecure = onCall(
-  async (request: any) => {
-    const { timeMin, timeMax } = request.data;
-    const userEmail = request.auth?.token.email;
+  async (request: CallableRequest) => {
+    const { timeMin, timeMax } = request.data as { timeMin?: string; timeMax?: string };
+    const userEmail = request.auth?.token?.email;
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
 
     try {
       const calendar = await getCalendarClient();
       const response = await calendar.events.list({
         calendarId: MASTER_CALENDAR_ID,
-        timeMin: timeMin || new Date().toISOString(),
+        timeMin: (timeMin as string) || new Date().toISOString(),
         timeMax:
-          timeMax
+          (timeMax as string)
           || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         singleEvents: true,
         orderBy: 'startTime',
       });
 
-      const events = response.data.items || [];
+      const events = (response.data?.items as GoogleCalendarEvent[]) || [];
 
       // Filter events for privacy if not admin
-      const filteredEvents = events.map((event: any) => {
+      const filteredEvents = events.map((event: GoogleCalendarEvent) => {
         const isPublic
           = event.extendedProperties?.private?.status === 'confirmed'
           || event.extendedProperties?.private?.status === 'pending';
@@ -116,18 +165,23 @@ export const getCalendarEventsSecure = onCall(
  * Create a calendar event for a booking.
  */
 export const createCalendarEventSecure = onCall(
-  async (request: any) => {
-    const { clientName, service, startTime, endTime } = request.data;
-    const userEmail = request.auth?.token.email;
+  async (request: CallableRequest) => {
+    const { clientName, service, startTime, endTime } = request.data as {
+      clientName?: string;
+      service?: string;
+      startTime?: string;
+      endTime?: string;
+    };
+    const userEmail = request.auth?.token?.email;
 
     if (!startTime) {
       throw new HttpsError('invalid-argument', 'Start time is required.');
     }
 
     // Default end time to 1 hour after start if not provided
-    const start = new Date(startTime);
+    const start = new Date(startTime as string);
     const end = endTime
-      ? new Date(endTime)
+      ? new Date(endTime as string)
       : new Date(start.getTime() + 60 * 60 * 1000);
 
     try {
@@ -162,8 +216,8 @@ export const createCalendarEventSecure = onCall(
  * Confirm a pending calendar event. Admin only.
  */
 export const confirmCalendarEventSecure = onCall(
-  async (request: any) => {
-    const userEmail = request.auth?.token.email;
+  async (request: CallableRequest) => {
+    const userEmail = request.auth?.token?.email;
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
 
     if (!isAdmin) {
@@ -173,7 +227,7 @@ export const confirmCalendarEventSecure = onCall(
       );
     }
 
-    const { eventId } = request.data;
+    const { eventId } = request.data as { eventId?: string };
     if (!eventId) {
       throw new HttpsError('invalid-argument', 'Event ID is required.');
     }
@@ -184,7 +238,7 @@ export const confirmCalendarEventSecure = onCall(
       // Get current event to preserve other properties
       const eventResponse = await calendar.events.get({
         calendarId: MASTER_CALENDAR_ID,
-        eventId: eventId,
+        eventId: eventId as string,
       });
 
       const event = eventResponse.data;
@@ -212,8 +266,8 @@ export const confirmCalendarEventSecure = onCall(
  * Cancel/Delete a calendar event. Admin only.
  */
 export const cancelCalendarEventSecure = onCall(
-  async (request: any) => {
-    const userEmail = request.auth?.token.email;
+  async (request: CallableRequest) => {
+    const userEmail = request.auth?.token?.email;
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
 
     if (!isAdmin) {
@@ -223,7 +277,7 @@ export const cancelCalendarEventSecure = onCall(
       );
     }
 
-    const { eventId } = request.data;
+    const { eventId } = request.data as { eventId?: string };
     if (!eventId) {
       throw new HttpsError('invalid-argument', 'Event ID is required.');
     }
@@ -232,7 +286,7 @@ export const cancelCalendarEventSecure = onCall(
       const calendar = await getCalendarClient();
       await calendar.events.delete({
         calendarId: MASTER_CALENDAR_ID,
-        eventId: eventId,
+        eventId: eventId as string,
       });
 
       return { success: true };
@@ -251,7 +305,7 @@ export const generateGeminiResponse = onCall(
   {
     secrets: ['GEMINI_API_KEY'],
   },
-  async (request: any) => {
+  async (request: CallableRequest) => {
     const { conversationHistory, userMessage, systemInstruction } = request.data;
 
     if (!userMessage || typeof userMessage !== 'string') {
@@ -276,7 +330,7 @@ export const generateGeminiResponse = onCall(
       const ai = new GoogleGenAI({ apiKey });
 
       // Build conversation history for context
-      const history = conversationHistory || [];
+      const history = (conversationHistory || []) as Array<{ role: string; text: string }>;
       const contents = [
         ...history.map((msg: { role: string; text: string }) => ({
           role: msg.role === 'user' ? 'user' : 'model',
@@ -292,10 +346,8 @@ export const generateGeminiResponse = onCall(
         model: 'gemini-3-flash-preview',
         contents: contents,
         config: {
-          systemInstruction: systemInstruction
-            || `You are Dawn Naglich's elite concierge. Dawn is a specialist in Muscle Activation (MAT). 
-          Location: 31005 Bainbridge Rd, Solon, OH 44139. 
-          Keep answers concise, healing-focused, and encourage booking for realignment.`,
+          systemInstruction: systemInstruction || CLIENT_ASSISTANT_INSTRUCTION,
+          tools: [{ functionDeclarations: allToolDeclarations }],
         },
       });
 
@@ -305,6 +357,7 @@ export const generateGeminiResponse = onCall(
         responseText = result;
       } else if (result && typeof result === 'object') {
         // Try to get text from the response object
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const textProperty = (result as any).text;
         if (typeof textProperty === 'string') {
           responseText = textProperty;
@@ -312,6 +365,7 @@ export const generateGeminiResponse = onCall(
           responseText = textProperty();
         } else {
           // Try alternative structure
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const candidates = result as any;
           responseText = candidates.response?.text
             || candidates.candidates?.[0]?.content?.parts?.[0]?.text
@@ -332,6 +386,120 @@ export const generateGeminiResponse = onCall(
         'internal',
         `Failed to generate response: ${errorMessage}`,
       );
+    }
+  },
+);
+
+/**
+ * Initialize a Gemini Live session server-side.
+ * This secures the API key and provides session configuration.
+ */
+export const createGeminiLiveSession = onCall(
+  {
+    secrets: ['GEMINI_API_KEY'],
+  },
+  async () => {
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new HttpsError('internal', 'Gemini API key not configured.');
+      }
+
+      // Return configuration for the client to use with the proxy
+      // In a real implementation, this might return a session ID or a signed token
+      return {
+        success: true,
+        config: {
+          model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+          systemInstruction: ADMIN_VOICE_ASSISTANT_INSTRUCTION(new Date().toLocaleString()),
+          tools: [{ functionDeclarations: allToolDeclarations }],
+        },
+      };
+    } catch (error: unknown) {
+      console.error('Error creating Gemini Live session:', error);
+      throw new HttpsError('internal', 'Failed to create session.');
+    }
+  },
+);
+
+/**
+ * Proxy message to Gemini Live API.
+ * This handles the bidirectional communication securely.
+ */
+export const proxyGeminiLiveMessage = onCall(
+  {
+    secrets: ['GEMINI_API_KEY'],
+  },
+  async (request: CallableRequest) => {
+    const { media, message, config } = request.data as ProxyRequestData;
+
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new HttpsError('internal', 'Gemini API key not configured.');
+      }
+
+      if (!GoogleGenAI) {
+        const genaiModule = await import('@google/genai');
+        GoogleGenAI = genaiModule.GoogleGenAI;
+      }
+
+      // eslint-disable-next-line new-cap
+      const ai = new GoogleGenAI({ apiKey });
+      const currentTime = new Date().toLocaleString();
+      const systemInstruction = config?.systemInstruction
+        || ADMIN_VOICE_ASSISTANT_INSTRUCTION(currentTime);
+      const model = ai.getGenerativeModel({
+        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+        systemInstruction: systemInstruction,
+        tools: [{ functionDeclarations: allToolDeclarations }],
+      });
+
+      // Handle audio input (media) or text input (message)
+      // This is a simplified "per-turn" proxy for the "Live" experience
+      // In a real bidirectional streaming setup, this would be more complex
+      let result;
+      if (media) {
+        result = await model.generateContent([
+          {
+            inlineData: {
+              data: media.data,
+              mimeType: media.mimeType,
+            },
+          },
+        ]);
+      } else if (message) {
+        result = await model.generateContent(message);
+      } else {
+        throw new HttpsError('invalid-argument', 'No input provided.');
+      }
+
+      const response = await result.response;
+      const text = response.text();
+
+      // Check for tool calls
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const functionCalls = (response.candidates?.[0]?.content?.parts as any[])?.filter((p: any) => p.functionCall);
+
+      if (functionCalls && functionCalls.length > 0) {
+        // Handle tool calls server-side
+        // This is a simplified version - in a real app you'd map these to actual functions
+        // For now, we return that tool calls were detected
+        return {
+          success: true,
+          text: text || 'Processing tool call...',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          functionCalls: functionCalls.map((p: any) => p.functionCall),
+        };
+      }
+
+      return {
+        success: true,
+        text,
+      };
+    } catch (error: unknown) {
+      console.error('Error in proxyGeminiLiveMessage:', error);
+      throw new HttpsError('internal', 'Failed to proxy message.');
     }
   },
 );

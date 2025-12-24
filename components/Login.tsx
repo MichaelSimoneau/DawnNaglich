@@ -41,7 +41,7 @@ const Login: React.FC<LoginProps> = ({ onLoginComplete }) => {
   const [loading, setLoading] = useState(false);
 
   // Configure Google OAuth for native platforms
-  // iOS requires using REVERSED_CLIENT_ID from GoogleService-Info.plist
+  // iOS requires using REVERSED_CLIENT_ID from GoogleServices-Info.plist
   const redirectUri =
     Platform.OS !== "web"
       ? Platform.OS === "ios"

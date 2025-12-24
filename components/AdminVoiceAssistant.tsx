@@ -5,22 +5,15 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
   Animated,
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome6 } from "@expo/vector-icons";
-import {
-  GoogleGenAI,
-  Modality,
-  LiveServerMessage,
-  Type,
-  FunctionDeclaration,
-} from "@google/genai";
 import { decode, decodeAudioData, createBlob } from "../services/audioUtils";
 import { CalendarService } from "../services/calendarService";
 import { PendingAction, TranscriptItem } from "../types";
+import { Platform } from "react-native";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -28,10 +21,15 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
   onClose,
 }) => {
   const [isActive, setIsActive] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [, setIsConnecting] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(
     null,
   );
+  
+  // Sync pendingAction state with ref
+  useEffect(() => {
+    pendingActionRef.current = pendingAction;
+  }, [pendingAction]);
 
   // Fluid Transcription State
   const [transcripts, setTranscripts] = useState<TranscriptItem[]>([]);
@@ -42,10 +40,12 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
   const audioContextOutputRef = useRef<AudioContext | null>(null);
   const nextStartTimeRef = useRef<number>(0);
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
-  const sessionRef = useRef<any>(null);
+  const sessionRef = useRef<{ close?: () => void } | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const sessionConfigRef = useRef<Record<string, unknown> | null>(null);
+  const pendingActionRef = useRef<PendingAction | null>(null);
 
   useEffect(() => {
     // Entrance animation
@@ -79,7 +79,9 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
       sourcesRef.current.forEach((s) => {
         try {
           s.stop();
-        } catch (e) {}
+        } catch {
+          // Ignore cleanup errors
+        }
       });
     };
   }, []);
@@ -89,285 +91,300 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
   }, [transcripts, currentInput, currentOutput]);
 
-  // Becky's toolbox
-  const getEventsDeclaration: FunctionDeclaration = {
-    name: "getCalendarEvents",
-    parameters: {
-      type: Type.OBJECT,
-      description:
-        "Fetch current schedule. Essential for context before booking or cancelling.",
-      properties: {
-        timeMin: { type: Type.STRING },
-        timeMax: { type: Type.STRING },
-      },
-      required: ["timeMin", "timeMax"],
-    },
-  };
-
-  const createEventDeclaration: FunctionDeclaration = {
-    name: "createCalendarEvent",
-    parameters: {
-      type: Type.OBJECT,
-      description:
-        "Pre-schedule a session. This triggers a confirmation request to Dawn.",
-      properties: {
-        clientName: { type: Type.STRING },
-        service: { type: Type.STRING },
-        startTime: { type: Type.STRING },
-        endTime: { type: Type.STRING },
-        summary: {
-          type: Type.STRING,
-          description: "A brief summary of what you are doing.",
-        },
-      },
-      required: ["clientName", "service", "startTime", "endTime", "summary"],
-    },
-  };
-
-  const cancelEventDeclaration: FunctionDeclaration = {
-    name: "cancelCalendarEvent",
-    parameters: {
-      type: Type.OBJECT,
-      description:
-        "Remove a session. This triggers a confirmation request to Dawn.",
-      properties: {
-        eventId: { type: Type.STRING },
-        summary: {
-          type: Type.STRING,
-          description: "Briefly state which event is being removed.",
-        },
-      },
-      required: ["eventId", "summary"],
-    },
-  };
-
-  const confirmActionDeclaration: FunctionDeclaration = {
-    name: "confirmPendingAction",
-    parameters: {
-      type: Type.OBJECT,
-      description:
-        'Call this ONLY when Dawn explicitly confirms the previous request (e.g. says "Yes", "Do it", "Confirm").',
-      properties: {},
-      required: [],
-    },
-  };
-
   const startAssistant = async () => {
     setIsConnecting(true);
     try {
-      // Use EXPO_PUBLIC_GEMINI_API_KEY for web, fallback to GEMINI_API_KEY for native
-      const apiKey =
-        process.env.EXPO_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-      
-      if (!apiKey) {
-        throw new Error("Gemini API key not configured");
+      // Determine the API endpoint URL - always use /api/ path
+      let createSessionUrl: string;
+      if (Platform.OS === 'web') {
+        const origin = typeof window !== "undefined" ? window.location.origin : "";
+         // Only use emulator if explicitly on localhost:5001
+        const isEmulator = origin.includes("localhost:5001") || origin.includes("127.0.0.1:5001");
+        createSessionUrl = isEmulator
+          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/createGeminiLiveSession"
+          : `${origin}/api/createGeminiLiveSession`;
+
+        // If we are on localhost dev server (e.g. 8081) but want to hit production functions
+        if (origin.includes("localhost") && !origin.includes("5001")) {
+             createSessionUrl = "https://dawn-naglich.firebaseapp.com/api/createGeminiLiveSession";
+        }
+      } else {
+        // For native, use the Firebase Hosting domain with /api/ path
+        // This goes through Firebase Hosting rewrites, same as web
+        createSessionUrl = "https://dawn-naglich.firebaseapp.com/api/createGeminiLiveSession";
       }
 
-      const ai = new GoogleGenAI({ apiKey });
+      // Initialize session server-side via HTTP
+      const sessionResponse = await fetch(createSessionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          data: {},
+        }),
+      });
+
+      if (!sessionResponse || !sessionResponse.ok) {
+        throw new Error(`HTTP error! status: ${sessionResponse?.status || 'unknown'}`);
+      }
+
+      const sessionResult = await sessionResponse.json();
+      const sessionData = (sessionResult.result || sessionResult) as { success: boolean; config?: Record<string, unknown> };
+
+      if (!sessionData.success) {
+        throw new Error("Failed to create AI session");
+      }
+
+      const sessionConfig = sessionData.config;
+      sessionConfigRef.current = sessionConfig;
+      
+      // In a full implementation, we would connect to a WebSocket proxy here.
+      // For Phase 1, we adapt the UI to show we're connected and ready.
+      setIsActive(true);
+      setIsConnecting(false);
+
       audioContextInputRef.current = new (
-        window.AudioContext || (window as any).webkitAudioContext
+        window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
       )({ sampleRate: 16000 });
       audioContextOutputRef.current = new (
-        window.AudioContext || (window as any).webkitAudioContext
+        window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
       )({ sampleRate: 24000 });
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      const sessionPromise = ai.live.connect({
-        model: "gemini-2.5-flash-native-audio-preview-09-2025",
-        callbacks: {
-          onopen: () => {
-            setIsActive(true);
-            setIsConnecting(false);
-            const source =
-              audioContextInputRef.current!.createMediaStreamSource(stream);
-            const scriptProcessor =
-              audioContextInputRef.current!.createScriptProcessor(4096, 1, 1);
-            scriptProcessor.onaudioprocess = (event) => {
-              const inputData = event.inputBuffer.getChannelData(0);
-              sessionPromise.then((s) =>
-                s.sendRealtimeInput({ media: createBlob(inputData) }),
-              );
-            };
-            source.connect(scriptProcessor);
-            scriptProcessor.connect(audioContextInputRef.current!.destination);
-          },
-          onmessage: async (message: LiveServerMessage) => {
-            // Interruption handling
-            if (message.serverContent?.interrupted) {
-              for (const source of sourcesRef.current.values()) {
-                try {
-                  source.stop();
-                } catch (e) {}
-                sourcesRef.current.delete(source);
-              }
-              nextStartTimeRef.current = 0;
-            }
+      const source = audioContextInputRef.current!.createMediaStreamSource(stream);
+      const scriptProcessor = audioContextInputRef.current!.createScriptProcessor(4096, 1, 1);
+      
+      // Determine proxy URL - always use /api/ path
+      let proxyUrl: string;
+      if (Platform.OS === 'web') {
+        const origin = typeof window !== "undefined" ? window.location.origin : "";
+        const isEmulator = origin.includes("localhost:5001") || origin.includes("127.0.0.1:5001");
+        proxyUrl = isEmulator
+          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/proxyGeminiLiveMessage"
+          : `${origin}/api/proxyGeminiLiveMessage`;
 
-            // Function Calling
-            if (message.toolCall) {
-              for (const fc of message.toolCall.functionCalls) {
-                let toolResult = "Processing...";
-                // Fix: Cast fc.args to any to resolve unknown type issues
-                const args = (fc.args || {}) as any;
-                if (fc.name === "getCalendarEvents") {
-                  const items = await CalendarService.getEventsSecureV2(
-                    args.timeMin,
-                    args.timeMax,
-                  );
-                  toolResult = items.length
-                    ? items
-                        .map(
-                          (e) =>
-                            `${e.summary} at ${new Date(e.start.dateTime).toLocaleTimeString()}`,
-                        )
-                        .join(", ")
-                    : "Schedule is clear.";
-                } else if (fc.name === "createCalendarEvent") {
-                  setPendingAction({
-                    type: "create",
-                    data: args,
-                    summary: args.summary,
-                  });
-                  toolResult = "Queued for confirmation.";
-                } else if (fc.name === "cancelCalendarEvent") {
-                  setPendingAction({
-                    type: "cancel",
-                    data: { eventId: args.eventId },
-                    summary: args.summary,
-                  });
-                  toolResult = "Cancellation queued.";
-                } else if (fc.name === "confirmPendingAction") {
-                  if (pendingAction) {
-                    if (pendingAction.type === "create")
-                      await CalendarService.createEventSecure(
-                        pendingAction.data,
-                      );
-                    else if (pendingAction.type === "cancel")
-                      await CalendarService.cancelEventSecure(
-                        pendingAction.data.eventId,
-                      );
-                    toolResult = "Executed.";
-                    setPendingAction(null);
-                  } else {
-                    toolResult = "No active queue.";
-                  }
-                }
-                sessionPromise.then((s) =>
-                  s.sendToolResponse({
-                    functionResponses: {
-                      id: fc.id,
-                      name: fc.name,
-                      response: { result: toolResult },
-                    },
-                  }),
-                );
-              }
-            }
+        if (origin.includes("localhost") && !origin.includes("5001")) {
+             proxyUrl = "https://dawn-naglich.firebaseapp.com/api/proxyGeminiLiveMessage";
+        }
+      } else {
+        // For native, use the Firebase Hosting domain with /api/ path
+        // This goes through Firebase Hosting rewrites, same as web
+        proxyUrl = "https://dawn-naglich.firebaseapp.com/api/proxyGeminiLiveMessage";
+      }
+      
+      let audioBufferQueue: Float32Array[] = [];
+      let isProcessing = false;
 
-            // Transcription Stream
-            if (message.serverContent?.outputTranscription) {
-              setCurrentOutput(
-                (prev) =>
-                  prev + message.serverContent!.outputTranscription!.text,
-              );
-            } else if (message.serverContent?.inputTranscription) {
-              setCurrentInput(
-                (prev) =>
-                  prev + message.serverContent!.inputTranscription!.text,
-              );
-            }
+      scriptProcessor.onaudioprocess = async (event) => {
+        if (isProcessing) return; // Prevent overlapping requests
+        isProcessing = true;
 
-            if (message.serverContent?.turnComplete) {
-              setTranscripts((prev) => [
-                ...prev,
-                ...(currentInput
-                  ? [
-                      {
-                        id: Date.now() + "-in",
-                        role: "user",
-                        text: currentInput,
-                        isComplete: true,
-                      } as TranscriptItem,
-                    ]
-                  : []),
-                ...(currentOutput
-                  ? [
-                      {
-                        id: Date.now() + "-out",
-                        role: "model",
-                        text: currentOutput,
-                        isComplete: true,
-                      } as TranscriptItem,
-                    ]
-                  : []),
-              ]);
-              setCurrentInput("");
-              setCurrentOutput("");
-            }
+        const inputData = event.inputBuffer.getChannelData(0);
+        const mediaData = createBlob(inputData);
 
-            // Audio Playback
-            const audioData =
-              message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-            if (audioData && audioContextOutputRef.current) {
-              const ctx = audioContextOutputRef.current;
-              nextStartTimeRef.current = Math.max(
-                nextStartTimeRef.current,
-                ctx.currentTime,
-              );
-              const audioBuffer = await decodeAudioData(
-                decode(audioData),
-                ctx,
-                24000,
-                1,
-              );
-              const source = ctx.createBufferSource();
-              source.buffer = audioBuffer;
-              source.connect(ctx.destination);
-              source.addEventListener("ended", () =>
-                sourcesRef.current.delete(source),
-              );
-              source.start(nextStartTimeRef.current);
-              nextStartTimeRef.current += audioBuffer.duration;
-              sourcesRef.current.add(source);
-            }
-          },
-          onerror: () => setIsConnecting(false),
-          onclose: () => setIsActive(false),
-        },
-        config: {
-          responseModalities: [Modality.AUDIO],
-          outputAudioTranscription: {},
-          inputAudioTranscription: {},
-          tools: [
-            {
-              functionDeclarations: [
-                getEventsDeclaration,
-                createEventDeclaration,
-                cancelEventDeclaration,
-                confirmActionDeclaration,
-              ],
+        // Queue audio for batching (send every few chunks to reduce HTTP overhead)
+        audioBufferQueue.push(inputData);
+        if (audioBufferQueue.length < 3) {
+          isProcessing = false;
+          return;
+        }
+
+      audioBufferQueue = [];
+
+        // Proxy audio chunk to backend via HTTP
+        try {
+          const proxyResponse = await fetch(proxyUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
-          ],
-          speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } },
-          },
-          systemInstruction: `You are 'Becky', the elite, intuitive digital concierge for Dawn Naglich Wellness. 
-          Current Time: ${new Date().toLocaleString()}.
+            body: JSON.stringify({
+              data: {
+                media: mediaData,
+                config: sessionConfig,
+              },
+            }),
+          });
+
+          if (!proxyResponse || !proxyResponse.ok) {
+            throw new Error(`HTTP error! status: ${proxyResponse?.status || 'unknown'}`);
+          }
+
+          const proxyResult = await proxyResponse.json();
+          const data = (proxyResult.result || proxyResult) as {
+            success: boolean;
+            text?: string;
+            functionCalls?: Array<{ id: string; name: string; args?: Record<string, unknown> }>;
+            audio?: string;
+            turnComplete?: boolean;
+          };
           
-          BECKY'S PROTOCOL:
-          - You are the gatekeeper of Dawn's schedule. Dawn focuses on Muscle Activation and healing; you handle the logistics.
-          - Your primary tool is the calendar. Always check availability before suggesting times.
-          - You are warm, professional, and highly efficient. Use short, punchy sentences.
-          - PROTOCOL FOR CHANGES: When Dawn asks to book or cancel, you must confirm the details verbally ("Okay, booking Michael for Muscle Activation at 10 AM, shall I confirm?").
-          - EXECUTION: Only call 'confirmPendingAction' when Dawn gives explicit verbal confirmation.
-          - PRIVACY: You only share schedule details with Dawn or Michael.
-          - If the system is busy or has an error, politely inform Dawn and suggest checking the manual dashboard.`,
-        },
-      });
-      sessionRef.current = await sessionPromise;
+          // Handle function calls
+          if (data.functionCalls && Array.isArray(data.functionCalls)) {
+            for (const fc of data.functionCalls) {
+              await handleFunctionCall(fc, sessionConfigRef.current);
+            }
+          }
+
+          // Handle text response
+          if (data.success && data.text) {
+            setCurrentOutput((prev) => prev + data.text);
+          }
+
+          // Handle audio response
+          if (data.audio) {
+            await playAudioResponse(data.audio);
+          }
+
+          // Handle turn completion
+          if (data.turnComplete) {
+            // Move current input/output to transcripts
+            setTranscripts((prev) => {
+              const newTranscripts = [...prev];
+              if (currentInput) {
+                newTranscripts.push({
+                  id: Date.now() + "-in",
+                  role: "user",
+                  text: currentInput,
+                  isComplete: true,
+                } as TranscriptItem);
+                setCurrentInput("");
+              }
+              if (currentOutput) {
+                newTranscripts.push({
+                  id: Date.now() + "-out",
+                  role: "model",
+                  text: currentOutput,
+                  isComplete: true,
+                } as TranscriptItem);
+                setCurrentOutput("");
+              }
+              return newTranscripts;
+            });
+          }
+        } catch (e) {
+          console.error("Proxy error:", e);
+        } finally {
+          isProcessing = false;
+        }
+      };
+
+      source.connect(scriptProcessor);
+      scriptProcessor.connect(audioContextInputRef.current!.destination);
+
     } catch (e) {
       console.error(e);
       setIsConnecting(false);
+    }
+  };
+
+  const handleFunctionCall = async (
+    fc: { id: string; name: string; args?: Record<string, unknown> },
+    sessionConfig: Record<string, unknown> | null,
+  ) => {
+    let toolResult = "Processing...";
+    const args = fc.args || {};
+
+    try {
+      if (fc.name === "getCalendarEvents") {
+        const items = await CalendarService.getEventsSecureV2();
+        toolResult = items.length
+          ? items
+              .map(
+                (e: { summary?: string; start: { dateTime: string } }) =>
+                  `${e.summary || 'Event'} at ${new Date(e.start.dateTime).toLocaleTimeString()}`,
+              )
+              .join(", ")
+          : "Schedule is clear.";
+      } else if (fc.name === "createCalendarEvent") {
+        const newPendingAction: PendingAction = {
+          type: "create",
+          data: args,
+          summary: (args.summary as string) || "Create calendar event",
+        };
+        setPendingAction(newPendingAction);
+        pendingActionRef.current = newPendingAction;
+        toolResult = "Queued for confirmation.";
+      } else if (fc.name === "cancelCalendarEvent") {
+        const newPendingAction: PendingAction = {
+          type: "cancel",
+          data: { eventId: args.eventId as string },
+          summary: (args.summary as string) || "Cancel calendar event",
+        };
+        setPendingAction(newPendingAction);
+        pendingActionRef.current = newPendingAction;
+        toolResult = "Cancellation queued.";
+      } else if (fc.name === "confirmPendingAction") {
+        const currentPending = pendingActionRef.current;
+        if (currentPending) {
+          if (currentPending.type === "create") {
+            await CalendarService.createEventSecure(currentPending.data);
+          } else if (currentPending.type === "cancel") {
+            await CalendarService.cancelEventSecure(currentPending.data.eventId);
+          }
+          toolResult = "Executed.";
+          setPendingAction(null);
+          pendingActionRef.current = null;
+        } else {
+          toolResult = "No active queue.";
+        }
+      }
+
+      // Send tool response back to the proxy
+      const toolResponseUrl = Platform.OS === 'web'
+        ? (typeof window !== "undefined" && (window.location.origin.includes("localhost") || window.location.origin.includes("127.0.0.1"))
+          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/proxyGeminiLiveMessage"
+          : `${window.location.origin}/api/proxyGeminiLiveMessage`)
+        : "https://dawn-naglich.firebaseapp.com/api/proxyGeminiLiveMessage";
+
+      await fetch(toolResponseUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+            body: JSON.stringify({
+              data: {
+                functionResponse: {
+                  id: fc.id,
+                  name: fc.name,
+                  response: { result: toolResult },
+                },
+                config: sessionConfig || {},
+              },
+            }),
+      });
+    } catch (error) {
+      console.error("Function call error:", error);
+    }
+  };
+
+  const playAudioResponse = async (audioData: string) => {
+    if (!audioContextOutputRef.current) return;
+
+    try {
+      const ctx = audioContextOutputRef.current;
+      nextStartTimeRef.current = Math.max(
+        nextStartTimeRef.current,
+        ctx.currentTime,
+      );
+      const audioBuffer = await decodeAudioData(
+        decode(audioData),
+        ctx,
+        24000,
+        1,
+      );
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(ctx.destination);
+      source.addEventListener("ended", () =>
+        sourcesRef.current.delete(source),
+      );
+      source.start(nextStartTimeRef.current);
+      nextStartTimeRef.current += audioBuffer.duration;
+      sourcesRef.current.add(source);
+    } catch (error) {
+      console.error("Audio playback error:", error);
     }
   };
 
@@ -460,7 +477,7 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
                   {pendingAction.summary}
                 </Text>
               </View>
-              <Text style={styles.bannerPrompt}>Say "Yes" to confirm</Text>
+              <Text style={styles.bannerPrompt}>Say &quot;Yes&quot; to confirm</Text>
             </Animated.View>
           )}
 

@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
+  Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebaseConfig";
@@ -53,126 +55,134 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {showVoice && <AdminVoiceAssistant onClose={() => setShowVoice(false)} />}
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.title}>Dawn's Studio</Text>
-            <Text style={styles.subtitle}>Daily Management & Alignment</Text>
-          </View>
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={styles.logoutBtn}
-              onPress={() => {
-                if (auth) signOut(auth);
-              }}
-            >
-              <Text style={styles.logoutBtnText}>Logout</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.voiceBtn}
-              onPress={() => setShowVoice(true)}
-            >
-              <FontAwesome6 name="microphone" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Today's Agenda</Text>
-            <View className="flex-row items-center gap-2">
-              <TouchableOpacity onPress={fetchCalendar} disabled={loading}>
-                <FontAwesome6
-                  name="rotate"
-                  size={14}
-                  color="#059669"
-                  style={loading ? { transform: [{ rotate: "180deg" }] } : undefined}
-                />
-              </TouchableOpacity>
-              {loading && <ActivityIndicator size="small" color="#10B981" />}
-            </View>
-          </View>
-
-          {appointments.length === 0 && !loading ? (
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>
-                All quiet today. Perfect for personal practice.
-              </Text>
-            </View>
-          ) : (
-            appointments.map((appt) => (
-              <View key={appt.id} style={styles.apptRow}>
-                <View style={styles.apptTime}>
-                  <Text style={styles.timeLabel}>
-                    {new Date(appt.startTime).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    styles.apptMain,
-                    appt.status === "pending" && styles.pendingBorder,
-                  ]}
-                >
-                  <View style={styles.apptInfo}>
-                    <Text style={styles.clientName}>{appt.clientName}</Text>
-                    <Text style={styles.serviceLabel}>{appt.service}</Text>
-                  </View>
-
-                  <View style={styles.apptActions}>
-                    {appt.status === "pending" ? (
-                      <TouchableOpacity
-                        onPress={() => handleAction(appt.id, "confirm")}
-                        disabled={!!processingId}
-                        style={styles.confirmBtn}
-                      >
-                        {processingId === appt.id ? (
-                          <ActivityIndicator size="small" color="#FFF" />
-                        ) : (
-                          <FontAwesome6 name="check" size={16} color="#FFFFFF" />
-                        )}
-                      </TouchableOpacity>
-                    ) : (
-                      <View style={styles.confirmedBadge}>
-                        <FontAwesome6 name="check-double" size={16} color="#059669" />
-                      </View>
-                    )}
-                    <TouchableOpacity
-                      onPress={() => handleAction(appt.id, "cancel")}
-                      disabled={!!processingId}
-                      style={styles.cancelBtn}
-                    >
-                      <FontAwesome6 name="trash" size={16} color="#FCA5A5" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            ))
-          )}
-        </View>
-
-        <TouchableOpacity
-          style={styles.externalLink}
-          onPress={() => Linking.openURL("https://calendar.google.com")}
+      
+      <View style={styles.centerContainer}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.externalLinkText}>Open Google Calendar</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </View>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.title}>Dawn's Studio</Text>
+              <Text style={styles.subtitle}>Daily Management & Alignment</Text>
+            </View>
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                style={styles.logoutBtn}
+                onPress={() => {
+                  if (auth) signOut(auth);
+                }}
+              >
+                <Text style={styles.logoutBtnText}>Logout</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.voiceBtn}
+                onPress={() => setShowVoice(true)}
+              >
+                <FontAwesome6 name="microphone" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>Today's Agenda</Text>
+              <View className="flex-row items-center gap-2">
+                <TouchableOpacity onPress={fetchCalendar} disabled={loading}>
+                  <FontAwesome6
+                    name="rotate"
+                    size={14}
+                    color="#059669"
+                    style={loading ? { transform: [{ rotate: "180deg" }] } : undefined}
+                  />
+                </TouchableOpacity>
+                {loading && <ActivityIndicator size="small" color="#10B981" />}
+              </View>
+            </View>
+
+            {appointments.length === 0 && !loading ? (
+              <View style={styles.empty}>
+                <Text style={styles.emptyText}>
+                  All quiet today. Perfect for personal practice.
+                </Text>
+              </View>
+            ) : (
+              appointments.map((appt) => (
+                <View key={appt.id} style={styles.apptRow}>
+                  <View style={styles.apptTime}>
+                    <Text style={styles.timeLabel}>
+                      {new Date(appt.startTime).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.apptMain,
+                      appt.status === "pending" && styles.pendingBorder,
+                    ]}
+                  >
+                    <View style={styles.apptInfo}>
+                      <Text style={styles.clientName}>{appt.clientName}</Text>
+                      <Text style={styles.serviceLabel}>{appt.service}</Text>
+                    </View>
+
+                    <View style={styles.apptActions}>
+                      {appt.status === "pending" ? (
+                        <TouchableOpacity
+                          onPress={() => handleAction(appt.id, "confirm")}
+                          disabled={!!processingId}
+                          style={styles.confirmBtn}
+                        >
+                          {processingId === appt.id ? (
+                            <ActivityIndicator size="small" color="#FFF" />
+                          ) : (
+                            <FontAwesome6 name="check" size={16} color="#FFFFFF" />
+                          )}
+                        </TouchableOpacity>
+                      ) : (
+                        <View style={styles.confirmedBadge}>
+                          <FontAwesome6 name="check-double" size={16} color="#059669" />
+                        </View>
+                      )}
+                      <TouchableOpacity
+                        onPress={() => handleAction(appt.id, "cancel")}
+                        disabled={!!processingId}
+                        style={styles.cancelBtn}
+                      >
+                        <FontAwesome6 name="trash" size={16} color="#FCA5A5" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ))
+            )}
+          </View>
+
+          <TouchableOpacity
+            style={styles.externalLink}
+            onPress={() => Linking.openURL("https://calendar.google.com")}
+          >
+            <Text style={styles.externalLinkText}>Open Google Calendar</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF" },
-  scrollContent: { padding: 30, paddingTop: 60 },
+  centerContainer: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 1024,
+    alignSelf: 'center',
+  },
+  scrollContent: { padding: 30, paddingTop: 20 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",

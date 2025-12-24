@@ -46,6 +46,14 @@
         "function": "generateGeminiResponse"
       },
       {
+        "source": "/api/createGeminiLiveSession",
+        "function": "createGeminiLiveSession"
+      },
+      {
+        "source": "/api/proxyGeminiLiveMessage",
+        "function": "proxyGeminiLiveMessage"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
@@ -91,5 +99,7 @@
   },
   "remoteconfig": {
     "template": "remoteconfig.template.json"
+  },
+  "react-native": {
   }
 }

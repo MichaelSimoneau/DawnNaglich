@@ -7,7 +7,6 @@ import {
   getReactNativePersistence,
 } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
-import { getFunctions, Functions } from "firebase/functions";
 import { Platform } from "react-native";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -46,7 +45,6 @@ if (process.env.FIREBASE_CONFIG_JSON) {
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let db: Firestore | undefined;
-let functions: Functions | undefined;
 
 try {
   // Initialize only if not in a partial state or if forced by API key presence
@@ -79,9 +77,6 @@ try {
   }
   
   db = getFirestore(app);
-  // Note: getFunctions() without region parameter allows functions to be called
-  // via /api/* rewrites in firebase.json, avoiding CORS issues
-  functions = getFunctions(app);
 } catch (e) {
   console.warn(
     "Firebase initialization limited. Some authenticated features may be restricted.",
@@ -89,5 +84,5 @@ try {
   );
 }
 
-export { auth, db, functions };
+export { auth, db};
 export default app;

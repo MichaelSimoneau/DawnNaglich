@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Script to write google-services.json or GoogleService-Info.plist from EAS secret during build
+ * Script to write google-services.json or GoogleServices-Info.plist from EAS secret during build
  * This allows google-services files to be available in EAS builds
  * without committing them to the repository
  */
@@ -52,11 +52,15 @@ if (process.env.EAS_BUILD_PLATFORM) {
 }
 
 const fileName =
-  platform === "android" ? "google-services.json" : "GoogleService-Info.plist";
+  platform === "android" ? "google-services.json" : "GoogleServices-Info.plist";
 console.log(`Setting up ${fileName} for ${platform} platform...`);
 
 const GOOGLE_SERVICES_SECRET = process.env.GOOGLE_SERVICES_JSON;
-const OUTPUT_PATH = path.join(__dirname, "..", fileName);
+// For iOS, write to the DawnNaglichWellness directory where Xcode expects it
+const OUTPUT_PATH =
+  platform === "ios"
+    ? path.join(__dirname, "..", "ios", "DawnNaglichWellness", fileName)
+    : path.join(__dirname, "..", fileName);
 
 if (!GOOGLE_SERVICES_SECRET) {
   console.warn(

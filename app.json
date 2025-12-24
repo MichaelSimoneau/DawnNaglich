@@ -18,6 +18,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.dawnnaglich.wellness",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "CFBundleDisplayName": "Dawn Naglich",
         "NSMicrophoneUsageDescription": "Dawn needs microphone access for the Becky AI scheduling assistant.",
@@ -48,7 +49,14 @@
     "plugins": [
       "expo-asset",
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "@react-native-firebase/app",
+        {
+          "iosGoogleServicesFile": "./ios/DawnNaglichWellness/GoogleServices-Info.plist",
+          "androidGoogleServicesFile": "./android/app/google-services.json"
+        }
+      ]
     ],
     "owner": "michael-simoneau"
   }

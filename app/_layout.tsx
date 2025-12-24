@@ -39,9 +39,10 @@ function RootLayoutContent() {
   const [showLogin, setShowLogin] = useState(false);
 
   // Load FontAwesome6 fonts for web
+  // Note: @expo/vector-icons on web may handle fonts automatically,
+  // but we load them explicitly to ensure they're available
   const [fontsLoaded, fontError] = useFonts({
-    'FontAwesome6_Solid': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Solid.ttf'),
-    'FontAwesome6_Regular': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Regular.ttf'),
+    ...FontAwesome6.font,
   });
 
   // Initialize snow state based on date
@@ -49,17 +50,19 @@ function RootLayoutContent() {
     setIsSnowing(isBeforeSnowEndDate());
   }, []);
 
-  // Show loading state while fonts are loading (web only)
-  if (Platform.OS === 'web' && !fontsLoaded && !fontError) {
-    return (
-      <View className="flex-1 bg-emerald-950 justify-center items-center">
-        <ActivityIndicator size="large" color="#10B981" />
-        <Text className="mt-5 text-[12px] text-emerald-400 font-black tracking-[8px]">
-          LOADING
-        </Text>
-      </View>
-    );
-  }
+  // Log font loading status for debugging
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      if (fontError) {
+        console.error('Font loading error:', fontError);
+      } else if (fontsLoaded) {
+        console.log('Fonts loaded successfully');
+      }
+    }
+  }, [fontsLoaded, fontError]);
+
+  // Don't block rendering on web - fonts may load asynchronously
+  // @expo/vector-icons should handle font loading automatically
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSnowToggle = (e: any) => {
