@@ -15,6 +15,8 @@ import {
   ScrollView,
 } from "react-native";
 import { FontAwesome6 } from "@expo/vector-icons";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../firebaseConfig";
 
 const FACILITY_ADDRESS = "31005 Bainbridge Rd, Solon, OH 44139";
 const DIRECTIONS_URL = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(FACILITY_ADDRESS)}`;
@@ -158,6 +160,10 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
     }, 50);
 
     try {
+      if (!functions) {
+         throw new Error("Functions not initialized");
+      }
+      
       // Build conversation history (excluding the current user message we just added)
       const conversationHistory = messages
         .slice(0, -1) // Exclude the user message we just added
@@ -166,50 +172,16 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           text: msg.text,
         }));
 
-      // Determine the API endpoint URL - always use /api/ path
-      let apiUrl: string;
-      if (Platform.OS === 'web') {
-        const origin = typeof window !== "undefined" ? window.location.origin : "";
-        // Only use emulator if explicitly on localhost:5001 or if configured
-        const isEmulator = origin.includes("localhost:5001") || origin.includes("127.0.0.1:5001");
-        apiUrl = isEmulator
-          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/generateGeminiResponse"
-          : `${origin}/api/generateGeminiResponse`;
-          
-        // If we are on localhost dev server (e.g. 8081) but want to hit production functions
-        if (origin.includes("localhost") && !origin.includes("5001")) {
-            // Check if we have a rewrite, otherwise point to prod
-             apiUrl = "https://dawn-naglich.firebaseapp.com/api/generateGeminiResponse";
-        }
-      } else {
-        // For native, use the Firebase Hosting domain with /api/ path
-        // This goes through Firebase Hosting rewrites, same as web
-        apiUrl = "https://dawn-naglich.firebaseapp.com/api/generateGeminiResponse";
-      }
-
-      // Make direct HTTP call to the function endpoint
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data: {
-            conversationHistory,
-            userMessage: userMsg,
-            userRole: 'client', // Pass role context
-          },
-        }),
+      // Call the cloud function using the Firebase SDK
+      // This handles Auth, CORS, and URL resolution automatically
+      const generateResponse = httpsCallable(functions, 'generateGeminiResponse');
+      const result = await generateResponse({
+        conversationHistory,
+        userMessage: userMsg,
+        userRole: 'client', // Pass role context
       });
-
-      if (!response || !response.ok) {
-        throw new Error(`HTTP error! status: ${response?.status || 'unknown'}`);
-      }
-
-      const result = await response.json();
-      // onCall functions return { result: { ... } }
-      // We need to access result.result to get our actual return value
-      const data = result.result || result;
+      
+      const data = result.data as { success: boolean; text: string };
       
       if (data.success && data.text) {
         setMessages((prev) => [

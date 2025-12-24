@@ -70,18 +70,18 @@ const AdminDashboard: React.FC = () => {
             </View>
             <View style={styles.headerActions}>
               <TouchableOpacity
-                style={styles.logoutBtn}
-                onPress={() => {
-                  if (auth) signOut(auth);
-                }}
-              >
-                <Text style={styles.logoutBtnText}>Logout</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
                 style={styles.voiceBtn}
                 onPress={() => setShowVoice(true)}
               >
                 <FontAwesome6 name="microphone" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.logoutIconBtn}
+                onPress={() => {
+                  if (auth) signOut(auth);
+                }}
+              >
+                <FontAwesome6 name="right-from-bracket" size={20} color="#EF4444" />
               </TouchableOpacity>
             </View>
           </View>
@@ -204,28 +204,28 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 12 },
-  logoutBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: "rgba(239, 68, 68, 0.1)",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(239, 68, 68, 0.3)",
-  },
-  logoutBtnText: {
-    color: "#EF4444",
-    fontSize: 11,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
   voiceBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: "#059669",
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#059669",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  logoutIconBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.2)",
   },
   card: {
     backgroundColor: "#F8FAFC",

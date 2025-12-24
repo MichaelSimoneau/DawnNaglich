@@ -41,9 +41,19 @@ function RootLayoutContent() {
   // Load FontAwesome6 fonts for web
   // Note: @expo/vector-icons on web may handle fonts automatically,
   // but we load them explicitly to ensure they're available
-  const [fontsLoaded, fontError] = useFonts({
-    ...FontAwesome6.font,
-  });
+  const [fontsLoaded, fontError] = useFonts(
+    Platform.OS === 'web'
+      ? {
+          // Explicitly map the font names used by react-native-vector-icons
+          // to the local asset files to ensure they load on web
+          'FontAwesome6Free-Solid': require('../assets/FontAwesome6_Solid.ttf'),
+          'FontAwesome6Free-Regular': require('../assets/FontAwesome6_Regular.ttf'),
+          'FontAwesome6Brands-Regular': require('../assets/FontAwesome6_Brands.ttf'),
+        }
+      : {
+          ...FontAwesome6.font,
+        },
+  );
 
   // Initialize snow state based on date
   useEffect(() => {

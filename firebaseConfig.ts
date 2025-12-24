@@ -7,6 +7,7 @@ import {
   getReactNativePersistence,
 } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
+import { getFunctions, connectFunctionsEmulator, Functions } from "firebase/functions";
 import { Platform } from "react-native";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -17,15 +18,7 @@ if (process.env.FIREBASE_CONFIG_JSON) {
   // EAS build: Parse JSON from environment variable
   firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG_JSON as string);
 } else {
-  // Local development: set FIREBASE_CONFIG_JSON 
-  // to the contents of firebase-config.json
-  // via the `source ./.zshrc` command
-  // throw new Error(`
-  //   Firebase config not found:
-  //   - EAS build: set FIREBASE_CONFIG_JSON to the contents of firebase-config.json
-  //   - Local development: set FIREBASE_CONFIG_JSON to the contents of firebase-config.json
-  //   - hint: \`source ./.zshrc\` to load the environment variable in your terminal
-  // `);
+  // Local development fallback
   firebaseConfig = {
     "version": "2",
     "projectNumber": "333181114084",
@@ -45,44 +38,66 @@ if (process.env.FIREBASE_CONFIG_JSON) {
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let db: Firestore | undefined;
+let functions: Functions | undefined;
 
+// Initialize App
 try {
-  // Initialize only if not in a partial state or if forced by API key presence
   app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
-  
-  // Initialize Auth with AsyncStorage persistence for React Native
-  // Use getAuth for web, initializeAuth for native platforms
-  if (Platform.OS === "web") {
-    auth = getAuth(app);
-  } else {
-    try {
-      // Try to initialize with AsyncStorage persistence for native platforms
-      auth = initializeAuth(app, {
-        persistence: getReactNativePersistence(ReactNativeAsyncStorage),
-      });
-    } catch (error) {
-      // If auth is already initialized, get the existing instance
-      // This can happen if the module is reloaded or auth was initialized elsewhere
-      if (
-        error &&
-        typeof error === "object" &&
-        "code" in error &&
-        error.code === "auth/already-initialized"
-      ) {
-        auth = getAuth(app);
-      } else {
-        throw error;
-      }
-    }
-  }
-  
-  db = getFirestore(app);
 } catch (e) {
-  console.warn(
-    "Firebase initialization limited. Some authenticated features may be restricted.",
-    e,
-  );
+  console.warn("Firebase App initialization failed:", e);
 }
 
-export { auth, db};
+// Initialize Auth
+if (app) {
+  try {
+    if (Platform.OS === "web") {
+      auth = getAuth(app);
+    } else {
+      try {
+        auth = initializeAuth(app, {
+          persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+        });
+      } catch (error) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "code" in error &&
+          // @ts-expect-error - code exists
+          error.code === "auth/already-initialized"
+        ) {
+          auth = getAuth(app);
+        } else {
+          throw error;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Firebase Auth initialization failed:", e);
+  }
+
+  // Initialize Firestore
+  try {
+    db = getFirestore(app);
+  } catch (e) {
+    console.warn("Firebase Firestore initialization failed:", e);
+  }
+
+  // Initialize Functions
+  try {
+    functions = getFunctions(app, "us-central1");
+    
+    // Connect to emulator if on localhost
+    if (Platform.OS === "web" && typeof window !== 'undefined') {
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isLocal) {
+        // console.log("Connecting to Functions Emulator on localhost:5001");
+        connectFunctionsEmulator(functions, "127.0.0.1", 5001);
+      }
+    }
+  } catch (e) {
+    console.warn("Firebase Functions initialization failed:", e);
+  }
+}
+
+export { auth, db, functions };
 export default app;

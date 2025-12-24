@@ -13,7 +13,8 @@ import { FontAwesome6 } from "@expo/vector-icons";
 import { decode, decodeAudioData, createBlob } from "../services/audioUtils";
 import { CalendarService } from "../services/calendarService";
 import { PendingAction, TranscriptItem } from "../types";
-import { Platform } from "react-native";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../firebaseConfig";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -75,7 +76,13 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
     startAssistant();
 
     return () => {
-      sessionRef.current?.close();
+      wsRef.current?.close();
+      if (audioContextInputRef.current?.state !== "closed") {
+        audioContextInputRef.current?.close();
+      }
+      if (audioContextOutputRef.current?.state !== "closed") {
+        audioContextOutputRef.current?.close();
+      }
       sourcesRef.current.forEach((s) => {
         try {
           s.stop();
@@ -94,43 +101,15 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
   const startAssistant = async () => {
     setIsConnecting(true);
     try {
-      // Determine the API endpoint URL - always use /api/ path
-      let createSessionUrl: string;
-      if (Platform.OS === 'web') {
-        const origin = typeof window !== "undefined" ? window.location.origin : "";
-         // Only use emulator if explicitly on localhost:5001
-        const isEmulator = origin.includes("localhost:5001") || origin.includes("127.0.0.1:5001");
-        createSessionUrl = isEmulator
-          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/createGeminiLiveSession"
-          : `${origin}/api/createGeminiLiveSession`;
-
-        // If we are on localhost dev server (e.g. 8081) but want to hit production functions
-        if (origin.includes("localhost") && !origin.includes("5001")) {
-             createSessionUrl = "https://dawn-naglich.firebaseapp.com/api/createGeminiLiveSession";
-        }
-      } else {
-        // For native, use the Firebase Hosting domain with /api/ path
-        // This goes through Firebase Hosting rewrites, same as web
-        createSessionUrl = "https://dawn-naglich.firebaseapp.com/api/createGeminiLiveSession";
+      if (!functions) {
+        throw new Error("Functions not initialized");
       }
 
-      // Initialize session server-side via HTTP
-      const sessionResponse = await fetch(createSessionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data: {},
-        }),
-      });
-
-      if (!sessionResponse || !sessionResponse.ok) {
-        throw new Error(`HTTP error! status: ${sessionResponse?.status || 'unknown'}`);
-      }
-
-      const sessionResult = await sessionResponse.json();
-      const sessionData = (sessionResult.result || sessionResult) as { success: boolean; config?: Record<string, unknown> };
+      // Initialize session server-side via SDK
+      const createGeminiLiveSession = httpsCallable(functions, 'createGeminiLiveSession');
+      const sessionResult = await createGeminiLiveSession({});
+      
+      const sessionData = sessionResult.data as { success: boolean; config?: Record<string, unknown> };
 
       if (!sessionData.success) {
         throw new Error("Failed to create AI session");
@@ -155,24 +134,6 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
       const source = audioContextInputRef.current!.createMediaStreamSource(stream);
       const scriptProcessor = audioContextInputRef.current!.createScriptProcessor(4096, 1, 1);
       
-      // Determine proxy URL - always use /api/ path
-      let proxyUrl: string;
-      if (Platform.OS === 'web') {
-        const origin = typeof window !== "undefined" ? window.location.origin : "";
-        const isEmulator = origin.includes("localhost:5001") || origin.includes("127.0.0.1:5001");
-        proxyUrl = isEmulator
-          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/proxyGeminiLiveMessage"
-          : `${origin}/api/proxyGeminiLiveMessage`;
-
-        if (origin.includes("localhost") && !origin.includes("5001")) {
-             proxyUrl = "https://dawn-naglich.firebaseapp.com/api/proxyGeminiLiveMessage";
-        }
-      } else {
-        // For native, use the Firebase Hosting domain with /api/ path
-        // This goes through Firebase Hosting rewrites, same as web
-        proxyUrl = "https://dawn-naglich.firebaseapp.com/api/proxyGeminiLiveMessage";
-      }
-      
       let audioBufferQueue: Float32Array[] = [];
       let isProcessing = false;
 
@@ -192,27 +153,17 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
 
       audioBufferQueue = [];
 
-        // Proxy audio chunk to backend via HTTP
+        // Proxy audio chunk to backend via SDK
         try {
-          const proxyResponse = await fetch(proxyUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              data: {
-                media: mediaData,
-                config: sessionConfig,
-              },
-            }),
+          const proxyGeminiLiveMessage = httpsCallable(functions, 'proxyGeminiLiveMessage');
+          const proxyResult = await proxyGeminiLiveMessage({
+            media: mediaData,
+            config: sessionConfig,
           });
 
-          if (!proxyResponse || !proxyResponse.ok) {
-            throw new Error(`HTTP error! status: ${proxyResponse?.status || 'unknown'}`);
-          }
+          console.log("AI Proxy Response:", proxyResult.data); // Validation Log
 
-          const proxyResult = await proxyResponse.json();
-          const data = (proxyResult.result || proxyResult) as {
+          const data = proxyResult.data as {
             success: boolean;
             text?: string;
             functionCalls?: Array<{ id: string; name: string; args?: Record<string, unknown> }>;
@@ -331,29 +282,18 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
         }
       }
 
-      // Send tool response back to the proxy
-      const toolResponseUrl = Platform.OS === 'web'
-        ? (typeof window !== "undefined" && (window.location.origin.includes("localhost") || window.location.origin.includes("127.0.0.1"))
-          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/proxyGeminiLiveMessage"
-          : `${window.location.origin}/api/proxyGeminiLiveMessage`)
-        : "https://dawn-naglich.firebaseapp.com/api/proxyGeminiLiveMessage";
-
-      await fetch(toolResponseUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Send tool response back to the proxy using SDK
+      if (!functions) throw new Error("Functions not initialized");
+      const proxyGeminiLiveMessage = httpsCallable(functions, 'proxyGeminiLiveMessage');
+      await proxyGeminiLiveMessage({
+        functionResponse: {
+          id: fc.id,
+          name: fc.name,
+          response: { result: toolResult },
         },
-            body: JSON.stringify({
-              data: {
-                functionResponse: {
-                  id: fc.id,
-                  name: fc.name,
-                  response: { result: toolResult },
-                },
-                config: sessionConfig || {},
-              },
-            }),
+        config: sessionConfig || {},
       });
+      
     } catch (error) {
       console.error("Function call error:", error);
     }

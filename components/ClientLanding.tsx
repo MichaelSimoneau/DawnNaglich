@@ -120,6 +120,18 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
     });
   };
 
+  const bottomElementsStyle = useAnimatedStyle(() => {
+    return {
+      opacity: interpolate(
+        scrollX.value,
+        [2.5, 3],
+        [1, 0],
+        Extrapolation.CLAMP,
+      ),
+      pointerEvents: scrollX.value > 2.8 ? "none" : "auto",
+    };
+  });
+
   return (
     <View style={styles.container}>
       <LandingPage progress={scrollX} isMapActive={isMapActive} />
@@ -179,6 +191,48 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
           </View>
         ))}
       </Animated.ScrollView>
+
+      {/* Fixed Bottom Elements: Pagination Dots & Reserve Now */}
+      <Animated.View
+        style={[styles.bottomFixedContainer, bottomElementsStyle]}
+        pointerEvents="box-none"
+      >
+        <View style={styles.paginationContainer}>
+          {PAGES.map((_, i) => {
+            // eslint-disable-next-line react-hooks/rules-of-hooks
+            const dotStyle = useAnimatedStyle(() => {
+              const inputRange = [i - 1, i, i + 1];
+              const width = interpolate(
+                scrollX.value,
+                inputRange,
+                [6, 24, 6],
+                Extrapolation.CLAMP,
+              );
+              const opacity = interpolate(
+                scrollX.value,
+                inputRange,
+                [0.4, 1, 0.4],
+                Extrapolation.CLAMP,
+              );
+              return {
+                width,
+                opacity,
+              };
+            });
+            return (
+              <Animated.View
+                key={i}
+                style={[styles.paginationDot, dotStyle]}
+              />
+            );
+          })}
+        </View>
+
+        <TouchableOpacity style={styles.reserveButtonFixed} onPress={onBookNow}>
+          <Text style={styles.reserveButtonText}>Reserve Now</Text>
+          <Text style={styles.reserveIcon}>↓</Text>
+        </TouchableOpacity>
+      </Animated.View>
 
       {/* Top Bar with Indicators, Login/Logout - ALWAYS VISIBLE */}
       <View style={styles.topBar} pointerEvents="box-none">
@@ -281,14 +335,6 @@ const ContentSlide: React.FC<ContentSlideProps> = ({
       ) : (
         <TouchableOpacity onPress={onBookNow} style={styles.bookButton}>
           <Text style={styles.bookButtonText}>View Available Times</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Reserve Now Button - Bottom of slide */}
-      {index !== 3 && (
-        <TouchableOpacity style={styles.reserveButton} onPress={onBookNow}>
-          <Text style={styles.reserveButtonText}>Reserve Now</Text>
-          <Text style={styles.reserveIcon}>↓</Text>
         </TouchableOpacity>
       )}
     </Animated.View>
@@ -506,14 +552,31 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     textTransform: "uppercase",
   },
-  reserveButton: {
+  bottomFixedContainer: {
     position: "absolute",
-    bottom: 16,
+    bottom: 0,
     left: 0,
     right: 0,
     alignItems: "center",
+    justifyContent: "flex-end",
+    paddingBottom: 24,
+    zIndex: 20,
+  },
+  paginationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  paginationDot: {
+    height: 6,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 3,
+  },
+  reserveButtonFixed: {
+    alignItems: "center",
     gap: 4,
-    paddingBottom: 4,
   },
   reserveButtonText: {
     fontSize: 8,
