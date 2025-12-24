@@ -223,8 +223,12 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           throw new Error(`Function error: ${errorMsg}`);
         }
         
-        // Firebase callable functions via HTTP return: { result: { data: { success, text } } }
-        if (responseData.result?.data) {
+        // Firebase callable functions via HTTP return: { result: { success, text } } or { result: { data: { success, text } } }
+        if (responseData.result?.success !== undefined) {
+          // Direct result format: { result: { success, text } }
+          result = responseData.result as { success: boolean; text: string };
+        } else if (responseData.result?.data) {
+          // Wrapped data format: { result: { data: { success, text } } }
           result = responseData.result.data as { success: boolean; text: string };
         } else if (responseData.data) {
           result = responseData.data as { success: boolean; text: string };

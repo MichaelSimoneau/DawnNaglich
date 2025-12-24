@@ -149,8 +149,12 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
           throw new Error(`Function error: ${errorMsg}`);
         }
         
-        // Firebase callable functions via HTTP return: { result: { data: {...} } }
-        if (responseData.result?.data) {
+        // Firebase callable functions via HTTP return: { result: { success, config } } or { result: { data: {...} } }
+        if (responseData.result?.success !== undefined) {
+          // Direct result format: { result: { success, config } }
+          sessionData = responseData.result as { success: boolean; config?: Record<string, unknown> };
+        } else if (responseData.result?.data) {
+          // Wrapped data format: { result: { data: { success, config } } }
           sessionData = responseData.result.data as { success: boolean; config?: Record<string, unknown> };
         } else if (responseData.data) {
           sessionData = responseData.data as { success: boolean; config?: Record<string, unknown> };
@@ -273,9 +277,13 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
               throw new Error(`Function error: ${errorMsg}`);
             }
             
-            // Firebase callable functions via HTTP return: { result: { data: {...} } }
+            // Firebase callable functions via HTTP return: { result: { success, ... } } or { result: { data: {...} } }
             let proxyResult;
-            if (responseData.result?.data) {
+            if (responseData.result?.success !== undefined) {
+              // Direct result format: { result: { success, ... } }
+              proxyResult = responseData.result;
+            } else if (responseData.result?.data) {
+              // Wrapped data format: { result: { data: {...} } }
               proxyResult = responseData.result.data;
             } else if (responseData.data) {
               proxyResult = responseData.data;
