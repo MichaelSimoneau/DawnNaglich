@@ -85,6 +85,80 @@ async function getCalendarClient() {
 }
 
 /**
+ * Core logic for fetching calendar events (used by both callable function and function call handler)
+ */
+async function getCalendarEventsCore(
+  timeMin?: string,
+  timeMax?: string,
+  userEmail?: string,
+): Promise<{ success: boolean; items: GoogleCalendarEvent[] }> {
+  const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
+
+  try {
+    const calendar = await getCalendarClient();
+    const response = await calendar.events.list({
+      calendarId: MASTER_CALENDAR_ID,
+      timeMin: timeMin || new Date().toISOString(),
+      timeMax: timeMax || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      singleEvents: true,
+      orderBy: 'startTime',
+    });
+
+    const events = (response.data?.items as GoogleCalendarEvent[]) || [];
+
+    // Filter events for privacy if not admin
+    const filteredEvents = events.map((event: GoogleCalendarEvent) => {
+      const isPublic
+        = event.extendedProperties?.private?.status === 'confirmed'
+        || event.extendedProperties?.private?.status === 'pending';
+
+      if (isAdmin || isPublic) {
+        return event;
+      }
+
+      // Hide details for private events
+      return {
+        id: event.id,
+        summary: 'Busy',
+        start: event.start,
+        end: event.end,
+        transparency: event.transparency,
+      };
+    });
+
+    return { success: true, items: filteredEvents };
+  } catch (error: unknown) {
+    console.error('Error fetching calendar events:', error);
+
+    // Check if this is a Google Calendar API not enabled error
+    const errorMessage
+      = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : '';
+    const errorCode
+      = error && typeof error === 'object' && 'code' in error
+        ? error.code
+        : undefined;
+    const isApiNotEnabled
+      = errorCode === 403
+      || errorMessage.includes('API has not been used')
+      || errorMessage.includes('it is disabled')
+      || errorMessage.includes('PERMISSION_DENIED');
+
+    if (isApiNotEnabled) {
+      console.warn(
+        '⚠️ Google Calendar API is not enabled for this project. '
+        + 'Please enable it at: https://console.developers.google.com/apis/api/calendar-json.googleapis.com/overview',
+      );
+      // Return empty array instead of throwing to allow graceful fallback
+      return { success: true, items: [] };
+    }
+
+    throw new HttpsError('internal', 'Failed to fetch calendar events.');
+  }
+}
+
+/**
  * Fetch calendar events securely.
  * Admins see full details, clients see "Busy" for non-public events.
  */
@@ -95,74 +169,56 @@ export const getCalendarEventsSecure = onCall(
   async (request: CallableRequest) => {
     const { timeMin, timeMax } = request.data as { timeMin?: string; timeMax?: string };
     const userEmail = request.auth?.token?.email;
-    const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
-
-    try {
-      const calendar = await getCalendarClient();
-      const response = await calendar.events.list({
-        calendarId: MASTER_CALENDAR_ID,
-        timeMin: (timeMin as string) || new Date().toISOString(),
-        timeMax:
-          (timeMax as string)
-          || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        singleEvents: true,
-        orderBy: 'startTime',
-      });
-
-      const events = (response.data?.items as GoogleCalendarEvent[]) || [];
-
-      // Filter events for privacy if not admin
-      const filteredEvents = events.map((event: GoogleCalendarEvent) => {
-        const isPublic
-          = event.extendedProperties?.private?.status === 'confirmed'
-          || event.extendedProperties?.private?.status === 'pending';
-
-        if (isAdmin || isPublic) {
-          return event;
-        }
-
-        // Hide details for private events
-        return {
-          id: event.id,
-          summary: 'Busy',
-          start: event.start,
-          end: event.end,
-          transparency: event.transparency,
-        };
-      });
-
-      return { success: true, items: filteredEvents };
-    } catch (error: unknown) {
-      console.error('Error fetching calendar events:', error);
-
-      // Check if this is a Google Calendar API not enabled error
-      const errorMessage
-        = error && typeof error === 'object' && 'message' in error
-          ? String(error.message)
-          : '';
-      const errorCode
-        = error && typeof error === 'object' && 'code' in error
-          ? error.code
-          : undefined;
-      const isApiNotEnabled
-        = errorCode === 403
-        || errorMessage.includes('API has not been used')
-        || errorMessage.includes('it is disabled')
-        || errorMessage.includes('PERMISSION_DENIED');
-
-      if (isApiNotEnabled) {
-        console.warn(
-          '⚠️ Google Calendar API is not enabled for this project. '
-          + 'Please enable it at: https://console.developers.google.com/apis/api/calendar-json.googleapis.com/overview',
-        );
-        // Return empty array instead of throwing to allow graceful fallback
-        return { success: true, items: [] };
-      }
-
-      throw new HttpsError('internal', 'Failed to fetch calendar events.');
-    }
+    return getCalendarEventsCore(timeMin, timeMax, userEmail);
   },
 );
+
+/**
+ * Core logic for creating calendar events
+ */
+async function createCalendarEventCore(
+  clientName: string,
+  service: string,
+  startTime: string,
+  endTime?: string,
+  userEmail?: string,
+): Promise<{ success: boolean; eventId?: string }> {
+  if (!startTime) {
+    throw new HttpsError('invalid-argument', 'Start time is required.');
+  }
+
+  // Default end time to 1 hour after start if not provided
+  const start = new Date(startTime);
+  const end = endTime
+    ? new Date(endTime)
+    : new Date(start.getTime() + 60 * 60 * 1000);
+
+  try {
+    const calendar = await getCalendarClient();
+    const event = {
+      summary: `${clientName} - ${service}`,
+      description: `Booking for ${service}`,
+      start: { dateTime: start.toISOString() },
+      end: { dateTime: end.toISOString() },
+      attendees: userEmail ? [{ email: userEmail }] : [],
+      extendedProperties: {
+        private: {
+          status: 'pending', // New bookings start as pending
+        },
+      },
+    };
+
+    const response = await calendar.events.insert({
+      calendarId: MASTER_CALENDAR_ID,
+      requestBody: event,
+    });
+
+    return { success: true, eventId: response.data.id || undefined };
+  } catch (error) {
+    console.error('Error creating calendar event:', error);
+    throw new HttpsError('internal', 'Failed to create calendar event.');
+  }
+}
 
 /**
  * Create a calendar event for a booking.
@@ -180,41 +236,13 @@ export const createCalendarEventSecure = onCall(
     };
     const userEmail = request.auth?.token?.email;
 
-    if (!startTime) {
-      throw new HttpsError('invalid-argument', 'Start time is required.');
-    }
-
-    // Default end time to 1 hour after start if not provided
-    const start = new Date(startTime as string);
-    const end = endTime
-      ? new Date(endTime as string)
-      : new Date(start.getTime() + 60 * 60 * 1000);
-
-    try {
-      const calendar = await getCalendarClient();
-      const event = {
-        summary: `${clientName} - ${service}`,
-        description: `Booking for ${service}`,
-        start: { dateTime: start.toISOString() },
-        end: { dateTime: end.toISOString() },
-        attendees: userEmail ? [{ email: userEmail }] : [],
-        extendedProperties: {
-          private: {
-            status: 'pending', // New bookings start as pending
-          },
-        },
-      };
-
-      const response = await calendar.events.insert({
-        calendarId: MASTER_CALENDAR_ID,
-        requestBody: event,
-      });
-
-      return { success: true, eventId: response.data.id };
-    } catch (error) {
-      console.error('Error creating calendar event:', error);
-      throw new HttpsError('internal', 'Failed to create calendar event.');
-    }
+    return createCalendarEventCore(
+      clientName as string,
+      service as string,
+      startTime as string,
+      endTime,
+      userEmail,
+    );
   },
 );
 
@@ -272,6 +300,40 @@ export const confirmCalendarEventSecure = onCall(
 );
 
 /**
+ * Core logic for canceling calendar events
+ */
+async function cancelCalendarEventCore(
+  eventId: string,
+  userEmail?: string,
+): Promise<{ success: boolean }> {
+  const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
+
+  if (!isAdmin) {
+    throw new HttpsError(
+      'permission-denied',
+      'Only admins can cancel events.',
+    );
+  }
+
+  if (!eventId) {
+    throw new HttpsError('invalid-argument', 'Event ID is required.');
+  }
+
+  try {
+    const calendar = await getCalendarClient();
+    await calendar.events.delete({
+      calendarId: MASTER_CALENDAR_ID,
+      eventId: eventId,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting calendar event:', error);
+    throw new HttpsError('internal', 'Failed to cancel calendar event.');
+  }
+}
+
+/**
  * Cancel/Delete a calendar event. Admin only.
  */
 export const cancelCalendarEventSecure = onCall(
@@ -280,34 +342,62 @@ export const cancelCalendarEventSecure = onCall(
   },
   async (request: CallableRequest) => {
     const userEmail = request.auth?.token?.email;
-    const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
-
-    if (!isAdmin) {
-      throw new HttpsError(
-        'permission-denied',
-        'Only admins can cancel events.',
-      );
-    }
-
     const { eventId } = request.data as { eventId?: string };
-    if (!eventId) {
-      throw new HttpsError('invalid-argument', 'Event ID is required.');
-    }
-
-    try {
-      const calendar = await getCalendarClient();
-      await calendar.events.delete({
-        calendarId: MASTER_CALENDAR_ID,
-        eventId: eventId as string,
-      });
-
-      return { success: true };
-    } catch (error) {
-      console.error('Error deleting calendar event:', error);
-      throw new HttpsError('internal', 'Failed to cancel calendar event.');
-    }
+    return cancelCalendarEventCore(eventId as string, userEmail);
   },
 );
+
+/**
+ * Execute a function call from Gemini
+ */
+async function executeFunctionCall(
+  functionName: string,
+  args: Record<string, unknown>,
+): Promise<unknown> {
+  console.log(`Executing function call: ${functionName}`, args);
+
+  try {
+    switch (functionName) {
+      case 'getCalendarEvents': {
+        // Call core function directly (client requests are unauthenticated)
+        const result = await getCalendarEventsCore(
+          args.timeMin as string | undefined,
+          args.timeMax as string | undefined,
+          undefined, // No user email for client requests
+        );
+        return result;
+      }
+      case 'createCalendarEvent': {
+        // Call core function directly
+        const result = await createCalendarEventCore(
+          args.clientName as string,
+          args.service as string,
+          args.startTime as string,
+          args.endTime as string | undefined,
+          undefined, // No user email for client requests
+        );
+        return result;
+      }
+      case 'cancelCalendarEvent': {
+        // Client requests cannot cancel events (admin only)
+        return { success: false, error: 'Only admins can cancel events' };
+      }
+      case 'confirmPendingAction': {
+        // This is admin-only, return error for client
+        return { success: false, error: 'This action requires admin authentication' };
+      }
+      default:
+        return { success: false, error: `Unknown function: ${functionName}` };
+    }
+  } catch (error: unknown) {
+    const errorMessage
+      = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : 'Unknown error';
+    console.error(`Error executing ${functionName}:`, errorMessage);
+    return { success: false, error: errorMessage };
+  }
+}
 
 /**
  * Generate Gemini AI response securely using server-side API key.
@@ -342,10 +432,20 @@ export const generateGeminiResponse = onCall(
       }
 
       const ai = new GoogleGenAI({ apiKey });
+      const currentTime = new Date().toLocaleString('en-US', {
+        timeZone: 'America/New_York',
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true,
+      });
 
       // Build conversation history for context
       const history = (conversationHistory || []) as Array<{ role: string; text: string }>;
-      const contents = [
+      let contents: Array<{ role: string; parts: Array<{ text?: string; functionResponse?: unknown }> }> = [
         ...history.map((msg: { role: string; text: string }) => ({
           role: msg.role === 'user' ? 'user' : 'model',
           parts: [{ text: msg.text }],
@@ -356,37 +456,110 @@ export const generateGeminiResponse = onCall(
         },
       ];
 
-      const result = await ai.models.generateContent({
+      // Use dynamic system instruction with current date/time
+      const dynamicSystemInstruction = systemInstruction || CLIENT_ASSISTANT_INSTRUCTION(currentTime);
+
+      // Make initial call to Gemini
+      let result = await ai.models.generateContent({
         model: 'gemini-2.5-pro',
         contents: contents,
         config: {
-          systemInstruction: systemInstruction || CLIENT_ASSISTANT_INSTRUCTION,
+          systemInstruction: dynamicSystemInstruction,
           tools: [{ functionDeclarations: allToolDeclarations }],
         },
       });
 
-      // Extract text from response - the API returns text directly
+      // Handle function calls in a loop (Gemini may chain multiple calls)
+      let maxIterations = 5; // Prevent infinite loops
+      while (maxIterations > 0) {
+        maxIterations--;
+
+        // Extract function calls from response
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const resultAny = result as any;
+        const candidates = resultAny.candidates || resultAny.response?.candidates || [];
+        
+        let hasFunctionCall = false;
+        const functionResponses: Array<{ name: string; response: unknown }> = [];
+
+        for (const candidate of candidates) {
+          const parts = candidate.content?.parts || [];
+          for (const part of parts) {
+            if (part.functionCall) {
+              hasFunctionCall = true;
+              const functionName = part.functionCall.name;
+              const functionArgs = part.functionCall.args || {};
+
+              console.log(`Function call detected: ${functionName}`, functionArgs);
+
+              // Execute the function
+              const functionResult = await executeFunctionCall(functionName, functionArgs);
+
+              // Add function response for follow-up
+              functionResponses.push({
+                name: functionName,
+                response: functionResult,
+              });
+            }
+          }
+        }
+
+        // If no function calls, break and extract text
+        if (!hasFunctionCall) {
+          break;
+        }
+
+        // Add function responses to conversation and make follow-up call
+        contents.push({
+          role: 'model',
+          parts: functionResponses.map((fr) => ({
+            functionResponse: {
+              name: fr.name,
+              response: fr.response,
+            },
+          })),
+        });
+
+        // Make follow-up call with function results
+        result = await ai.models.generateContent({
+          model: 'gemini-2.5-pro',
+          contents: contents,
+          config: {
+            systemInstruction: dynamicSystemInstruction,
+            tools: [{ functionDeclarations: allToolDeclarations }],
+          },
+        });
+      }
+
+      // Extract text from final response
       let responseText: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const resultAny = result as any;
+      
       if (typeof result === 'string') {
         responseText = result;
-      } else if (result && typeof result === 'object') {
+      } else {
         // Try to get text from the response object
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const textProperty = (result as any).text;
-        if (typeof textProperty === 'string') {
-          responseText = textProperty;
-        } else if (typeof textProperty === 'function') {
-          responseText = textProperty();
+        const candidates = resultAny.candidates || resultAny.response?.candidates || [];
+        const firstCandidate = candidates[0];
+        
+        if (firstCandidate?.content?.parts) {
+          // Find text part (not function call)
+          const textPart = firstCandidate.content.parts.find(
+            (part: { text?: string; functionCall?: unknown }) => part.text,
+          );
+          if (textPart?.text) {
+            responseText = textPart.text;
+          } else {
+            responseText = resultAny.response?.text
+              || resultAny.text
+              || 'I missed that. Please try again.';
+          }
         } else {
-          // Try alternative structure
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const candidates = result as any;
-          responseText = candidates.response?.text
-            || candidates.candidates?.[0]?.content?.parts?.[0]?.text
+          responseText = resultAny.response?.text
+            || resultAny.text
             || 'I missed that. Please try again.';
         }
-      } else {
-        responseText = 'I missed that. Please try again.';
       }
 
       return { success: true, text: responseText };
