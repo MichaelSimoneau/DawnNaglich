@@ -195,12 +195,35 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorText = await response.text();
+          console.error("HTTP error response:", errorText);
+          throw new Error(`HTTP error! status: ${response.status}, body: ${errorText.substring(0, 200)}`);
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error("Non-JSON response:", text.substring(0, 500));
+          throw new Error(`Expected JSON but got ${contentType}`);
         }
 
         const responseData = await response.json();
-        // Handle both direct function response and wrapped response
-        result = responseData.result?.data || responseData as { success: boolean; text: string };
+        console.log("ClientAssistant response:", JSON.stringify(responseData, null, 2)); // Debug log
+        
+        // Handle Firebase callable function response format
+        // When called via HTTP through Hosting rewrite, Firebase wraps it: { result: { data: { success, text } } }
+        // When called via SDK, it's just: { success, text }
+        // Direct function call might return: { success, text }
+        if (responseData.result?.data) {
+          result = responseData.result.data as { success: boolean; text: string };
+        } else if (responseData.data) {
+          result = responseData.data as { success: boolean; text: string };
+        } else if (responseData.success !== undefined) {
+          result = responseData as { success: boolean; text: string };
+        } else {
+          console.error("Unexpected response format:", responseData);
+          throw new Error("Unexpected response format from server");
+        }
       } else {
         // For native, use Firebase SDK
         if (!functions) {
@@ -230,14 +253,28 @@ const ClientAssistant: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
       }
     } catch (e) {
       console.error("ClientAssistant API error:", e);
+      console.error("Error details:", {
+        message: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      });
+      
+      let errorMessage = "I'm having trouble connecting right now. Please try again in a moment, or use the booking calendar to schedule directly.";
+      
+      if (e instanceof Error) {
+        if (e.message.includes("not initialized")) {
+          errorMessage = "Service configuration issue. Please contact support.";
+        } else if (e.message.includes("Failed to fetch") || e.message.includes("NetworkError")) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (e.message.includes("HTTP error")) {
+          errorMessage = `Server error (${e.message}). Please try again later.`;
+        }
+      }
+      
       setMessages((prev) => [
         ...prev,
         {
           role: "ai",
-          text:
-            e instanceof Error && e.message.includes("not initialized")
-              ? "Service configuration issue. Please contact support."
-              : "I'm having trouble connecting right now. Please try again in a moment, or use the booking calendar to schedule directly.",
+          text: errorMessage,
         },
       ]);
     } finally {

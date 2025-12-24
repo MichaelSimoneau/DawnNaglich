@@ -11,8 +11,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   interpolate,
-  Extrapolation,
-  runOnJS,
+  Extrapolation, // Keep Extrapolation
   useAnimatedScrollHandler,
 } from "react-native-reanimated";
 import { signOut } from "firebase/auth";
@@ -63,6 +62,90 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
     return () => clearTimeout(timeoutId);
   }, [activePageIndex, SCREEN_WIDTH]);
 
+  // Update SEO meta tags dynamically for web
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const currentPage = PAGES[activePageIndex] || PAGES[0];
+      const baseUrl = "https://dawn-naglich.web.app";
+      const pageUrl = `${baseUrl}/#${currentPage.id}`;
+      const pageImage = currentPage.image || PAGES[0].image;
+      const pageImageUrl = pageImage ? `${pageImage.split('?')[0]}?auto=format&fit=crop&q=80&w=1200` : `${baseUrl}/og-image.jpg`;
+
+      // SEO-optimized title with "Dawn Naglich" prominently featured
+      const seoTitle = `Dawn Naglich - ${currentPage.subtitle} | ${currentPage.label} | Elite Wellness & Functional Realignment`;
+      const seoDescription = `${currentPage.description} Experience Dawn Naglich's expertise in ${currentPage.label.toLowerCase()} - Elite Muscle Activation & Functional Realignment in Solon.`;
+
+      // Update document title
+      document.title = seoTitle;
+
+      // Helper function to set or update meta tag
+      const setMetaTag = (attribute: string, content: string, isProperty = false) => {
+        const attr = isProperty ? 'property' : 'name';
+        let meta = document.querySelector(`meta[${attr}="${attribute}"]`) as HTMLMetaElement;
+        if (!meta) {
+          meta = document.createElement('meta');
+          meta.setAttribute(attr, attribute);
+          document.head.appendChild(meta);
+        }
+        meta.setAttribute('content', content);
+      };
+
+      // Helper function to set or update link tag
+      const setLinkTag = (rel: string, href: string) => {
+        let link = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement;
+        if (!link) {
+          link = document.createElement('link');
+          link.setAttribute('rel', rel);
+          document.head.appendChild(link);
+        }
+        link.setAttribute('href', href);
+      };
+
+      // Primary SEO Meta Tags
+      setMetaTag('description', seoDescription);
+      setMetaTag('keywords', `Dawn Naglich, ${currentPage.label}, Muscle Activation, Functional Realignment, Wellness, Physical Therapy, Solon, Recovery, ${currentPage.badge}, Dawn Naglich ${currentPage.label}`);
+      setMetaTag('author', 'Dawn Naglich');
+      setMetaTag('robots', 'index, follow');
+      setLinkTag('canonical', pageUrl);
+
+      // Open Graph / Facebook Social Sharing
+      setMetaTag('og:type', 'website', true);
+      setMetaTag('og:url', pageUrl, true);
+      setMetaTag('og:title', seoTitle, true);
+      setMetaTag('og:description', seoDescription, true);
+      setMetaTag('og:image', pageImageUrl, true);
+      setMetaTag('og:image:width', '1200', true);
+      setMetaTag('og:image:height', '630', true);
+      setMetaTag('og:image:alt', `Dawn Naglich - ${currentPage.subtitle}`, true);
+      setMetaTag('og:site_name', 'Dawn Naglich Wellness', true);
+      setMetaTag('og:locale', 'en_US', true);
+
+      // Twitter Card Social Sharing
+      setMetaTag('twitter:card', 'summary_large_image');
+      setMetaTag('twitter:title', seoTitle);
+      setMetaTag('twitter:description', seoDescription);
+      setMetaTag('twitter:image', pageImageUrl);
+      setMetaTag('twitter:image:alt', `Dawn Naglich - ${currentPage.subtitle}`);
+      setMetaTag('twitter:site', '@dawn_naglich');
+      setMetaTag('twitter:creator', '@dawn_naglich');
+
+      // Additional SEO Meta Tags
+      setMetaTag('theme-color', '#10B981');
+      setMetaTag('apple-mobile-web-app-title', 'Dawn Naglich');
+      setMetaTag('application-name', 'Dawn Naglich Wellness');
+
+      // Update URL hash for deep linking
+      try {
+        const targetHash = `#${currentPage.id}`;
+        if (window.location.hash !== targetHash) {
+          window.history.replaceState(null, "", targetHash);
+        }
+      } catch {
+        // Silently fail if history API is not available
+      }
+    }
+  }, [activePageIndex]);
+
   const snapToExactPosition = (index: number) => {
     const clampedIndex = Math.max(0, Math.min(index, PAGES.length - 1));
     const expectedOffset = clampedIndex * SCREEN_WIDTH;
@@ -84,34 +167,36 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
     onScroll: (event) => {
       scrollX.value = event.contentOffset.x / SCREEN_WIDTH;
     },
-    onScrollBeginDrag: () => {
+    onBeginDrag: () => {
       isScrollingRef.current = true;
     },
-    onMomentumScrollEnd: (event) => {
-      const currentOffset = event.contentOffset.x;
-      const index = Math.round(currentOffset / SCREEN_WIDTH);
-      const clampedIndex = Math.max(0, Math.min(index, PAGES.length - 1));
-      const expectedOffset = clampedIndex * SCREEN_WIDTH;
-
-      // Always snap to exact position to prevent stuttering
-      if (Math.abs(currentOffset - expectedOffset) > 0.5) {
-        runOnJS(snapToExactPosition)(clampedIndex);
-      } else {
-        runOnJS(handleScrollEnd)(clampedIndex);
-      }
-    },
-    onScrollEndDrag: (event) => {
-      const currentOffset = event.contentOffset.x;
-      const index = Math.round(currentOffset / SCREEN_WIDTH);
-      const clampedIndex = Math.max(0, Math.min(index, PAGES.length - 1));
-      const expectedOffset = clampedIndex * SCREEN_WIDTH;
-
-      // Snap immediately on drag end if not at exact position
-      if (Math.abs(currentOffset - expectedOffset) > 0.5) {
-        runOnJS(snapToExactPosition)(clampedIndex);
-      }
-    },
   });
+
+  const handleMomentumScrollEnd = (event: { nativeEvent: { contentOffset: { x: number } } }) => {
+    const currentOffset = event.nativeEvent.contentOffset.x;
+    const index = Math.round(currentOffset / SCREEN_WIDTH);
+    const clampedIndex = Math.max(0, Math.min(index, PAGES.length - 1));
+    const expectedOffset = clampedIndex * SCREEN_WIDTH;
+
+    // Always snap to exact position to prevent stuttering
+    if (Math.abs(currentOffset - expectedOffset) > 0.5) {
+      snapToExactPosition(clampedIndex);
+    } else {
+      handleScrollEnd(clampedIndex);
+    }
+  };
+
+  const handleScrollEndDrag = (event: { nativeEvent: { contentOffset: { x: number } } }) => {
+    const currentOffset = event.nativeEvent.contentOffset.x;
+    const index = Math.round(currentOffset / SCREEN_WIDTH);
+    const clampedIndex = Math.max(0, Math.min(index, PAGES.length - 1));
+    const expectedOffset = clampedIndex * SCREEN_WIDTH;
+
+    // Snap immediately on drag end if not at exact position
+    if (Math.abs(currentOffset - expectedOffset) > 0.5) {
+      snapToExactPosition(clampedIndex);
+    }
+  };
 
   const handleLogout = () => {
     if (auth) signOut(auth).catch((error) => {
@@ -147,6 +232,8 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={scrollHandler}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+        onScrollEndDrag={handleScrollEndDrag}
         scrollEventThrottle={16}
         decelerationRate={0.9}
         snapToInterval={SCREEN_WIDTH}
@@ -180,7 +267,6 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
       >
         <View style={styles.paginationContainer}>
           {PAGES.map((_, i) => {
-            // eslint-disable-next-line react-hooks/rules-of-hooks
             const dotStyle = useAnimatedStyle(() => {
               const inputRange = [i - 1, i, i + 1];
               const width = interpolate(
@@ -328,7 +414,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     position: "relative",
   },
-  topBar: {
+  topBar: ({
     position: "absolute",
     top: 0,
     left: 0,
@@ -346,8 +432,8 @@ const styles = StyleSheet.create({
         position: "absolute",
         top: 0,
       },
-    }),
-  },
+    }) as object,
+  } as const),
   topBarContent: {
     flexDirection: "row",
     alignItems: "center",
