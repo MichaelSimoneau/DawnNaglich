@@ -855,11 +855,11 @@ export const proxyGeminiLiveMessage = onCall(
         ]);
         const response = await result.response;
         const text = response.text();
-        
+
         // Check for additional tool calls
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const functionCalls = (response.candidates?.[0]?.content?.parts as any[])?.filter((p: any) => p.functionCall);
-        
+
         return {
           success: true,
           text,
