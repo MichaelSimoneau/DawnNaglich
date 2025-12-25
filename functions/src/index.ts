@@ -43,6 +43,14 @@ interface ProxyRequestData {
   message?: unknown;
   config?: {
     systemInstruction?: string;
+    history?: Array<{
+      role: string;
+      parts: Array<{
+        text?: string;
+        inlineData?: { data: string; mimeType: string };
+        functionResponse?: { name: string; response: unknown };
+      }>;
+    }>;
   };
   functionResponse?: {
     id: string;
@@ -173,17 +181,38 @@ async function getCalendarEventsCore(
   const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
 
   try {
-    const calendar = await getCalendarClient();
-    const appCalendarId = await getAppCalendarId();
+    let calendar;
+    try {
+      calendar = await getCalendarClient();
+    } catch (error) {
+      console.error('Error getting calendar client:', error);
+      throw error;
+    }
+
+    let appCalendarId;
+    try {
+      appCalendarId = await getAppCalendarId();
+    } catch (error) {
+      console.error('Error getting app calendar ID:', error);
+      throw error;
+    }
 
     // Get events from app calendar
-    const response = await calendar.events.list({
-      calendarId: appCalendarId,
-      timeMin: timeMin || new Date().toISOString(),
-      timeMax: timeMax || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      singleEvents: true,
-      orderBy: 'startTime',
-    });
+    let response;
+    try {
+      response = await calendar.events.list({
+        calendarId: appCalendarId,
+        timeMin: timeMin || new Date().toISOString(),
+        timeMax: timeMax || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        singleEvents: true,
+        orderBy: 'startTime',
+      });
+    } catch (error) {
+      console.error('Error listing calendar events:', error);
+      console.error('Calendar ID:', appCalendarId);
+      console.error('Time range:', { timeMin, timeMax });
+      throw error;
+    }
 
     const events = (response.data?.items as GoogleCalendarEvent[]) || [];
 
@@ -279,17 +308,31 @@ async function getCalendarEventsCore(
   } catch (error: unknown) {
     console.error('Error fetching calendar events:', error);
 
-    // Check if this is a Google Calendar API not enabled error
+    // Extract detailed error information
     const errorMessage
       = error && typeof error === 'object' && 'message' in error
         ? String(error.message)
-        : '';
+        : 'Unknown error';
     const errorCode
       = error && typeof error === 'object' && 'code' in error
-        ? error.code
+        ? String(error.code)
+        : 'UNKNOWN';
+    const errorDetails
+      = error && typeof error === 'object' && 'details' in error
+        ? error.details
         : undefined;
+
+    console.error('Error details:', {
+      message: errorMessage,
+      code: errorCode,
+      details: errorDetails,
+      userEmail,
+      isAdmin,
+    });
+
+    // Check if this is a Google Calendar API not enabled error
     const isApiNotEnabled
-      = errorCode === 403
+      = errorCode === '403'
       || errorMessage.includes('API has not been used')
       || errorMessage.includes('it is disabled')
       || errorMessage.includes('PERMISSION_DENIED');
@@ -303,7 +346,9 @@ async function getCalendarEventsCore(
       return { success: true, items: [] };
     }
 
-    throw new HttpsError('internal', 'Failed to fetch calendar events.');
+    // Include more details in the error message for debugging
+    const detailedErrorMessage = `Failed to fetch calendar events: ${errorMessage} (Code: ${errorCode})`;
+    throw new HttpsError('internal', detailedErrorMessage);
   }
 }
 
@@ -316,9 +361,21 @@ export const getCalendarEventsSecure = onCall(
     invoker: 'public',
   },
   async (request: CallableRequest) => {
-    const { timeMin, timeMax } = request.data as { timeMin?: string; timeMax?: string };
-    const userEmail = request.auth?.token?.email;
-    return getCalendarEventsCore(timeMin, timeMax, userEmail);
+    try {
+      const { timeMin, timeMax } = request.data as { timeMin?: string; timeMax?: string };
+      const userEmail = request.auth?.token?.email;
+      console.log('getCalendarEventsSecure called:', { timeMin, timeMax, userEmail });
+      const result = await getCalendarEventsCore(timeMin, timeMax, userEmail);
+      console.log('getCalendarEventsSecure success:', { itemCount: result.items?.length || 0 });
+      return result;
+    } catch (error: unknown) {
+      console.error('getCalendarEventsSecure error:', error);
+      const errorMessage
+        = error && typeof error === 'object' && 'message' in error
+          ? String(error.message)
+          : 'Failed to fetch calendar events.';
+      throw new HttpsError('internal', errorMessage);
+    }
   },
 );
 
@@ -830,29 +887,31 @@ export const proxyGeminiLiveMessage = onCall(
       const currentTime = new Date().toLocaleString();
       const systemInstruction = config?.systemInstruction
         || ADMIN_VOICE_ASSISTANT_INSTRUCTION(currentTime);
-      const model = ai.getGenerativeModel({
-        model: 'gemini-2.5-pro',
-        systemInstruction: systemInstruction,
-        tools: [{ functionDeclarations: allToolDeclarations }],
-      });
 
       // Handle function response (from tool call execution)
       if (functionResponse) {
         // For function responses, we need to send it back to Gemini to continue the conversation
         // Format matches what Gemini expects for function responses
-        const result = await model.generateContent([
-          {
-            role: 'model',
-            parts: [
-              {
-                functionResponse: {
-                  name: functionResponse.name,
-                  response: functionResponse.response,
+        const result = await ai.models.generateContent({
+          model: 'gemini-2.5-pro',
+          contents: [
+            {
+              role: 'model',
+              parts: [
+                {
+                  functionResponse: {
+                    name: functionResponse.name,
+                    response: functionResponse.response,
+                  },
                 },
-              },
-            ],
+              ],
+            },
+          ],
+          config: {
+            systemInstruction: systemInstruction,
+            tools: [{ functionDeclarations: allToolDeclarations }],
           },
-        ]);
+        });
         const response = await result.response;
         const text = response.text();
 
@@ -871,21 +930,60 @@ export const proxyGeminiLiveMessage = onCall(
       // Handle audio input (media) or text input (message)
       // This is a simplified "per-turn" proxy for the "Live" experience
       // In a real bidirectional streaming setup, this would be more complex
-      let result;
+      const contents: Array<{
+        role: string;
+        parts: Array<{
+          text?: string;
+          inlineData?: { data: string; mimeType: string };
+          functionResponse?: { name: string; response: unknown };
+        }>;
+      }> = [];
+
+      if (config?.history) {
+        contents.push(...config.history);
+      }
+
       if (media) {
-        result = await model.generateContent([
-          {
+        contents.push({
+          role: 'user',
+          parts: [{
             inlineData: {
               data: media.data,
               mimeType: media.mimeType,
             },
-          },
-        ]);
+          }],
+        });
       } else if (message) {
-        result = await model.generateContent(message);
+        // Handle message input - could be string or array
+        if (typeof message === 'string') {
+          contents.push({ role: 'user', parts: [{ text: message }] });
+        } else if (Array.isArray(message)) {
+          // Type assertion needed because message is typed as unknown
+          const messageArray = message as Array<{
+            role: string;
+            parts: Array<{
+              text?: string;
+              inlineData?: { data: string; mimeType: string };
+              functionResponse?: { name: string; response: unknown };
+            }>;
+          }>;
+          contents.push(...messageArray);
+        } else {
+          // Fallback: try to convert to string
+          contents.push({ role: 'user', parts: [{ text: String(message) }] });
+        }
       } else {
         throw new HttpsError('invalid-argument', 'No input provided.');
       }
+
+      const result = await ai.models.generateContent({
+        model: 'gemini-2.5-pro',
+        contents: contents,
+        config: {
+          systemInstruction: systemInstruction,
+          tools: [{ functionDeclarations: allToolDeclarations }],
+        },
+      });
 
       const response = await result.response;
       const text = response.text();

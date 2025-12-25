@@ -10,16 +10,9 @@ import {
 } from "react-native";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { SERVICES } from "../constants";
-import { Service, Appointment } from "../types";
+import { Appointment } from "../types";
 import { CalendarService } from "../services/calendarService";
-import { auth } from "../firebaseConfig";
 import { useUser } from "../UserContext";
-
-interface Slot {
-  id: string;
-  day: Date;
-  time: string;
-}
 
 interface BookingProps {
   activeSlotId: string | null;
@@ -108,7 +101,7 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
 
   const generateDays = () => {
     const days = [];
-    let d = new Date();
+    const d = new Date();
     d.setHours(0, 0, 0, 0);
     while (days.length < 30) {
       if (d.getDay() !== 0) days.push(new Date(d));
@@ -131,10 +124,11 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
 
   const parseTimeToMinutes = (time: string): number => {
     const [timeStr, ampm] = time.split(" ");
-    let [hour, minute] = timeStr.split(":").map(Number);
-    if (ampm === "PM" && hour !== 12) hour += 12;
-    if (ampm === "AM" && hour === 12) hour = 0;
-    return hour * 60 + minute;
+    const [hour, minute] = timeStr.split(":").map(Number);
+    let adjustedHour = hour;
+    if (ampm === "PM" && adjustedHour !== 12) adjustedHour += 12;
+    if (ampm === "AM" && adjustedHour === 12) adjustedHour = 0;
+    return adjustedHour * 60 + minute;
   };
 
   const getTimeSlotIndex = (
@@ -222,10 +216,6 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
     return { canExpandUp, canExpandDown };
   };
 
-  const isSlotInSelection = (id: string): boolean => {
-    return selectedSlots.some((s) => s.id === id);
-  };
-
   const isSlotInSelectedRange = (
     day: Date,
     time: string,
@@ -271,21 +261,23 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
 
     // Parse start time
     const [startTimeStr, startAmpm] = firstSlot.time.split(" ");
-    let [startHour, startMinute] = startTimeStr.split(":").map(Number);
-    if (startAmpm === "PM" && startHour !== 12) startHour += 12;
-    if (startAmpm === "AM" && startHour === 12) startHour = 0;
+    const [startHour, startMinute] = startTimeStr.split(":").map(Number);
+    let adjustedStartHour = startHour;
+    if (startAmpm === "PM" && adjustedStartHour !== 12) adjustedStartHour += 12;
+    if (startAmpm === "AM" && adjustedStartHour === 12) adjustedStartHour = 0;
 
     const startTime = new Date(firstSlot.day);
-    startTime.setHours(startHour, startMinute, 0, 0);
+    startTime.setHours(adjustedStartHour, startMinute, 0, 0);
 
     // Calculate end time: last slot + 30 minutes
     const [endTimeStr, endAmpm] = lastSlot.time.split(" ");
-    let [endHour, endMinute] = endTimeStr.split(":").map(Number);
-    if (endAmpm === "PM" && endHour !== 12) endHour += 12;
-    if (endAmpm === "AM" && endHour === 12) endHour = 0;
+    const [endHour, endMinute] = endTimeStr.split(":").map(Number);
+    let adjustedEndHour = endHour;
+    if (endAmpm === "PM" && adjustedEndHour !== 12) adjustedEndHour += 12;
+    if (endAmpm === "AM" && adjustedEndHour === 12) adjustedEndHour = 0;
 
     const endTime = new Date(lastSlot.day);
-    endTime.setHours(endHour, endMinute + 30, 0, 0);
+    endTime.setHours(adjustedEndHour, endMinute + 30, 0, 0);
 
     const durationMinutes = selectedSlots.length * 30;
     const timeRange =
@@ -310,7 +302,7 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
         setSelectedSlots([]);
         setFormData((prev) => ({ ...prev, notes: "" }));
       }
-    } catch (e) {
+    } catch {
       alert("Booking error.");
     } finally {
       setIsBooking(false);
@@ -447,7 +439,6 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
                   time,
                   slots,
                 );
-                const isSlotSelected = isSlotInSelection(id);
                 const { canExpandUp, canExpandDown } = canExpandToSlot(
                   day,
                   time,
@@ -591,13 +582,14 @@ const Booking: React.FC<BookingProps> = ({ activeSlotId, onSlotSelect }) => {
                         const firstSlot = sortedSlots[0];
                         const lastSlot = sortedSlots[sortedSlots.length - 1];
                         const [endTimeStr, endAmpm] = lastSlot.time.split(" ");
-                        let [endHour, endMinute] = endTimeStr
+                        const [endHour, endMinute] = endTimeStr
                           .split(":")
                           .map(Number);
-                        if (endAmpm === "PM" && endHour !== 12) endHour += 12;
-                        if (endAmpm === "AM" && endHour === 12) endHour = 0;
+                        let adjustedEndHour = endHour;
+                        if (endAmpm === "PM" && adjustedEndHour !== 12) adjustedEndHour += 12;
+                        if (endAmpm === "AM" && adjustedEndHour === 12) adjustedEndHour = 0;
                         const endTime = new Date(lastSlot.day);
-                        endTime.setHours(endHour, endMinute + 30, 0, 0);
+                        endTime.setHours(adjustedEndHour, endMinute + 30, 0, 0);
                         const timeRange =
                           selectedSlots.length === 1
                             ? firstSlot.time

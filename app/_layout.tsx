@@ -46,8 +46,11 @@ function RootLayoutContent() {
       ? {
           // Explicitly map the font names used by react-native-vector-icons
           // to the local asset files to ensure they load on web
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
           'FontAwesome6Free-Solid': require('../assets/FontAwesome6_Solid.ttf'),
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
           'FontAwesome6Free-Regular': require('../assets/FontAwesome6_Regular.ttf'),
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
           'FontAwesome6Brands-Regular': require('../assets/FontAwesome6_Brands.ttf'),
         }
       : {

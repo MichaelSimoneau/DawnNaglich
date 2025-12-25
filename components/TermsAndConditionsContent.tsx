@@ -54,7 +54,7 @@ const TermsAndConditionsContent: React.FC = () => {
             </Text>
             <Text className="text-emerald-50/80 leading-relaxed font-light">
               Appointments must be booked through our online system. We require
-              24 hours' notice for cancellations or rescheduling. Failure to
+              24 hours&apos; notice for cancellations or rescheduling. Failure to
               provide notice may result in a cancellation fee.
             </Text>
           </View>

@@ -4,20 +4,20 @@ overview: Fix the `proxyGeminiLiveMessage` function to use the correct Google Ge
 todos:
   - id: fix-proxy-api
     content: Replace ai.getGenerativeModel() with ai.models.generateContent() in proxyGeminiLiveMessage
-    status: pending
+    status: completed
   - id: fix-function-response
     content: Update function response handling to use correct API format
-    status: pending
+    status: completed
     dependencies:
       - fix-proxy-api
   - id: fix-media-message
     content: Update media and message handling to use correct API format
-    status: pending
+    status: completed
     dependencies:
       - fix-proxy-api
   - id: investigate-calendar-error
     content: Investigate getCalendarEventsSecure 500 error and add better error handling
-    status: pending
+    status: completed
 ---
 
 # Fix AdminVoiceAssistant API Errors
