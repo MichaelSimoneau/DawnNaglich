@@ -11,22 +11,27 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome6 } from "@expo/vector-icons";
-import { decode, decodeAudioData, createBlob } from "../services/audioUtils";
+import { decode, decodeAudioData, encode } from "../services/audioUtils";
+import { voiceService } from "../services/voiceService";
+import { voiceMessageBus } from "../services/voiceMessageBus";
 import { CalendarService } from "../services/calendarService";
 import { PendingAction, TranscriptItem } from "../types";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../firebaseConfig";
+import { Audio } from "expo-av";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
   onClose,
 }) => {
-  const [isActive, setIsActive] = useState(false);
-  const [, setIsConnecting] = useState(false);
-  const [pendingAction, setPendingAction] = useState<PendingAction | null>(
-    null,
-  );
+  // Connection and listening state
+  const [isListening, setIsListening] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [queuedCount, setQueuedCount] = useState(0);
+  
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   
   // Sync pendingAction state with ref
   useEffect(() => {
@@ -38,15 +43,19 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
   const [currentInput, setCurrentInput] = useState("");
   const [currentOutput, setCurrentOutput] = useState("");
 
-  const audioContextInputRef = useRef<AudioContext | null>(null);
+  // Audio output
   const audioContextOutputRef = useRef<AudioContext | null>(null);
   const nextStartTimeRef = useRef<number>(0);
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
+  const nativeSoundRef = useRef<Audio.Sound | null>(null);
+  const nativeAudioQueueRef = useRef<Array<{ data: string; timestamp: number }>>([]);
+  
   const scrollRef = useRef<ScrollView>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const sessionConfigRef = useRef<Record<string, unknown> | null>(null);
   const pendingActionRef = useRef<PendingAction | null>(null);
+  const messageBusUnsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     // Entrance animation
@@ -73,12 +82,35 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
       ]),
     ).start();
 
-    startAssistant();
+    // Initialize voice assistant - START LISTENING IMMEDIATELY
+    initializeVoiceAssistant();
 
     return () => {
-      if (audioContextInputRef.current?.state !== "closed") {
-        audioContextInputRef.current?.close();
-      }
+      cleanup();
+    };
+  }, []);
+
+  useEffect(() => {
+    // Auto-scroll to bottom of transcript
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+  }, [transcripts, currentInput, currentOutput]);
+
+  const cleanup = async () => {
+    // Stop recording
+    if (isListening) {
+      await voiceService.stopRecording();
+    }
+
+    // Unsubscribe from message bus
+    if (messageBusUnsubscribeRef.current) {
+      messageBusUnsubscribeRef.current();
+    }
+
+    // Clear response callback
+    voiceMessageBus.setResponseCallback(null);
+
+    // Cleanup audio output
+    if (Platform.OS === "web") {
       if (audioContextOutputRef.current?.state !== "closed") {
         audioContextOutputRef.current?.close();
       }
@@ -89,228 +121,28 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
           // Ignore cleanup errors
         }
       });
-    };
-  }, []);
-
-  useEffect(() => {
-    // Auto-scroll to bottom of transcript
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
-  }, [transcripts, currentInput, currentOutput]);
-
-  const startAssistant = async () => {
-    setIsConnecting(true);
-    try {
-      let sessionData: { success: boolean; config?: Record<string, unknown> };
-      
-      // On web, use the /api/ path for deployed sites to go through Firebase Hosting rewrites
-      if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        const origin = window.location.origin;
-        const isLocal = origin.includes("localhost") || origin.includes("127.0.0.1");
-        
-        // Use direct function URL for localhost, direct Cloud Functions URL for deployed
-        // Firebase Hosting rewrites don't work reliably with callable functions via HTTP
-        const apiUrl = isLocal
-          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/createGeminiLiveSession"
-          : "https://us-central1-dawn-naglich.cloudfunctions.net/createGeminiLiveSession";
-        
-        const requestBody = {
-          data: {},
-        };
-        
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("HTTP error response:", errorText);
-          console.error("Request URL:", apiUrl);
-          throw new Error(`HTTP error! status: ${response.status}, body: ${errorText.substring(0, 200)}`);
-        }
-
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          const text = await response.text();
-          console.error("Non-JSON response:", text.substring(0, 500));
-          throw new Error(`Expected JSON but got ${contentType}`);
-        }
-
-        const responseData = await response.json();
-        console.log("AdminVoiceAssistant createGeminiLiveSession response:", JSON.stringify(responseData, null, 2));
-        
-        // Check for error responses first (Firebase callable functions return errors in { error: {...} } format)
-        if (responseData.error) {
-          const errorMsg = responseData.error.message || JSON.stringify(responseData.error);
-          console.error("Function returned error:", errorMsg);
-          throw new Error(`Function error: ${errorMsg}`);
-        }
-        
-        // Firebase callable functions via HTTP return: { result: { success, config } } or { result: { data: {...} } }
-        if (responseData.result?.success !== undefined) {
-          // Direct result format: { result: { success, config } }
-          sessionData = responseData.result as { success: boolean; config?: Record<string, unknown> };
-        } else if (responseData.result?.data) {
-          // Wrapped data format: { result: { data: { success, config } } }
-          sessionData = responseData.result.data as { success: boolean; config?: Record<string, unknown> };
-        } else if (responseData.data) {
-          sessionData = responseData.data as { success: boolean; config?: Record<string, unknown> };
-        } else if (responseData.success !== undefined) {
-          sessionData = responseData as { success: boolean; config?: Record<string, unknown> };
-        } else {
-          console.error("Unexpected response format:", responseData);
-          throw new Error(`Unexpected response format from server: ${JSON.stringify(responseData).substring(0, 200)}`);
-        }
-      } else {
-        // For native, use Firebase SDK
-        if (!functions) {
-          throw new Error("Functions not initialized");
-        }
-        
-        const createGeminiLiveSession = httpsCallable(functions, 'createGeminiLiveSession');
-        const sessionResult = await createGeminiLiveSession({});
-        sessionData = sessionResult.data as { success: boolean; config?: Record<string, unknown> };
-      }
-
-      if (!sessionData.success) {
-        throw new Error("Failed to create AI session");
-      }
-
-      const sessionConfig = sessionData.config;
-      sessionConfigRef.current = sessionConfig;
-      
-      // In a full implementation, we would connect to a WebSocket proxy here.
-      // For Phase 1, we adapt the UI to show we're connected and ready.
-      setIsActive(true);
-      setIsConnecting(false);
-
-      audioContextInputRef.current = new (
-        window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-      )({ sampleRate: 16000 });
-      audioContextOutputRef.current = new (
-        window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-      )({ sampleRate: 24000 });
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      const source = audioContextInputRef.current!.createMediaStreamSource(stream);
-      const scriptProcessor = audioContextInputRef.current!.createScriptProcessor(4096, 1, 1);
-      
-      let audioBufferQueue: Float32Array[] = [];
-      let isProcessing = false;
-
-      scriptProcessor.onaudioprocess = async (event) => {
-        if (isProcessing) return; // Prevent overlapping requests
-        isProcessing = true;
-
-        const inputData = event.inputBuffer.getChannelData(0);
-        const mediaData = createBlob(inputData);
-
-        // Queue audio for batching (send every few chunks to reduce HTTP overhead)
-        audioBufferQueue.push(inputData);
-        if (audioBufferQueue.length < 3) {
-          isProcessing = false;
-          return;
-        }
-
-      audioBufferQueue = [];
-
-        // Proxy audio chunk to backend
+    } else {
+      // Cleanup native audio
+      if (nativeSoundRef.current) {
         try {
-          let data: {
+          await nativeSoundRef.current.unloadAsync();
+        } catch {
+          // Ignore cleanup errors
+        }
+        nativeSoundRef.current = null;
+      }
+      nativeAudioQueueRef.current = [];
+    }
+    };
+
+  // Handle responses from backend (called by message bus or directly)
+  const handleBackendResponse = async (data: {
             success: boolean;
             text?: string;
             functionCalls?: Array<{ id: string; name: string; args?: Record<string, unknown> }>;
             audio?: string;
             turnComplete?: boolean;
-          };
-          
-          // On web, use the /api/ path for deployed sites to go through Firebase Hosting rewrites
-          if (Platform.OS === 'web' && typeof window !== 'undefined') {
-            const origin = window.location.origin;
-            const isLocal = origin.includes("localhost") || origin.includes("127.0.0.1");
-            
-            // Use direct function URL for localhost, direct Cloud Functions URL for deployed
-            // Firebase Hosting rewrites don't work reliably with callable functions via HTTP
-            const apiUrl = isLocal
-              ? "http://127.0.0.1:5001/dawn-naglich/us-central1/proxyGeminiLiveMessage"
-              : "https://us-central1-dawn-naglich.cloudfunctions.net/proxyGeminiLiveMessage";
-            
-            const requestBody = {
-              data: {
-                media: mediaData,
-                config: sessionConfig,
-              },
-            };
-            
-            const response = await fetch(apiUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(requestBody),
-            });
-
-            if (!response.ok) {
-              const errorText = await response.text();
-              console.error("HTTP error response:", errorText);
-              console.error("Request URL:", apiUrl);
-              throw new Error(`HTTP error! status: ${response.status}, body: ${errorText.substring(0, 200)}`);
-            }
-
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-              const text = await response.text();
-              console.error("Non-JSON response:", text.substring(0, 500));
-              throw new Error(`Expected JSON but got ${contentType}`);
-            }
-
-            const responseData = await response.json();
-            console.log("AI Proxy Response:", JSON.stringify(responseData, null, 2));
-            
-            // Check for error responses first (Firebase callable functions return errors in { error: {...} } format)
-            if (responseData.error) {
-              const errorMsg = responseData.error.message || JSON.stringify(responseData.error);
-              console.error("Function returned error:", errorMsg);
-              throw new Error(`Function error: ${errorMsg}`);
-            }
-            
-            // Firebase callable functions via HTTP return: { result: { success, ... } } or { result: { data: {...} } }
-            let proxyResult;
-            if (responseData.result?.success !== undefined) {
-              // Direct result format: { result: { success, ... } }
-              proxyResult = responseData.result;
-            } else if (responseData.result?.data) {
-              // Wrapped data format: { result: { data: {...} } }
-              proxyResult = responseData.result.data;
-            } else if (responseData.data) {
-              proxyResult = responseData.data;
-            } else if (responseData.success !== undefined) {
-              proxyResult = responseData;
-            } else {
-              console.error("Unexpected response format:", responseData);
-              throw new Error(`Unexpected response format from server: ${JSON.stringify(responseData).substring(0, 200)}`);
-            }
-            
-            data = proxyResult as typeof data;
-          } else {
-            // For native, use Firebase SDK
-            if (!functions) {
-              throw new Error("Functions not initialized");
-            }
-            
-            const proxyGeminiLiveMessage = httpsCallable(functions, 'proxyGeminiLiveMessage');
-            const proxyResult = await proxyGeminiLiveMessage({
-              media: mediaData,
-              config: sessionConfig,
-            });
-
-            console.log("AI Proxy Response:", proxyResult.data); // Validation Log
-            data = proxyResult.data as typeof data;
-          }
-          
+  }) => {
           // Handle function calls
           if (data.functionCalls && Array.isArray(data.functionCalls)) {
             for (const fc of data.functionCalls) {
@@ -354,19 +186,163 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
               return newTranscripts;
             });
           }
-        } catch (e) {
-          console.error("Proxy error:", e);
-        } finally {
-          isProcessing = false;
+  };
+
+  const initializeVoiceAssistant = async () => {
+    try {
+      // STEP 1: Start listening IMMEDIATELY (before backend connection)
+      setIsListening(true);
+      setIsConnecting(true);
+
+      // Show immediate response message
+      setCurrentOutput("I am still connecting, one moment, please.");
+
+      // Initialize audio output context for web (for playback)
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        const AudioContextClass =
+          window.AudioContext ||
+          (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        
+        if (AudioContextClass) {
+          audioContextOutputRef.current = new AudioContextClass({ sampleRate: 24000 });
         }
-      };
+      } else {
+        // Initialize native audio mode for playback
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+        });
+      }
 
-      source.connect(scriptProcessor);
-      scriptProcessor.connect(audioContextInputRef.current!.destination);
+      // Initialize message bus (loads persisted queue if any)
+      await voiceMessageBus.initialize();
 
-    } catch (e) {
-      console.error(e);
+      // Start recording immediately
+      await voiceService.startRecording((audioChunk) => {
+        // Queue audio chunk in message bus
+        voiceMessageBus.queueCommand(audioChunk).catch((error) => {
+          console.error("VoiceAssistant: Error queueing command", error);
+        });
+      });
+
+      // Subscribe to message bus state changes
+      messageBusUnsubscribeRef.current = voiceMessageBus.onStateChange((state) => {
+        setQueuedCount(state.queuedCount);
+        setIsConnected(state.connectionState === "CONNECTED");
+        setIsConnecting(state.connectionState === "CONNECTING");
+      });
+
+      // STEP 2: Connect to backend (happens in parallel with listening)
+      await connectToBackend();
+
+    } catch (error) {
+      console.error("VoiceAssistant: Error initializing", error);
       setIsConnecting(false);
+      setCurrentOutput("Error initializing voice assistant. Please try again.");
+    }
+  };
+
+  const connectToBackend = async () => {
+    try {
+      setIsConnecting(true);
+
+      let sessionData: { success: boolean; config?: Record<string, unknown> };
+      
+      // On web, use HTTP fetch
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        const origin = window.location.origin;
+        const isLocal = origin.includes("localhost") || origin.includes("127.0.0.1");
+        
+        const apiUrl = isLocal
+          ? "http://127.0.0.1:5001/dawn-naglich/us-central1/createGeminiLiveSession"
+          : "https://us-central1-dawn-naglich.cloudfunctions.net/createGeminiLiveSession";
+        
+        const requestBody = {
+          data: {},
+        };
+        
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("HTTP error response:", errorText);
+          throw new Error(`HTTP error! status: ${response.status}, body: ${errorText.substring(0, 200)}`);
+        }
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await response.text();
+          console.error("Non-JSON response:", text.substring(0, 500));
+          throw new Error(`Expected JSON but got ${contentType}`);
+        }
+
+        const responseData = await response.json();
+        console.log("AdminVoiceAssistant createGeminiLiveSession response:", JSON.stringify(responseData, null, 2));
+        
+        // Check for error responses
+        if (responseData.error) {
+          const errorMsg = responseData.error.message || JSON.stringify(responseData.error);
+          throw new Error(`Function error: ${errorMsg}`);
+        }
+        
+        // Parse response
+        if (responseData.result?.success !== undefined) {
+          sessionData = responseData.result as { success: boolean; config?: Record<string, unknown> };
+        } else if (responseData.result?.data) {
+          sessionData = responseData.result.data as { success: boolean; config?: Record<string, unknown> };
+        } else if (responseData.data) {
+          sessionData = responseData.data as { success: boolean; config?: Record<string, unknown> };
+        } else if (responseData.success !== undefined) {
+          sessionData = responseData as { success: boolean; config?: Record<string, unknown> };
+        } else {
+          throw new Error(`Unexpected response format: ${JSON.stringify(responseData).substring(0, 200)}`);
+        }
+      } else {
+        // For native, use Firebase SDK
+        if (!functions) {
+          throw new Error("Functions not initialized");
+        }
+        
+        const createGeminiLiveSession = httpsCallable(functions, "createGeminiLiveSession");
+        const sessionResult = await createGeminiLiveSession({});
+        sessionData = sessionResult.data as { success: boolean; config?: Record<string, unknown> };
+      }
+
+      if (!sessionData.success) {
+        throw new Error("Failed to create AI session");
+      }
+
+      const sessionConfig = sessionData.config;
+      sessionConfigRef.current = sessionConfig;
+      await voiceMessageBus.setSessionConfig(sessionConfig || {});
+
+      // STEP 3: Mark as connected - this will trigger queue processing
+      voiceMessageBus.setConnected(true, sessionConfig);
+      setIsConnecting(false);
+      setIsConnected(true);
+
+      // Clear the "connecting" message
+      setCurrentOutput("");
+
+      // Set up response handler for message bus
+      voiceMessageBus.setResponseCallback(handleBackendResponse);
+
+    } catch (error) {
+      console.error("VoiceAssistant: Error connecting to backend", error);
+      setIsConnecting(false);
+      setCurrentOutput("Error connecting to backend. Commands are queued and will be processed when connection is restored.");
+      
+      // Retry connection after delay
+      setTimeout(() => {
+        connectToBackend();
+      }, 3000);
     }
   };
 
@@ -384,7 +360,7 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
           ? items
               .map(
                 (e: { summary?: string; start: { dateTime: string } }) =>
-                  `${e.summary || 'Event'} at ${new Date(e.start.dateTime).toLocaleTimeString()}`,
+                  `${e.summary || "Event"} at ${new Date(e.start.dateTime).toLocaleTimeString()}`,
               )
               .join(", ")
           : "Schedule is clear.";
@@ -423,20 +399,18 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
       }
 
       // Send tool response back to the proxy
-      // On web, use the /api/ path for deployed sites to go through Firebase Hosting rewrites
-      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (Platform.OS === "web" && typeof window !== "undefined") {
         const origin = window.location.origin;
         const isLocal = origin.includes("localhost") || origin.includes("127.0.0.1");
         
-        // Use direct function URL for localhost, /api/ path for deployed
         const apiUrl = isLocal
           ? "http://127.0.0.1:5001/dawn-naglich/us-central1/proxyGeminiLiveMessage"
           : `${origin}/api/proxyGeminiLiveMessage`;
         
         await fetch(apiUrl, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             data: {
@@ -452,7 +426,7 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
       } else {
         // For native, use Firebase SDK
         if (!functions) throw new Error("Functions not initialized");
-        const proxyGeminiLiveMessage = httpsCallable(functions, 'proxyGeminiLiveMessage');
+        const proxyGeminiLiveMessage = httpsCallable(functions, "proxyGeminiLiveMessage");
         await proxyGeminiLiveMessage({
           functionResponse: {
             id: fc.id,
@@ -462,47 +436,143 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
           config: sessionConfig || {},
         });
       }
-      
     } catch (error) {
       console.error("Function call error:", error);
     }
   };
 
   const playAudioResponse = async (audioData: string) => {
-    if (!audioContextOutputRef.current) return;
+    if (Platform.OS === "web") {
+      // Web audio playback using AudioContext
+      if (!audioContextOutputRef.current) {
+        return;
+      }
 
-    try {
-      const ctx = audioContextOutputRef.current;
-      nextStartTimeRef.current = Math.max(
-        nextStartTimeRef.current,
-        ctx.currentTime,
-      );
-      const audioBuffer = await decodeAudioData(
-        decode(audioData),
-        ctx,
-        24000,
-        1,
-      );
-      const source = ctx.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(ctx.destination);
-      source.addEventListener("ended", () =>
-        sourcesRef.current.delete(source),
-      );
-      source.start(nextStartTimeRef.current);
-      nextStartTimeRef.current += audioBuffer.duration;
-      sourcesRef.current.add(source);
-    } catch (error) {
-      console.error("Audio playback error:", error);
+      try {
+        const ctx = audioContextOutputRef.current;
+        nextStartTimeRef.current = Math.max(
+          nextStartTimeRef.current,
+          ctx.currentTime,
+        );
+        const audioBuffer = await decodeAudioData(
+          decode(audioData),
+          ctx,
+          24000,
+          1,
+        );
+        const source = ctx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(ctx.destination);
+        source.addEventListener("ended", () =>
+          sourcesRef.current.delete(source),
+        );
+        source.start(nextStartTimeRef.current);
+        nextStartTimeRef.current += audioBuffer.duration;
+        sourcesRef.current.add(source);
+      } catch (error) {
+        console.error("Audio playback error:", error);
+      }
+    } else {
+      // Native audio playback using expo-av Audio.Sound
+      try {
+        // Decode base64 audio data
+        const audioBytes = decode(audioData);
+        
+        // Convert to WAV format for native playback
+        // Create a simple WAV header for PCM data
+        const sampleRate = 24000;
+        const numChannels = 1;
+        const bitsPerSample = 16;
+        const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+        const blockAlign = numChannels * (bitsPerSample / 8);
+        const dataSize = audioBytes.length;
+        const fileSize = 36 + dataSize;
+
+        const wavHeader = new ArrayBuffer(44);
+        const view = new DataView(wavHeader);
+        
+        // RIFF header
+        const writeString = (offset: number, string: string) => {
+          for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+          }
+        };
+        
+        writeString(0, "RIFF");
+        view.setUint32(4, fileSize, true);
+        writeString(8, "WAVE");
+        writeString(12, "fmt ");
+        view.setUint32(16, 16, true); // fmt chunk size
+        view.setUint16(20, 1, true); // audio format (PCM)
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, byteRate, true);
+        view.setUint16(32, blockAlign, true);
+        view.setUint16(34, bitsPerSample, true);
+        writeString(36, "data");
+        view.setUint32(40, dataSize, true);
+
+        // Combine header and audio data
+        const wavData = new Uint8Array(wavHeader.byteLength + audioBytes.length);
+        wavData.set(new Uint8Array(wavHeader), 0);
+        wavData.set(audioBytes, wavHeader.byteLength);
+
+        // Convert to base64 WAV data URI
+        // expo-av Audio.Sound supports data URIs on both iOS and Android
+        const base64Wav = encode(wavData);
+        const dataUri = `data:audio/wav;base64,${base64Wav}`;
+
+        // Create and play sound from data URI
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: dataUri },
+          { shouldPlay: true, volume: 1.0 }
+        );
+
+        // Store reference for cleanup
+        if (nativeSoundRef.current) {
+          await nativeSoundRef.current.unloadAsync();
+        }
+        nativeSoundRef.current = sound;
+
+        // Clean up when playback finishes
+        sound.setOnPlaybackStatusUpdate(async (status) => {
+          if (status.isLoaded && status.didJustFinish) {
+            try {
+              await sound.unloadAsync();
+            } catch (error) {
+              // Ignore cleanup errors
+              console.warn("Error cleaning up audio:", error);
+            }
+            if (nativeSoundRef.current === sound) {
+              nativeSoundRef.current = null;
+            }
+          }
+        });
+      } catch (error) {
+        console.error("Native audio playback error:", error);
+      }
     }
   };
 
   const handleClose = () => {
+    cleanup();
     Animated.timing(slideAnim, {
       toValue: SCREEN_HEIGHT,
       duration: 300,
       useNativeDriver: false,
     }).start(() => onClose());
+  };
+
+  // Determine status text and indicator
+  const getStatusText = () => {
+    if (isConnected) return "LIVE";
+    if (isConnecting) return "CONNECTING";
+    if (isListening) return "LISTENING";
+    return "INACTIVE";
+  };
+
+  const getStatusDotActive = () => {
+    return isConnected || isListening;
   };
 
   return (
@@ -516,10 +586,13 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
             <Text style={styles.backText}>Minimize Assistant</Text>
           </TouchableOpacity>
           <View style={styles.statusIndicator}>
-            <View style={[styles.dot, isActive ? styles.dotActive : null]} />
-            <Text style={styles.statusText}>
-              {isActive ? "LIVE" : "CONNECTING"}
-            </Text>
+            <View style={[styles.dot, getStatusDotActive() ? styles.dotActive : null]} />
+            <Text style={styles.statusText}>{getStatusText()}</Text>
+            {queuedCount > 0 && (
+              <View style={styles.queueBadge}>
+                <Text style={styles.queueBadgeText}>{queuedCount}</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -572,7 +645,9 @@ const AdminVoiceAssistant: React.FC<{ onClose: () => void }> = ({
 
           {!currentInput && !currentOutput && transcripts.length === 0 && (
             <Text style={styles.placeholderText}>
-              Start speaking to Becky...
+              {isConnecting && !isConnected
+                ? "I am still connecting, one moment, please."
+                : "Start speaking to Becky..."}
             </Text>
           )}
         </ScrollView>
@@ -645,6 +720,21 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "900",
     letterSpacing: 1,
+  },
+  queueBadge: {
+    backgroundColor: "#F59E0B",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 6,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 4,
+  },
+  queueBadgeText: {
+    color: "#FFF",
+    fontSize: 10,
+    fontWeight: "900",
   },
 
   transcriptStream: { flex: 1, paddingHorizontal: 40 },

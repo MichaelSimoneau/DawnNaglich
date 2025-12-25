@@ -1,6 +1,6 @@
 {
   "name": "dawn-naglich",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
@@ -30,6 +30,7 @@
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-firebase/app": "^23.7.0",
     "expo": "~54.0.30",
+    "expo-audio-streaming": "file:./expo-audio-streaming",
     "expo-asset": "^12.0.12",
     "expo-auth-session": "~7.0.10",
     "expo-av": "~16.0.8",
