@@ -1,6 +1,6 @@
 {
   "name": "dawn-naglich",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "expo-router/entry",
   "scripts": {
     "lint:web": "eslint {app,components,scripts}/**/* --ext .ts,.tsx",

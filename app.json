@@ -3,7 +3,7 @@
     "name": "Dawn Naglich",
     "slug": "dawn-naglich",
     "scheme": "dawn-naglich",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -31,6 +31,7 @@
         "backgroundColor": "#173129"
       },
       "package": "com.dawnnaglich.wellness",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "RECORD_AUDIO"
       ]
