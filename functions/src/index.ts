@@ -43,7 +43,14 @@ interface ProxyRequestData {
   message?: unknown;
   config?: {
     systemInstruction?: string;
-    history?: Array<{ role: string; parts: Array<{ text?: string; inlineData?: { data: string; mimeType: string }; functionResponse?: { name: string; response: unknown } }> }>;
+    history?: Array<{
+      role: string;
+      parts: Array<{
+        text?: string;
+        inlineData?: { data: string; mimeType: string };
+        functionResponse?: { name: string; response: unknown };
+      }>;
+    }>;
   };
   functionResponse?: {
     id: string;
@@ -300,7 +307,7 @@ async function getCalendarEventsCore(
     return { success: true, items: filteredEvents };
   } catch (error: unknown) {
     console.error('Error fetching calendar events:', error);
-    
+
     // Extract detailed error information
     const errorMessage
       = error && typeof error === 'object' && 'message' in error
@@ -923,8 +930,14 @@ export const proxyGeminiLiveMessage = onCall(
       // Handle audio input (media) or text input (message)
       // This is a simplified "per-turn" proxy for the "Live" experience
       // In a real bidirectional streaming setup, this would be more complex
-      let result;
-      const contents: Array<{ role: string; parts: Array<{ text?: string; inlineData?: { data: string; mimeType: string }; functionResponse?: { name: string; response: unknown } }> }> = [];
+      const contents: Array<{
+        role: string;
+        parts: Array<{
+          text?: string;
+          inlineData?: { data: string; mimeType: string };
+          functionResponse?: { name: string; response: unknown };
+        }>;
+      }> = [];
 
       if (config?.history) {
         contents.push(...config.history);
@@ -946,7 +959,15 @@ export const proxyGeminiLiveMessage = onCall(
           contents.push({ role: 'user', parts: [{ text: message }] });
         } else if (Array.isArray(message)) {
           // Type assertion needed because message is typed as unknown
-          contents.push(...(message as Array<{ role: string; parts: Array<{ text?: string; inlineData?: { data: string; mimeType: string }; functionResponse?: { name: string; response: unknown } }> }>));
+          const messageArray = message as Array<{
+            role: string;
+            parts: Array<{
+              text?: string;
+              inlineData?: { data: string; mimeType: string };
+              functionResponse?: { name: string; response: unknown };
+            }>;
+          }>;
+          contents.push(...messageArray);
         } else {
           // Fallback: try to convert to string
           contents.push({ role: 'user', parts: [{ text: String(message) }] });
@@ -955,7 +976,7 @@ export const proxyGeminiLiveMessage = onCall(
         throw new HttpsError('invalid-argument', 'No input provided.');
       }
 
-      result = await ai.models.generateContent({
+      const result = await ai.models.generateContent({
         model: 'gemini-2.5-pro',
         contents: contents,
         config: {
