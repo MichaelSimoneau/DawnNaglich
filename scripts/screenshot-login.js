@@ -5,11 +5,10 @@
  * Uses Puppeteer to render the component and capture it as an image
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
 const puppeteer = require("puppeteer");
 const path = require("path");
 const fs = require("fs");
-const React = require("react");
-const ReactDOMServer = require("react-dom/server");
 
 // Import the Login component
 // Note: This requires the component to work in a Node environment
@@ -104,7 +103,7 @@ async function generateLoginScreenshot() {
         urlToUse = devServerUrl;
         console.log("Using dev server at", devServerUrl);
       }
-    } catch (e) {
+    } catch {
       console.log("Dev server not available, using static HTML approach");
       console.log(
         "Note: For best results, start the dev server with: pnpm start --web",

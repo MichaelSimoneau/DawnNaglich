@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 
 const SnowOverlay: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const threeRef = useRef<any>(null);
 
   useEffect(() => {
@@ -16,7 +17,9 @@ const SnowOverlay: React.FC = () => {
     // Load Three.js from CDN to avoid Metro bundling issues
     const loadThree = async () => {
       // Check if THREE is already loaded
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((window as any).THREE) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         threeRef.current = (window as any).THREE;
         initScene();
         return;
@@ -28,6 +31,7 @@ const SnowOverlay: React.FC = () => {
         script.src =
           "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
         script.onload = () => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           threeRef.current = (window as any).THREE;
           initScene();
           resolve();
@@ -35,6 +39,7 @@ const SnowOverlay: React.FC = () => {
         script.onerror = () => {
           // Fallback to require if CDN fails
           try {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             const threeModule = require("three");
             threeRef.current = threeModule.default || threeModule;
             initScene();
@@ -172,13 +177,16 @@ const SnowOverlay: React.FC = () => {
       };
 
       // Store cleanup in a way that's accessible
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (containerRef.current as any)._threeCleanup = cleanup;
     };
 
     loadThree().catch(console.error);
 
     return () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((containerRef.current as any)?._threeCleanup) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (containerRef.current as any)._threeCleanup();
       }
     };
@@ -189,8 +197,9 @@ const SnowOverlay: React.FC = () => {
   }
 
   return (
+     
     <div
-      ref={containerRef as any}
+      ref={containerRef}
       style={{
         position: "fixed",
         top: 0,

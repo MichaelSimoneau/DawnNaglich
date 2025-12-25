@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const puppeteer = require('puppeteer');
 
 (async () => {
@@ -52,8 +53,7 @@ const puppeteer = require('puppeteer');
     } catch (e) {
         console.log('Timeout waiting for email input. Taking debug screenshot...');
         await page.screenshot({ path: 'debug-login-click.png' });
-        const html = await page.content();
-        // console.log('Page HTML:', html); // Commented out to reduce noise, enable if needed
+        // console.log('Page HTML:', await page.content()); // Commented out to reduce noise, enable if needed
         throw e;
     }
 
@@ -64,19 +64,16 @@ const puppeteer = require('puppeteer');
 
     // Click Sign In
     console.log('Submitting...');
-    let signInClicked = false;
     try {
         console.log('Waiting for Sign In button...');
         const signInButton = await page.waitForSelector('::-p-text(Sign In)', { visible: true, timeout: 10000 });
         console.log('Sign In button found, clicking...');
         await signInButton.click();
-        signInClicked = true;
         console.log('Clicked Sign In.');
-    } catch (e) {
+    } catch {
         console.log('Timeout or error waiting for Sign In button.');
         await page.screenshot({ path: 'debug-before-sign-in-click.png' });
-        const html = await page.content();
-        // console.log('Page HTML:', html); // Commented out to reduce noise, enable if needed
+        // console.log('Page HTML:', await page.content()); // Commented out to reduce noise, enable if needed
         throw new Error('Could not find or click Sign In button.');
     }
 
@@ -94,15 +91,12 @@ const puppeteer = require('puppeteer');
             { timeout: 10000 }
         );
         console.log('✅ Login Successful! Login form is no longer visible.');
-    } catch (e) {
+    } catch {
         console.log('⚠️ Login verification timed out. Taking screenshot...');
         await page.screenshot({ path: 'login-verification-fail.png' });
-        const html = await page.content();
-        // console.log('Page HTML:', html); // Commented out to reduce noise, enable if needed
+        // console.log('Page HTML:', await page.content()); // Commented out to reduce noise, enable if needed
         throw new Error('Login verification failed. Login form elements were still present.');
     }
-
-  } catch (error) {
 
   } catch (error) {
     console.error('Test failed:', error);

@@ -77,7 +77,9 @@ export default function Home() {
       ) {
         window.history.replaceState(null, "", targetHash);
       }
-    } catch (e) {}
+    } catch {
+      // Ignore errors when updating hash
+    }
     if (typeof document !== "undefined") {
       document.title = pageTitle;
     }

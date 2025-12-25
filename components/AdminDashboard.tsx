@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome6 } from "@expo/vector-icons";
@@ -163,7 +162,7 @@ const AdminDashboard: React.FC = () => {
         >
           <View style={styles.header}>
             <View>
-              <Text style={styles.title}>Dawn's Studio</Text>
+              <Text style={styles.title}>Dawn&apos;s Studio</Text>
               <Text style={styles.subtitle}>Daily Management & Alignment</Text>
             </View>
             <View style={styles.headerActions}>
@@ -186,7 +185,7 @@ const AdminDashboard: React.FC = () => {
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>Today's Agenda</Text>
+              <Text style={styles.cardTitle}>Today&apos;s Agenda</Text>
               <View className="flex-row items-center gap-2">
                 <TouchableOpacity onPress={fetchCalendar} disabled={loading}>
                   <FontAwesome6
@@ -367,7 +366,7 @@ const AdminDashboard: React.FC = () => {
                                 !calendarConfig.syncConfig?.syncToCalendarId && styles.radioSelected,
                               ]}
                             />
-                            <Text style={styles.calendarName}>Don't sync to personal calendar</Text>
+                            <Text style={styles.calendarName}>Don&apos;t sync to personal calendar</Text>
                           </View>
                         </TouchableOpacity>
                         {availableCalendars.map((cal) => {

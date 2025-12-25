@@ -16,4 +16,21 @@ export default defineConfig([
   { files: ["src/**/*.json5"], plugins: { json }, language: "json/json5", extends: ["json/recommended"] },
   { files: ["src/**/*.md"], plugins: { markdown }, language: "markdown/commonmark", extends: ["markdown/recommended"] },
   { files: ["src/**/*.css"], plugins: { css }, language: "css/css", extends: ["css/recommended"] },
+  {
+    ignores: [
+      "**/build/**",
+      "**/dist/**",
+      "**/node_modules/**",
+      "**/.expo/**",
+      "**/Pods/**",
+      "**/DerivedData/**",
+      "**/*.xcworkspace/**",
+      "**/*.xcodeproj/xcuserdata/**",
+      "android/app/build/**",
+      "android/.kotlin/**",
+      "ios/build/**",
+      "ios/Pods/**",
+      "ios/DerivedData/**",
+    ],
+  },
 ]);

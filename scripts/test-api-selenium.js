@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // Use Puppeteer since it's already installed, but test API calls directly
 const puppeteer = require('puppeteer');
 
@@ -43,7 +44,7 @@ async function testApiCalls() {
         if (contentType && contentType.includes('application/json')) {
           try {
             data = JSON.parse(text);
-          } catch (e) {
+          } catch {
             data = { error: 'Failed to parse JSON', text: text.substring(0, 500) };
           }
         } else {
@@ -97,7 +98,7 @@ async function testApiCalls() {
         if (contentType && contentType.includes('application/json')) {
           try {
             data = JSON.parse(text);
-          } catch (e) {
+          } catch {
             data = { error: 'Failed to parse JSON', text: text.substring(0, 500) };
           }
         } else {
@@ -147,7 +148,7 @@ async function testApiCalls() {
         if (contentType && contentType.includes('application/json')) {
           try {
             data = JSON.parse(text);
-          } catch (e) {
+          } catch {
             data = { error: 'Failed to parse JSON', text: text.substring(0, 500) };
           }
         } else {

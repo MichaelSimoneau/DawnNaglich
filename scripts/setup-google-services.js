@@ -6,6 +6,7 @@
  * without committing them to the repository
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require("fs");
 const path = require("path");
 
@@ -86,7 +87,7 @@ try {
     // Try to parse as JSON first, if it fails, assume it's already PLIST format
     let plistContent;
     try {
-      const jsonData = JSON.parse(GOOGLE_SERVICES_SECRET);
+      JSON.parse(GOOGLE_SERVICES_SECRET);
       // If it's JSON, we need to convert to PLIST format
       // For now, if it's valid JSON, write it as-is (assuming it's the plist content as JSON string)
       // Actually, if the secret contains the plist XML, it should be written directly
