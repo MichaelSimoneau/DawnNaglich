@@ -29,6 +29,9 @@ importers:
       expo-asset:
         specifier: ^12.0.12
         version: 12.0.12(expo@54.0.30)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      expo-audio-streaming:
+        specifier: file:./expo-audio-streaming
+        version: file:expo-audio-streaming(expo@54.0.30)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       expo-auth-session:
         specifier: ~7.0.10
         version: 7.0.10(expo@54.0.30)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -2737,6 +2740,13 @@ packages:
       react: '*'
       react-native: '*'
 
+  expo-audio-streaming@file:expo-audio-streaming:
+    resolution: {directory: expo-audio-streaming, type: directory}
+    peerDependencies:
+      expo: '>=54.0.0'
+      react: '>=19.0.0'
+      react-native: '>=0.81.0'
+
   expo-auth-session@7.0.10:
     resolution: {integrity: sha512-XDnKkudvhHSKkZfJ+KkodM+anQcrxB71i+h0kKabdLa5YDXTQ81aC38KRc3TMqmnBDHAu0NpfbzEVd9WDFY3Qg==}
     peerDependencies:
@@ -2838,6 +2848,9 @@ packages:
   expo-modules-autolinking@3.0.23:
     resolution: {integrity: sha512-YZnaE0G+52xftjH5nsIRaWsoVBY38SQCECclpdgLisdbRY/6Mzo7ndokjauOv3mpFmzMZACHyJNu1YSAffQwTg==}
     hasBin: true
+
+  expo-modules-core@1.12.26:
+    resolution: {integrity: sha512-y8yDWjOi+rQRdO+HY+LnUlz8qzHerUaw/LUjKPU/mX8PRXP4UUPEEp5fjAwBU44xjNmYSHWZDwet4IBBE+yQUA==}
 
   expo-modules-core@3.0.29:
     resolution: {integrity: sha512-LzipcjGqk8gvkrOUf7O2mejNWugPkf3lmd9GkqL9WuNyeN2fRwU0Dn77e3ZUKI3k6sI+DNwjkq4Nu9fNN9WS7Q==}
@@ -8747,6 +8760,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  expo-audio-streaming@file:expo-audio-streaming(expo@54.0.30)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0):
+    dependencies:
+      expo: 54.0.30(@babel/core@7.28.5)(@expo/metro-runtime@6.1.2)(expo-router@6.0.21)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      expo-modules-core: 1.12.26
+      react: 19.1.0
+      react-native: 0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
+
   expo-auth-session@7.0.10(expo@54.0.30)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0):
     dependencies:
       expo-application: 7.0.8(expo@54.0.30)
@@ -8867,6 +8887,10 @@ snapshots:
       commander: 7.2.0
       require-from-string: 2.0.2
       resolve-from: 5.0.0
+
+  expo-modules-core@1.12.26:
+    dependencies:
+      invariant: 2.2.4
 
   expo-modules-core@3.0.29(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0):
     dependencies:
