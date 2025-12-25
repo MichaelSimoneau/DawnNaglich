@@ -90,6 +90,18 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
         meta.setAttribute('content', content);
       };
 
+      const setScriptTag = (contentOrSrc: string, async: boolean = false) => {
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.async = async;
+        if (contentOrSrc.startsWith('http')) {
+          script.src = contentOrSrc;
+        } else {
+          script.textContent = contentOrSrc;
+        }
+        document.head.appendChild(script);
+      };
+
       // Helper function to set or update link tag
       const setLinkTag = (rel: string, href: string) => {
         let link = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement;
@@ -133,6 +145,26 @@ const ClientLanding: React.FC<ClientLandingProps> = ({
       setMetaTag('theme-color', '#10B981');
       setMetaTag('apple-mobile-web-app-title', 'Dawn Naglich');
       setMetaTag('application-name', 'Dawn Naglich Wellness');
+
+
+      // Google Tag Manager
+      /**
+       * <!-- Google tag (gtag.js) -->
+       * <script async src="https://www.googletagmanager.com/gtag/js?id=G-WRDENVG2TE"></script>
+       * <script>
+       *   window.dataLayer = window.dataLayer || [];
+       *   function gtag(){dataLayer.push(arguments);}
+       *   gtag('js', new Date());* 
+       *   gtag('config', 'G-WRDENVG2TE');
+       * </script>
+      **/
+      setScriptTag('https://www.googletagmanager.com/gtag/js?id=G-WRDENVG2TE');
+      setScriptTag(`
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-WRDENVG2TE');
+      `);
 
       // Update URL hash for deep linking
       try {
