@@ -942,10 +942,15 @@ export const proxyGeminiLiveMessage = onCall(
         });
       } else if (message) {
         // Handle message input - could be string or array
-        const messageContents = typeof message === 'string' 
-          ? [{ role: 'user', parts: [{ text: message }] }]
-          : message;
-        contents.push(...messageContents);
+        if (typeof message === 'string') {
+          contents.push({ role: 'user', parts: [{ text: message }] });
+        } else if (Array.isArray(message)) {
+          // Type assertion needed because message is typed as unknown
+          contents.push(...(message as Array<{ role: string; parts: Array<{ text?: string; inlineData?: { data: string; mimeType: string }; functionResponse?: { name: string; response: unknown } }> }>));
+        } else {
+          // Fallback: try to convert to string
+          contents.push({ role: 'user', parts: [{ text: String(message) }] });
+        }
       } else {
         throw new HttpsError('invalid-argument', 'No input provided.');
       }
